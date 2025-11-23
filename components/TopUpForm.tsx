@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Provider, Bundle, User, TransactionType } from '../types';
 import { PROVIDER_COLORS, PROVIDER_LOGOS, SAMPLE_BUNDLES } from '../constants';
 import { processAirtimePurchase, processDataPurchase } from '../services/topupService';
-import { Smartphone, Wifi, PiggyBank, Loader2, Sparkles } from 'lucide-react';
+import { Smartphone, Wifi, PiggyBank, Loader2, Sparkles, Star, Check } from 'lucide-react';
 
 interface TopUpFormProps {
   user: User;
@@ -145,29 +145,50 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess }) => {
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3 animate-fade-in">
+          <div className="grid grid-cols-2 gap-4 animate-fade-in pb-2">
             {filteredBundles.map((b) => (
               <div
                 key={b.id}
                 onClick={() => setSelectedBundle(b)}
-                className={`relative p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                className={`group relative p-4 rounded-xl border-2 cursor-pointer transition-all duration-300 ease-out ${
                   selectedBundle?.id === b.id 
-                    ? 'border-green-500 bg-green-50' 
-                    : 'border-gray-100 bg-yellow-50 hover:border-yellow-200'
+                    ? 'border-green-600 bg-green-50 shadow-inner scale-[0.98]' 
+                    : 'border-gray-100 bg-white hover:border-green-300 hover:shadow-lg hover:-translate-y-1'
                 }`}
-                style={{
-                    boxShadow: selectedBundle?.id === b.id ? 'none' : '2px 4px 6px rgba(0,0,0,0.05)',
-                    transform: selectedBundle?.id === b.id ? 'scale(0.98)' : 'rotate(-1deg)'
-                }}
               >
                 {b.isBestValue && (
-                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-full shadow-sm z-10 animate-bounce">
-                    HOT 🔥
-                  </span>
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-yellow-500 to-orange-500 text-white text-[10px] font-bold px-3 py-0.5 rounded-full shadow-sm z-10 flex items-center gap-1 whitespace-nowrap animate-pulse">
+                    <Star size={10} className="fill-current" /> BEST VALUE
+                  </div>
                 )}
-                <div className="text-sm font-bold text-gray-800">{b.dataAmount}</div>
-                <div className="text-xs text-gray-500">{b.validity}</div>
-                <div className="mt-2 font-mono font-bold text-green-700">₦{b.price}</div>
+                
+                <div className="flex flex-col items-center text-center relative z-10">
+                    <div className="text-2xl font-black text-gray-800 tracking-tight group-hover:text-green-600 transition-colors">
+                        {b.dataAmount}
+                    </div>
+                    <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1 mb-3">
+                        {b.validity}
+                    </div>
+                    <div className={`px-4 py-1.5 rounded-lg font-mono font-bold text-sm transition-colors ${
+                        selectedBundle?.id === b.id 
+                        ? 'bg-green-600 text-white shadow-md' 
+                        : 'bg-gray-100 text-gray-600 group-hover:bg-green-100 group-hover:text-green-700'
+                    }`}>
+                        ₦{b.price.toLocaleString()}
+                    </div>
+                </div>
+
+                {/* Selection Indicator */}
+                {selectedBundle?.id === b.id && (
+                    <div className="absolute top-2 right-2 text-green-600">
+                        <Check size={16} strokeWidth={3} />
+                    </div>
+                )}
+                
+                {/* Decoration */}
+                 <div className="absolute -bottom-4 -right-4 text-gray-50 opacity-0 group-hover:opacity-100 transition-opacity rotate-12 pointer-events-none">
+                    <Wifi size={50} className="text-green-50" />
+                 </div>
               </div>
             ))}
           </div>
