@@ -1,8 +1,9 @@
+
 import React, { useEffect, useState } from 'react';
 import { Transaction, User } from '../types';
 import { MockDB } from '../services/mockDb';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { Download, Users, TrendingUp, AlertCircle } from 'lucide-react';
+import { Download, Users, TrendingUp, AlertCircle, DollarSign, Wallet } from 'lucide-react';
 
 export const AdminDashboard: React.FC = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -17,7 +18,12 @@ export const AdminDashboard: React.FC = () => {
   }, []);
 
   // Compute Stats
-  const totalRevenue = transactions.reduce((sum, t) => sum + (t.status === 'SUCCESS' && t.type !== 'WALLET_FUND' ? t.amount : 0), 0);
+  const validTransactions = transactions.filter(t => t.status === 'SUCCESS' && t.type !== 'WALLET_FUND' && t.type !== 'ADMIN_CREDIT' && t.type !== 'ADMIN_DEBIT');
+  
+  const totalRevenue = validTransactions.reduce((sum, t) => sum + t.amount, 0);
+  const totalCost = validTransactions.reduce((sum, t) => sum + (t.costPrice || 0), 0);
+  const totalProfit = validTransactions.reduce((sum, t) => sum + (t.profit || 0), 0);
+  
   const totalUsers = users.length;
   
   // Chart Data preparation
@@ -31,8 +37,8 @@ export const AdminDashboard: React.FC = () => {
   const COLORS = ['#FFCC00', '#00C853', '#FF0000', '#00695C'];
 
   const exportCSV = () => {
-      const headers = ["ID", "User", "Type", "Amount", "Provider", "Date", "Status"];
-      const rows = transactions.map(t => [t.id, t.userId, t.type, t.amount, t.provider || '-', t.date, t.status]);
+      const headers = ["ID", "User", "Type", "Amount", "Cost", "Profit", "Provider", "Date", "Status"];
+      const rows = transactions.map(t => [t.id, t.userId, t.type, t.amount, t.costPrice || 0, t.profit || 0, t.provider || '-', t.date, t.status]);
       const csvContent = "data:text/csv;charset=utf-8," 
           + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
       const encodedUri = encodeURI(csvContent);
@@ -52,28 +58,35 @@ export const AdminDashboard: React.FC = () => {
         </button>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* Stats Cards Row 1 */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
             <div className="flex items-center gap-3 mb-2">
                 <div className="p-2 bg-green-100 text-green-700 rounded-lg"><TrendingUp size={20} /></div>
-                <h3 className="text-gray-500 text-sm font-medium">Total Revenue</h3>
+                <h3 className="text-gray-500 text-sm font-medium">Total Sales</h3>
             </div>
             <p className="text-2xl font-bold text-gray-900">₦{totalRevenue.toLocaleString()}</p>
         </div>
         <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
              <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 bg-blue-100 text-blue-700 rounded-lg"><Users size={20} /></div>
-                <h3 className="text-gray-500 text-sm font-medium">Active Users</h3>
+                <div className="p-2 bg-red-100 text-red-700 rounded-lg"><Wallet size={20} /></div>
+                <h3 className="text-gray-500 text-sm font-medium">Total Cost</h3>
             </div>
-            <p className="text-2xl font-bold text-gray-900">{totalUsers}</p>
+            <p className="text-2xl font-bold text-gray-900">₦{totalCost.toLocaleString()}</p>
         </div>
         <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
              <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 bg-yellow-100 text-yellow-700 rounded-lg"><AlertCircle size={20} /></div>
-                <h3 className="text-gray-500 text-sm font-medium">Pending Approvals</h3>
+                <div className="p-2 bg-blue-100 text-blue-700 rounded-lg"><DollarSign size={20} /></div>
+                <h3 className="text-gray-500 text-sm font-medium">Gross Profit</h3>
             </div>
-            <p className="text-2xl font-bold text-gray-900">0</p>
+            <p className="text-2xl font-bold text-blue-700">₦{totalProfit.toLocaleString()}</p>
+        </div>
+        <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+             <div className="flex items-center gap-3 mb-2">
+                <div className="p-2 bg-purple-100 text-purple-700 rounded-lg"><Users size={20} /></div>
+                <h3 className="text-gray-500 text-sm font-medium">Active Users</h3>
+            </div>
+            <p className="text-2xl font-bold text-gray-900">{totalUsers}</p>
         </div>
       </div>
 
@@ -105,6 +118,7 @@ export const AdminDashboard: React.FC = () => {
                     <tr>
                         <th className="px-2 py-2">User</th>
                         <th className="px-2 py-2">Type</th>
+                        <th className="px-2 py-2 text-right">Profit</th>
                         <th className="px-2 py-2 text-right">Amount</th>
                     </tr>
                 </thead>
@@ -113,6 +127,9 @@ export const AdminDashboard: React.FC = () => {
                         <tr key={t.id}>
                             <td className="px-2 py-2 font-medium">{t.userId}</td>
                             <td className="px-2 py-2">{t.type}</td>
+                            <td className="px-2 py-2 text-right text-green-600">
+                                {t.profit ? `+₦${t.profit}` : '-'}
+                            </td>
                             <td className="px-2 py-2 text-right">₦{t.amount}</td>
                         </tr>
                     ))}

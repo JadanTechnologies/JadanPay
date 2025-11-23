@@ -58,12 +58,18 @@ export const processAirtimePurchase = async (
       await MockDB.updateUserSavings(user.id, savedAmount);
   }
 
+  // Calculate Profit for Airtime (Assume 2% profit margin for Airtime)
+  const costPrice = amount * 0.98;
+  const profit = amount - costPrice;
+
   const tx: Transaction = {
     id: generateId(),
     userId: user.id,
     type: TransactionType.AIRTIME,
     provider,
     amount,
+    costPrice,
+    profit,
     destinationNumber: phone,
     status: TransactionStatus.SUCCESS,
     date: new Date().toISOString(),
@@ -124,12 +130,18 @@ export const processDataPurchase = async (
       await MockDB.updateUserSavings(user.id, savedAmount);
   }
 
+  // Calculate Profit from Bundle settings
+  const costPrice = bundle.costPrice || (bundle.price * 0.95); // Fallback to 5% margin if costPrice missing
+  const profit = bundle.price - costPrice;
+
   const tx: Transaction = {
     id: generateId(),
     userId: user.id,
     type: TransactionType.DATA,
     provider: bundle.provider,
     amount,
+    costPrice,
+    profit,
     destinationNumber: phone,
     bundleName: bundle.name,
     status: TransactionStatus.SUCCESS,

@@ -1,3 +1,4 @@
+
 export enum UserRole {
   USER = 'user',
   RESELLER = 'reseller',
@@ -60,7 +61,8 @@ export interface Bundle {
   provider: Provider;
   type: PlanType; // New field for plan categorization
   name: string;
-  price: number;
+  price: number; // Selling Price
+  costPrice: number; // Cost Price for profit calc
   dataAmount: string;
   validity: string;
   planId: string; // The ID sent to the external API (Bilal)
@@ -73,7 +75,9 @@ export interface Transaction {
   userId: string;
   type: TransactionType;
   provider?: Provider;
-  amount: number;
+  amount: number; // Selling Amount
+  costPrice?: number; // Cost Amount
+  profit?: number; // Profit
   destinationNumber?: string;
   bundleName?: string;
   status: TransactionStatus;

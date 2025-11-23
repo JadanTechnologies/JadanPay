@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Save, Globe, Smartphone, Building, Mail, Phone, ShieldAlert, CreditCard, Bell, Clock, FileText, Upload, Link as LinkIcon, Server, Database, Plus, Trash2, Edit2, Check, X } from 'lucide-react';
 import { Provider, Bundle, PlanType } from '../types';
@@ -78,6 +79,7 @@ export const AdminSettings: React.FC = () => {
           type: editingBundle.type || PlanType.SME,
           name: editingBundle.name || `${editingBundle.dataAmount} ${editingBundle.validity}`,
           price: Number(editingBundle.price),
+          costPrice: Number(editingBundle.costPrice) || Number(editingBundle.price), // Default cost to price if not set
           dataAmount: editingBundle.dataAmount || '0MB',
           validity: editingBundle.validity || '1 Day',
           planId: editingBundle.planId,
@@ -246,7 +248,9 @@ export const AdminSettings: React.FC = () => {
                                   <th className="p-3">Type</th>
                                   <th className="p-3">Plan Name</th>
                                   <th className="p-3">API Plan ID</th>
-                                  <th className="p-3">Price (₦)</th>
+                                  <th className="p-3">Cost (₦)</th>
+                                  <th className="p-3">Selling (₦)</th>
+                                  <th className="p-3">Profit</th>
                                   <th className="p-3">Status</th>
                                   <th className="p-3 text-right">Actions</th>
                               </tr>
@@ -264,7 +268,11 @@ export const AdminSettings: React.FC = () => {
                                       </td>
                                       <td className="p-3 font-medium text-gray-800">{b.name}</td>
                                       <td className="p-3 font-mono text-gray-500">{b.planId}</td>
+                                      <td className="p-3 font-medium text-red-600">₦{b.costPrice || b.price * 0.95}</td>
                                       <td className="p-3 font-bold text-green-700">₦{b.price}</td>
+                                      <td className="p-3 font-bold text-blue-600">
+                                          ₦{b.price - (b.costPrice || b.price * 0.95)}
+                                      </td>
                                       <td className="p-3">
                                           {b.isAvailable !== false ? (
                                               <span className="text-green-600 flex items-center gap-1"><Check size={12}/> Active</span>
@@ -522,25 +530,48 @@ export const AdminSettings: React.FC = () => {
                                 onChange={e => setEditingBundle({...editingBundle, name: e.target.value})}
                               />
                       </div>
-                      <div className="grid grid-cols-2 gap-3">
-                          <div>
-                              <label className="text-xs font-bold text-gray-500 block mb-1">Price (₦)</label>
-                              <input 
-                                type="number"
-                                className="w-full p-3 border rounded-xl" 
-                                value={editingBundle.price || ''}
-                                onChange={e => setEditingBundle({...editingBundle, price: Number(e.target.value)})}
-                              />
+                      
+                      <div className="p-3 bg-gray-50 rounded-xl border border-gray-100">
+                          <p className="text-xs font-bold text-gray-400 uppercase mb-2">Pricing Strategy</p>
+                          <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                  <label className="text-xs font-bold text-gray-500 block mb-1">Cost Price (₦)</label>
+                                  <input 
+                                    type="number"
+                                    className="w-full p-3 border rounded-xl bg-white focus:ring-red-200 border-red-200" 
+                                    value={editingBundle.costPrice || ''}
+                                    placeholder="API Cost"
+                                    onChange={e => setEditingBundle({...editingBundle, costPrice: Number(e.target.value)})}
+                                  />
+                              </div>
+                              <div>
+                                  <label className="text-xs font-bold text-gray-500 block mb-1">Selling Price (₦)</label>
+                                  <input 
+                                    type="number"
+                                    className="w-full p-3 border rounded-xl bg-white focus:ring-green-200 border-green-200" 
+                                    value={editingBundle.price || ''}
+                                    placeholder="User Price"
+                                    onChange={e => setEditingBundle({...editingBundle, price: Number(e.target.value)})}
+                                  />
+                              </div>
                           </div>
-                          <div>
-                              <label className="text-xs font-bold text-gray-500 block mb-1">API Plan ID</label>
-                              <input 
-                                className="w-full p-3 border rounded-xl font-mono text-sm" 
-                                placeholder="e.g. 1001"
-                                value={editingBundle.planId || ''}
-                                onChange={e => setEditingBundle({...editingBundle, planId: e.target.value})}
-                              />
+                          <div className="mt-2 text-right">
+                               <span className="text-xs text-gray-500">
+                                   Estimated Profit: <span className="font-bold text-blue-600">
+                                       ₦{(Number(editingBundle.price || 0) - Number(editingBundle.costPrice || 0)).toLocaleString()}
+                                   </span>
+                               </span>
                           </div>
+                      </div>
+
+                      <div>
+                          <label className="text-xs font-bold text-gray-500 block mb-1">API Plan ID</label>
+                          <input 
+                            className="w-full p-3 border rounded-xl font-mono text-sm" 
+                            placeholder="e.g. 1001"
+                            value={editingBundle.planId || ''}
+                            onChange={e => setEditingBundle({...editingBundle, planId: e.target.value})}
+                          />
                       </div>
                       
                       <div className="flex gap-4 pt-2">

@@ -16,6 +16,8 @@ let transactions: Transaction[] = [
     type: TransactionType.DATA,
     provider: Provider.MTN,
     amount: 1000,
+    costPrice: 950,
+    profit: 50,
     destinationNumber: '08031234567',
     bundleName: '1.5GB Monthly',
     status: TransactionStatus.SUCCESS,
