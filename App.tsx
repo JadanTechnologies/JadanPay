@@ -28,9 +28,8 @@ export default function App() {
   // Theme Management
   const [isDarkMode, setIsDarkMode] = useState(false);
 
-  // Initialize theme from system preference or local storage (mocked for now as just state)
+  // Initialize theme from system preference
   useEffect(() => {
-    // Check if user previously set dark mode or system preference
     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
        setIsDarkMode(true);
     }
@@ -45,6 +44,23 @@ export default function App() {
       root.classList.remove('dark');
     }
   }, [isDarkMode]);
+
+  // Try to load user if we have a "session" (simplified logic for this mock)
+  useEffect(() => {
+      // In a real app, we check for a token. Here we rely on Auth component to set state.
+      // But if we want persistence across reload without re-login for the user:
+      // We could store the loggedInUserId in localStorage.
+      const savedUserId = localStorage.getItem('JADANPAY_CURRENT_USER_ID');
+      if (savedUserId && !user) {
+          MockDB.getUsers().then(users => {
+              const found = users.find(u => u.id === savedUserId);
+              if (found) {
+                  setUser(found);
+                  setShowLanding(false);
+              }
+          });
+      }
+  }, []);
 
   const toggleTheme = () => {
     setIsDarkMode(!isDarkMode);
@@ -67,8 +83,19 @@ export default function App() {
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
-    // If switching tabs manually, clear the selected transaction to avoid auto-opening old receipts
     setSelectedTxId(undefined);
+  };
+  
+  const handleAuthSuccess = (u: User) => {
+      setUser(u);
+      localStorage.setItem('JADANPAY_CURRENT_USER_ID', u.id); // Persist session
+      // Redirect Admin strictly to admin dashboard, others to user dashboard
+      if (u.role === UserRole.ADMIN) {
+          setActiveTab('admin');
+      } else {
+          setActiveTab('dashboard');
+      }
+      setShowLanding(false);
   };
 
   if (!user) {
@@ -82,15 +109,7 @@ export default function App() {
     }
     
     return <Auth 
-        onAuthSuccess={(u) => {
-            setUser(u);
-            // Redirect Admin strictly to admin dashboard, others to user dashboard
-            if (u.role === UserRole.ADMIN) {
-                setActiveTab('admin');
-            } else {
-                setActiveTab('dashboard');
-            }
-        }} 
+        onAuthSuccess={handleAuthSuccess} 
         onBack={() => setShowLanding(true)}
     />;
   }
@@ -143,8 +162,9 @@ export default function App() {
         onTabChange={handleTabChange}
         onLogout={() => {
             setUser(null);
-            setActiveTab('dashboard'); // Reset tab on logout
-            setShowLanding(true); // Return to landing page
+            localStorage.removeItem('JADANPAY_CURRENT_USER_ID');
+            setActiveTab('dashboard'); 
+            setShowLanding(true); 
         }}
     >
       {renderContent()}

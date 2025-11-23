@@ -1,11 +1,27 @@
 
 import { User, Transaction, TransactionType, TransactionStatus, UserRole, Provider, Ticket, UserStatus, Staff, Role, Announcement, CommunicationTemplate, Bundle, AppNotification } from '../types';
 import { MOCK_USERS_DATA, SAMPLE_BUNDLES } from '../constants';
-import { SettingsService } from './settingsService';
+import { SettingsService, AppSettings } from './settingsService';
 
-// Initial Mock State
-// Ensure mock users have wallet numbers and referral codes
-let users: User[] = MOCK_USERS_DATA.map(u => ({
+const DB_STORAGE_KEY = 'JADANPAY_DB_V1';
+
+// Database Schema Interface
+interface DatabaseSchema {
+    users: User[];
+    transactions: Transaction[];
+    bundles: Bundle[];
+    tickets: Ticket[];
+    staffMembers: Staff[];
+    roles: Role[];
+    announcements: Announcement[];
+    templates: CommunicationTemplate[];
+    notifications: AppNotification[];
+    settings: AppSettings | null; // We can cache settings here too
+}
+
+// Default Data (used if LocalStorage is empty)
+const DEFAULT_BUNDLES: Bundle[] = SAMPLE_BUNDLES.map(b => ({...b, planId: b.id}));
+const DEFAULT_USERS: User[] = MOCK_USERS_DATA.map(u => ({
     ...u,
     walletNumber: u.id === 'u1' ? '2039485712' : u.id === 'u2' ? '2058392011' : '0000000000',
     referralCode: u.name.substring(0,3).toUpperCase() + Math.floor(Math.random() * 1000),
@@ -13,65 +29,75 @@ let users: User[] = MOCK_USERS_DATA.map(u => ({
     bonusBalance: 0
 })) as User[];
 
-let bundles: Bundle[] = SAMPLE_BUNDLES.map(b => ({...b, planId: b.id}));
+// In-Memory State (Sync with LocalStorage)
+let db: DatabaseSchema = {
+    users: [],
+    transactions: [],
+    bundles: [],
+    tickets: [],
+    staffMembers: [],
+    roles: [],
+    announcements: [],
+    templates: [],
+    notifications: [],
+    settings: null
+};
 
-let transactions: Transaction[] = [
-  {
-    id: 'tx_1',
-    userId: 'u1',
-    type: TransactionType.DATA,
-    provider: Provider.MTN,
-    amount: 1000,
-    costPrice: 950,
-    profit: 50,
-    destinationNumber: '08031234567',
-    bundleName: '1.5GB Monthly',
-    status: TransactionStatus.SUCCESS,
-    date: new Date(Date.now() - 86400000).toISOString(),
-    reference: 'REF-123456789',
-    previousBalance: 6000,
-    newBalance: 5000,
-  }
-];
+// --- CORE PERSISTENCE LOGIC ---
 
-let tickets: Ticket[] = [];
-let staffMembers: Staff[] = [];
-let roles: Role[] = [];
-let announcements: Announcement[] = [];
-let templates: CommunicationTemplate[] = [];
-let notifications: AppNotification[] = [];
+const loadDatabase = () => {
+    try {
+        const stored = localStorage.getItem(DB_STORAGE_KEY);
+        if (stored) {
+            const parsed = JSON.parse(stored);
+            // Merge defaults in case of new schema updates
+            db = { ...db, ...parsed };
+            console.log("Database loaded from LocalStorage");
+        } else {
+            console.log("Initializing new Database");
+            db.users = DEFAULT_USERS;
+            db.bundles = DEFAULT_BUNDLES;
+            // Initialize other arrays as empty
+            saveDatabase();
+        }
+    } catch (e) {
+        console.error("Failed to load database:", e);
+        // Fallback to defaults to prevent crash
+        db.users = DEFAULT_USERS;
+        db.bundles = DEFAULT_BUNDLES;
+    }
+};
+
+const saveDatabase = () => {
+    try {
+        localStorage.setItem(DB_STORAGE_KEY, JSON.stringify(db));
+    } catch (e) {
+        console.error("Failed to save database:", e);
+    }
+};
 
 // Helper to simulate network delay
 export const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-// Helper: Generate Unique Wallet Number
-const generateWalletNumber = () => {
-    return '2' + Math.random().toString().slice(2, 11);
-};
+// Helper Generators
+const generateWalletNumber = () => '2' + Math.random().toString().slice(2, 11);
+const generateReferralCode = (name: string) => name.substring(0,3).toUpperCase() + Math.floor(1000 + Math.random() * 9000);
 
-const generateReferralCode = (name: string) => {
-    return name.substring(0,3).toUpperCase() + Math.floor(1000 + Math.random() * 9000);
-};
+// Initialize immediately
+loadDatabase();
+
 
 export const MockDB = {
   // --- BACKUP & RESTORE ---
   getDatabaseDump: async () => {
       await delay(500);
-      const settings = await SettingsService.getSettings();
+      const currentSettings = await SettingsService.getSettings();
+      // Update DB with latest settings before dump
+      db.settings = currentSettings;
       return {
           version: '1.0',
           timestamp: new Date().toISOString(),
-          data: {
-              users,
-              transactions,
-              bundles,
-              tickets,
-              staffMembers,
-              roles,
-              announcements,
-              templates,
-              settings
-          }
+          data: db
       };
   },
 
@@ -80,46 +106,46 @@ export const MockDB = {
       if (!dump || !dump.data) throw new Error("Invalid Backup File");
       
       const { data } = dump;
-      if (data.users) users = data.users;
-      if (data.transactions) transactions = data.transactions;
-      if (data.bundles) bundles = data.bundles;
-      if (data.tickets) tickets = data.tickets;
-      if (data.staffMembers) staffMembers = data.staffMembers;
-      if (data.roles) roles = data.roles;
-      if (data.announcements) announcements = data.announcements;
-      if (data.templates) templates = data.templates;
-      if (data.settings) await SettingsService.updateSettings(data.settings);
+      // Validate critical keys
+      if (!Array.isArray(data.users)) throw new Error("Corrupt Data: Missing Users");
       
+      db = data;
+      
+      // Update settings service
+      if (data.settings) {
+          await SettingsService.updateSettings(data.settings);
+      }
+      
+      saveDatabase();
       return true;
   },
 
+  // --- USERS ---
+
   getUsers: async () => {
-    await delay(500);
-    return users;
+    await delay(300);
+    return [...db.users];
   },
   
-  // New method for referral management
   getTopReferrers: async (limit: number = 10) => {
       await delay(300);
-      return users
+      return db.users
         .filter(u => u.referralCount > 0)
         .sort((a, b) => b.referralCount - a.referralCount)
         .slice(0, limit);
   },
 
   getUserByEmail: async (email: string) => {
-    await delay(300);
-    return users.find(u => u.email === email);
+    await delay(200);
+    return db.users.find(u => u.email.toLowerCase() === email.toLowerCase());
   },
 
-  // REGISTRATION WITH VALIDATION
   registerUser: async (name: string, email: string, phone: string, referrerCode?: string): Promise<User> => {
-      await delay(800);
+      await delay(600);
       const settings = await SettingsService.getSettings();
       
-      // Check duplicates
-      const emailExists = users.some(u => u.email.toLowerCase() === email.toLowerCase());
-      const phoneExists = users.some(u => u.phone === phone);
+      const emailExists = db.users.some(u => u.email.toLowerCase() === email.toLowerCase());
+      const phoneExists = db.users.some(u => u.phone === phone);
 
       if (emailExists) throw new Error("This email address is already registered.");
       if (phoneExists) throw new Error("This phone number is already registered.");
@@ -127,16 +153,14 @@ export const MockDB = {
       // Resolve Referrer
       let referrerId: string | undefined = undefined;
       if (referrerCode && settings.enableReferral) {
-          const referrer = users.find(u => u.referralCode === referrerCode);
+          const referrer = db.users.find(u => u.referralCode === referrerCode);
           if (referrer) {
               referrerId = referrer.id;
-              // Reward Referrer (Simplified: Instant Reward on Sign Up)
-              // In real apps, this usually happens after first funding
               referrer.referralCount += 1;
               referrer.bonusBalance += settings.referralReward;
               
-              // Create Reward Transaction Record
-              transactions.unshift({
+              // Add Bonus Transaction for Referrer
+              db.transactions.unshift({
                   id: Math.random().toString(36),
                   userId: referrer.id,
                   type: TransactionType.REFERRAL_BONUS,
@@ -144,8 +168,8 @@ export const MockDB = {
                   status: TransactionStatus.SUCCESS,
                   date: new Date().toISOString(),
                   reference: `REF-BONUS-${Math.floor(Math.random() * 100000)}`,
-                  previousBalance: referrer.balance, // Note: Bonus balance is separate usually, but for tracking
-                  newBalance: referrer.balance // We don't touch main balance here
+                  previousBalance: referrer.balance,
+                  newBalance: referrer.balance
               });
 
               // Notify Referrer
@@ -166,22 +190,21 @@ export const MockDB = {
           role: UserRole.USER,
           balance: 0,
           savings: 0,
-          bonusBalance: 0, // Users start with 0, earn by referring
+          bonusBalance: 0,
           walletNumber: generateWalletNumber(),
           referralCode: generateReferralCode(name),
           referredBy: referrerId,
           referralCount: 0,
-          isVerified: true, // Auto verify for demo
+          isVerified: true,
           status: UserStatus.ACTIVE,
           ipAddress: '127.0.0.1',
           os: 'Web Browser',
           lastLogin: new Date().toISOString()
       };
 
-      users.push(newUser);
+      db.users.push(newUser);
       
-      // Create Welcome Notification
-      notifications.push({
+      db.notifications.push({
           id: Math.random().toString(36),
           userId: newUser.id,
           title: 'Welcome to JadanPay!',
@@ -191,27 +214,25 @@ export const MockDB = {
           type: 'success'
       });
 
+      saveDatabase();
       return newUser;
   },
 
   updateUserBalance: async (userId: string, amount: number) => {
-    await delay(300);
-    const userIndex = users.findIndex(u => u.id === userId);
-    if (userIndex === -1) throw new Error("User not found");
+    await delay(200);
+    const user = db.users.find(u => u.id === userId);
+    if (!user) throw new Error("User not found");
     
-    // Create deep copy
-    const user = { ...users[userIndex] };
     user.balance += amount;
-    users[userIndex] = user;
-    return user;
+    saveDatabase();
+    return { ...user };
   },
 
   redeemBonus: async (userId: string) => {
-      await delay(500);
-      const userIndex = users.findIndex(u => u.id === userId);
-      if (userIndex === -1) throw new Error("User not found");
+      await delay(400);
+      const user = db.users.find(u => u.id === userId);
+      if (!user) throw new Error("User not found");
       
-      const user = users[userIndex];
       const settings = await SettingsService.getSettings();
       const minWithdraw = settings.referralMinWithdrawal || 0;
 
@@ -219,15 +240,10 @@ export const MockDB = {
       if (user.bonusBalance < minWithdraw) throw new Error(`Minimum redeemable amount is ₦${minWithdraw}`);
 
       const amount = user.bonusBalance;
-      
-      // Move bonus to main balance
       user.balance += amount;
       user.bonusBalance = 0;
-      
-      users[userIndex] = user;
 
-      // Log transaction
-      transactions.unshift({
+      db.transactions.unshift({
           id: Math.random().toString(36),
           userId: userId,
           type: TransactionType.WALLET_FUND,
@@ -239,118 +255,124 @@ export const MockDB = {
           previousBalance: user.balance - amount,
           newBalance: user.balance
       });
-
-      return user;
+      
+      saveDatabase();
+      return { ...user };
   },
   
   updateUserSavings: async (userId: string, amount: number) => {
-    const userIndex = users.findIndex(u => u.id === userId);
-    if (userIndex !== -1) {
-        users[userIndex].savings += amount;
+    const user = db.users.find(u => u.id === userId);
+    if (user) {
+        user.savings += amount;
+        saveDatabase();
     }
   },
 
   updateUserStatus: async (userId: string, status: UserStatus) => {
     await delay(300);
-    const userIndex = users.findIndex(u => u.id === userId);
-    if (userIndex !== -1) {
-        users[userIndex].status = status;
-        return users[userIndex];
-    }
-    throw new Error("User not found");
+    const user = db.users.find(u => u.id === userId);
+    if (!user) throw new Error("User not found");
+    
+    user.status = status;
+    saveDatabase();
+    return { ...user };
   },
 
-  updateUser: async (user: User) => {
+  updateUser: async (updatedData: User) => {
       await delay(300);
-      const idx = users.findIndex(u => u.id === user.id);
-      if (idx !== -1) {
-          users[idx] = user;
-          return user;
+      const index = db.users.findIndex(u => u.id === updatedData.id);
+      if (index !== -1) {
+          db.users[index] = updatedData;
+          saveDatabase();
+          return updatedData;
       }
       throw new Error("User not found");
   },
 
   deleteUser: async (userId: string) => {
       await delay(400);
-      users = users.filter(u => u.id !== userId);
+      db.users = db.users.filter(u => u.id !== userId);
+      // Clean up transactions? Usually keep them for records, but lets keep it simple
+      saveDatabase();
   },
 
+  // --- TRANSACTIONS ---
+
   getTransactions: async (userId?: string) => {
-    await delay(500);
+    await delay(300);
     if (userId) {
-      return transactions.filter(t => t.userId === userId).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      return db.transactions.filter(t => t.userId === userId).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     }
-    return transactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    return db.transactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   },
 
   addTransaction: async (tx: Transaction) => {
-    await delay(400);
-    transactions.unshift(tx);
+    await delay(300);
+    db.transactions.unshift(tx);
+    saveDatabase();
     return tx;
   },
 
   getAllTransactionsAdmin: async () => {
-    await delay(600);
-    return transactions;
+    await delay(400);
+    return [...db.transactions];
   },
 
-  // PENDING PAYMENTS (MANUAL FUNDING)
   getPendingTransactions: async () => {
-      await delay(300);
-      return transactions.filter(t => t.status === TransactionStatus.PENDING && t.type === TransactionType.WALLET_FUND);
+      await delay(200);
+      return db.transactions.filter(t => t.status === TransactionStatus.PENDING && t.type === TransactionType.WALLET_FUND);
   },
 
   approveTransaction: async (txId: string) => {
-      await delay(600);
-      const idx = transactions.findIndex(t => t.id === txId);
-      if (idx === -1) throw new Error("Transaction not found");
+      await delay(500);
+      const tx = db.transactions.find(t => t.id === txId);
+      if (!tx) throw new Error("Transaction not found");
 
-      const tx = transactions[idx];
       tx.status = TransactionStatus.SUCCESS;
       tx.adminActionDate = new Date().toISOString();
 
       // Credit User
-      const user = await MockDB.updateUserBalance(tx.userId, tx.amount);
-      tx.previousBalance = user.balance - tx.amount;
-      tx.newBalance = user.balance;
+      const user = db.users.find(u => u.id === tx.userId);
+      if(user) {
+          user.balance += tx.amount;
+          tx.previousBalance = user.balance - tx.amount;
+          tx.newBalance = user.balance;
+          
+          MockDB.addNotification({
+            userId: tx.userId,
+            title: 'Payment Approved',
+            message: `Your manual funding of ₦${tx.amount.toLocaleString()} has been approved.`,
+            type: 'success'
+          });
+      }
 
-      // Notify User
-      MockDB.addNotification({
-          userId: tx.userId,
-          title: 'Payment Approved',
-          message: `Your manual funding of ₦${tx.amount.toLocaleString()} has been approved.`,
-          type: 'success'
-      });
-      
-      // Simulate Push/Email
-      console.log(`[PUSH] To ${tx.userId}: Payment Approved`);
-      console.log(`[EMAIL] To ${tx.userId}: Payment Approved`);
-
+      saveDatabase();
       return tx;
   },
 
   declineTransaction: async (txId: string) => {
-      await delay(600);
-      const idx = transactions.findIndex(t => t.id === txId);
-      if (idx === -1) throw new Error("Transaction not found");
+      await delay(500);
+      const tx = db.transactions.find(t => t.id === txId);
+      if (!tx) throw new Error("Transaction not found");
 
-      transactions[idx].status = TransactionStatus.DECLINED;
-      transactions[idx].adminActionDate = new Date().toISOString();
+      tx.status = TransactionStatus.DECLINED;
+      tx.adminActionDate = new Date().toISOString();
 
-      // Notify User
       MockDB.addNotification({
-          userId: transactions[idx].userId,
+          userId: tx.userId,
           title: 'Payment Declined',
-          message: `Your manual funding request of ₦${transactions[idx].amount.toLocaleString()} was declined. Please check proof.`,
+          message: `Your manual funding request of ₦${tx.amount.toLocaleString()} was declined.`,
           type: 'error'
       });
 
-      return transactions[idx];
+      saveDatabase();
+      return tx;
   },
 
-  // NOTIFICATIONS
+  // --- NOTIFICATIONS ---
+
   getNotifications: async (userId: string) => {
-      return notifications.filter(n => n.userId === userId).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      return db.notifications.filter(n => n.userId === userId).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   },
   
   addNotification: (n: Partial<AppNotification>) => {
@@ -363,26 +385,29 @@ export const MockDB = {
           isRead: false,
           type: n.type || 'info'
       };
-      notifications.unshift(notif);
+      db.notifications.unshift(notif);
+      saveDatabase();
   },
 
   markNotificationsRead: async (userId: string) => {
-      notifications.forEach(n => {
+      db.notifications.forEach(n => {
           if (n.userId === userId) n.isRead = true;
       });
+      saveDatabase();
   },
 
-  // Ticket Methods
+  // --- TICKETS ---
+
   getTickets: async (userId?: string) => {
-    await delay(400);
+    await delay(300);
     if (userId) {
-        return tickets.filter(t => t.userId === userId).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        return db.tickets.filter(t => t.userId === userId).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     }
-    return tickets.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    return db.tickets.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   },
   
   createTicket: async (userId: string, subject: string, message: string, priority: 'low' | 'medium' | 'high') => {
-    await delay(500);
+    await delay(400);
     const newTicket: Ticket = {
         id: Math.random().toString(36).substr(2, 9),
         userId,
@@ -400,91 +425,104 @@ export const MockDB = {
             }
         ]
     };
-    tickets.unshift(newTicket);
+    db.tickets.unshift(newTicket);
+    saveDatabase();
     return newTicket;
   },
 
   replyTicket: async (ticketId: string, text: string, isAdmin: boolean) => {
     await delay(300);
-    const tIndex = tickets.findIndex(t => t.id === ticketId);
-    if (tIndex !== -1) {
-        tickets[tIndex].messages.push({
+    const ticket = db.tickets.find(t => t.id === ticketId);
+    if (ticket) {
+        ticket.messages.push({
             id: Math.random().toString(36),
-            senderId: isAdmin ? 'admin' : tickets[tIndex].userId,
+            senderId: isAdmin ? 'admin' : ticket.userId,
             text,
             date: new Date().toISOString(),
             isAdmin
         });
+        saveDatabase();
     }
   },
 
-  // Staff Methods
+  // --- STAFF & ROLES ---
+
   getStaff: async () => {
       await delay(200);
-      return staffMembers;
+      return [...db.staffMembers];
   },
   addStaff: async (staff: Staff) => {
       await delay(300);
-      staffMembers.push(staff);
+      db.staffMembers.push(staff);
+      saveDatabase();
       return staff;
   },
   deleteStaff: async (id: string) => {
-      staffMembers = staffMembers.filter(s => s.id !== id);
+      db.staffMembers = db.staffMembers.filter(s => s.id !== id);
+      saveDatabase();
   },
   getRoles: async () => {
       await delay(200);
-      return roles;
+      return [...db.roles];
   },
   addRole: async (role: Role) => {
       await delay(300);
-      roles.push(role);
+      db.roles.push(role);
+      saveDatabase();
       return role;
   },
 
-  // Communication Methods
+  // --- COMMUNICATION ---
+
   getAnnouncements: async () => {
       await delay(200);
-      return announcements;
+      return [...db.announcements];
   },
   addAnnouncement: async (a: Announcement) => {
-      announcements.unshift(a);
+      db.announcements.unshift(a);
+      saveDatabase();
       return a;
   },
   deleteAnnouncement: async (id: string) => {
-      announcements = announcements.filter(a => a.id !== id);
+      db.announcements = db.announcements.filter(a => a.id !== id);
+      saveDatabase();
   },
   getTemplates: async () => {
       await delay(200);
-      return templates;
+      return [...db.templates];
   },
   saveTemplate: async (t: CommunicationTemplate) => {
-      const idx = templates.findIndex(temp => temp.id === t.id);
+      const idx = db.templates.findIndex(temp => temp.id === t.id);
       if (idx >= 0) {
-          templates[idx] = t;
+          db.templates[idx] = t;
       } else {
-          templates.push(t);
+          db.templates.push(t);
       }
+      saveDatabase();
       return t;
   },
   deleteTemplate: async (id: string) => {
-      templates = templates.filter(t => t.id !== id);
+      db.templates = db.templates.filter(t => t.id !== id);
+      saveDatabase();
   },
 
-  // Bundle / Pricing Methods
+  // --- BUNDLES ---
   getBundles: async () => {
       await delay(200);
-      return bundles;
+      return [...db.bundles];
   },
   saveBundle: async (b: Bundle) => {
-      const idx = bundles.findIndex(bun => bun.id === b.id);
+      const idx = db.bundles.findIndex(bun => bun.id === b.id);
       if (idx >= 0) {
-          bundles[idx] = b;
+          db.bundles[idx] = b;
       } else {
-          bundles.push(b);
+          db.bundles.push(b);
       }
+      saveDatabase();
       return b;
   },
   deleteBundle: async (id: string) => {
-      bundles = bundles.filter(b => b.id !== id);
+      db.bundles = db.bundles.filter(b => b.id !== id);
+      saveDatabase();
   }
 };
