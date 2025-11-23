@@ -114,7 +114,7 @@ export const Support: React.FC<SupportProps> = ({ user }) => {
                            </div>
                            <h3 className="font-bold text-sm text-gray-800 truncate">{t.subject}</h3>
                            <p className="text-xs text-gray-500 truncate mt-1">
-                               {t.messages[t.messages.length - 1].text}
+                               {t.messages && t.messages.length > 0 ? t.messages[t.messages.length - 1].text : 'No messages'}
                            </p>
                        </div>
                    ))
@@ -148,7 +148,7 @@ export const Support: React.FC<SupportProps> = ({ user }) => {
 
                     {/* Messages */}
                     <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50/30">
-                        {selectedTicket.messages.map(msg => (
+                        {selectedTicket.messages && selectedTicket.messages.map(msg => (
                             <div key={msg.id} className={`flex ${!msg.isAdmin ? 'justify-end' : 'justify-start'}`}>
                                 <div className={`max-w-[80%] p-3 rounded-2xl text-sm shadow-sm ${
                                     !msg.isAdmin 

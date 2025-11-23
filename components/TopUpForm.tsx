@@ -6,7 +6,7 @@ import { processAirtimePurchase, processDataPurchase } from '../services/topupSe
 import { SettingsService } from '../services/settingsService';
 import { MockDB } from '../services/mockDb';
 import { playNotification } from '../utils/audio';
-import { Smartphone, Wifi, PiggyBank, Loader2, Sparkles, Star, Check, AlertTriangle, Info, Share2, Ban, Signal, SignalHigh, SignalMedium, SignalLow, ChevronDown } from 'lucide-react';
+import { Smartphone, Wifi, PiggyBank, Loader2, Sparkles, Star, Check, AlertTriangle, Info, Share2, Ban, Signal, ChevronDown } from 'lucide-react';
 
 interface TopUpFormProps {
   user: User;
@@ -58,8 +58,8 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
   const loadData = async () => {
       // Load enabled/disabled providers and stats from Admin Settings
       const settings = await SettingsService.getSettings();
-      setProviderStatus(settings.providerStatus);
-      setProviderStats(settings.providerStats);
+      setProviderStatus(settings.providerStatus || {});
+      setProviderStats(settings.providerStats || {});
       
       // Load dynamic bundles
       const dbBundles = await MockDB.getBundles();
@@ -108,7 +108,7 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
 
   const handleProviderClick = (newProvider: Provider) => {
     // Check if provider is enabled in settings
-    if (!providerStatus[newProvider]) {
+    if (providerStatus && !providerStatus[newProvider]) {
         const msg = `Sorry, ${PROVIDER_LOGOS[newProvider]} services are currently unavailable.`;
         setError(msg);
         playNotification(msg, 'error');
@@ -287,9 +287,10 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
   };
 
   const renderSignalIcon = (rate: number) => {
-      if (rate >= 90) return <SignalHigh size={12} className="text-green-500" />;
-      if (rate >= 60) return <SignalMedium size={12} className="text-yellow-500" />;
-      return <SignalLow size={12} className="text-red-500" />;
+      // Use standard Signal icon with colors to avoid missing export issues in older lib versions
+      if (rate >= 90) return <Signal size={12} className="text-green-500" />;
+      if (rate >= 60) return <Signal size={12} className="text-yellow-500" />;
+      return <Signal size={12} className="text-red-500" />;
   };
 
   return (
@@ -340,7 +341,7 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
         {/* Provider Selection */}
         <div className="grid grid-cols-4 gap-2">
           {Object.values(Provider).map((p) => {
-            const isEnabled = providerStatus[p];
+            const isEnabled = providerStatus[p] !== false; // Default to true if undefined
             const stats = providerStats[p] ?? 100;
             return (
             <button

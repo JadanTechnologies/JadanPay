@@ -92,28 +92,31 @@ export const AdminDashboard: React.FC = () => {
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 h-80 w-full min-w-0 flex flex-col">
+         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col h-[400px]">
             <h3 className="font-bold text-gray-700 mb-4 shrink-0">Transaction Volume by Provider</h3>
-            <div className="flex-1 min-h-0 relative">
-                <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                        <Pie
-                            data={providerData}
-                            innerRadius={60}
-                            outerRadius={80}
-                            paddingAngle={5}
-                            dataKey="value"
-                        >
-                            {providerData.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                            ))}
-                        </Pie>
-                        <Tooltip />
-                    </PieChart>
-                </ResponsiveContainer>
+            <div className="flex-1 w-full min-h-0 relative">
+                {/* ResponsiveContainer needs a parent with explicit height to calculate percentages */}
+                <div style={{ width: '100%', height: '100%' }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                            <Pie
+                                data={providerData}
+                                innerRadius={60}
+                                outerRadius={80}
+                                paddingAngle={5}
+                                dataKey="value"
+                            >
+                                {providerData.map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                ))}
+                            </Pie>
+                            <Tooltip />
+                        </PieChart>
+                    </ResponsiveContainer>
+                </div>
             </div>
          </div>
-         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 h-80 overflow-y-auto">
+         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 h-[400px] overflow-y-auto">
              <h3 className="font-bold text-gray-700 mb-4">Recent Transactions</h3>
              <table className="w-full text-xs text-left">
                 <thead className="text-gray-400 bg-gray-50 uppercase font-semibold">
