@@ -6,7 +6,8 @@ import { processAirtimePurchase, processDataPurchase } from '../services/topupSe
 import { SettingsService } from '../services/settingsService';
 import { MockDB } from '../services/mockDb';
 import { playNotification } from '../utils/audio';
-import { Smartphone, Wifi, PiggyBank, Loader2, Sparkles, Star, Check, AlertTriangle, Info, Share2, Ban, Signal, ChevronDown } from 'lucide-react';
+// Replaced Signal with Activity/BarChart2 for better CDN compatibility if Signal is missing in older lucide versions
+import { Smartphone, Wifi, PiggyBank, Loader2, Sparkles, Star, Check, AlertTriangle, Info, Share2, Ban, Activity, ChevronDown } from 'lucide-react';
 
 interface TopUpFormProps {
   user: User;
@@ -221,9 +222,7 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
       setSuccessMsg(successText);
       
       // Play Success Sound
-      // readablePhone spaces out digits so TTS reads "Zero Eight Zero..." instead of "Eight Billion..."
       const readablePhone = phone.split('').join(' ');
-
       if (type === TransactionType.DATA) {
           playNotification(`Data has been sent to ${readablePhone} successfully.`);
       } else {
@@ -287,10 +286,10 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
   };
 
   const renderSignalIcon = (rate: number) => {
-      // Use standard Signal icon with colors to avoid missing export issues in older lib versions
-      if (rate >= 90) return <Signal size={12} className="text-green-500" />;
-      if (rate >= 60) return <Signal size={12} className="text-yellow-500" />;
-      return <Signal size={12} className="text-red-500" />;
+      // Use Activity as a safer alternative to Signal if icon package is old
+      if (rate >= 90) return <Activity size={12} className="text-green-500" />;
+      if (rate >= 60) return <Activity size={12} className="text-yellow-500" />;
+      return <Activity size={12} className="text-red-500" />;
   };
 
   return (
@@ -584,7 +583,7 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
           {loading ? <Loader2 className="animate-spin" /> : "Pay Now"}
         </button>
       </form>
-
+      
       {/* Provider Change Confirmation Modal */}
       {showProviderConfirm && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">

@@ -30,9 +30,14 @@ export const Support: React.FC<SupportProps> = ({ user }) => {
 
   const loadTickets = async () => {
     setLoading(true);
-    const data = await MockDB.getTickets(user.id);
-    setTickets(data);
-    setLoading(false);
+    try {
+        const data = await MockDB.getTickets(user.id);
+        setTickets(data);
+    } catch (e) {
+        console.error("Failed to load tickets");
+    } finally {
+        setLoading(false);
+    }
   };
 
   const handleCreateTicket = async (e: React.FormEvent) => {
@@ -46,7 +51,7 @@ export const Support: React.FC<SupportProps> = ({ user }) => {
         setShowCreateModal(false);
         setNewSubject('');
         setNewMessage('');
-        loadTickets();
+        await loadTickets();
     } catch (error) {
         alert("Failed to create ticket");
     } finally {
@@ -71,6 +76,14 @@ export const Support: React.FC<SupportProps> = ({ user }) => {
     } catch (error) {
         alert("Failed to send reply");
     }
+  };
+
+  // Helper to safely get last message
+  const getLastMessage = (ticket: Ticket) => {
+      if (ticket.messages && ticket.messages.length > 0) {
+          return ticket.messages[ticket.messages.length - 1].text;
+      }
+      return 'No messages';
   };
 
   return (
@@ -114,7 +127,7 @@ export const Support: React.FC<SupportProps> = ({ user }) => {
                            </div>
                            <h3 className="font-bold text-sm text-gray-800 truncate">{t.subject}</h3>
                            <p className="text-xs text-gray-500 truncate mt-1">
-                               {t.messages && t.messages.length > 0 ? t.messages[t.messages.length - 1].text : 'No messages'}
+                               {getLastMessage(t)}
                            </p>
                        </div>
                    ))
@@ -267,7 +280,6 @@ export const Support: React.FC<SupportProps> = ({ user }) => {
                 </div>
             </div>
        )}
-
     </div>
   );
 };
