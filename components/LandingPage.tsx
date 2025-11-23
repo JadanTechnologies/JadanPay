@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { Smartphone, Zap, Shield, Globe, ArrowRight, Star, ChevronDown, Activity, Wifi, Box, CheckCircle, Moon, Sun, Quote } from 'lucide-react';
+import { Smartphone, Zap, Shield, Globe, ArrowRight, Star, ChevronDown, Activity, Wifi, Box, CheckCircle, Moon, Sun, Quote, X, Mail, MapPin, Phone } from 'lucide-react';
 import { PROVIDER_LOGOS, PROVIDER_COLORS } from '../constants';
 import { SettingsService, AppSettings } from '../services/settingsService';
 
@@ -15,6 +15,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
   const [scrollY, setScrollY] = useState(0);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [settings, setSettings] = useState<AppSettings | null>(null);
+  
+  // Info Modal State
+  const [activeInfoModal, setActiveInfoModal] = useState<'about' | 'contact' | 'privacy' | 'terms' | null>(null);
 
   useEffect(() => {
     SettingsService.getSettings().then(setSettings);
@@ -45,6 +48,112 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
       }
   };
 
+  const renderInfoModal = () => {
+      if (!activeInfoModal) return null;
+      
+      let title = "";
+      let content = null;
+
+      switch(activeInfoModal) {
+        case 'about':
+          title = "About Us";
+          content = (
+            <div className="space-y-4 text-gray-600 dark:text-gray-300 leading-relaxed">
+              <p>Welcome to <strong className="text-gray-900 dark:text-white">{settings?.appName || 'JadanPay'}</strong>, Nigeria's most reliable digital top-up platform.</p>
+              <p>Our mission is to bridge the digital divide by providing affordable, reliable, and instant telecommunication services to every Nigerian. We understand that in today's world, staying connected is not a luxury—it's a necessity.</p>
+              <p>Founded with a vision to simplify payments, we have grown from a small reseller into a robust platform serving thousands of users daily. We pride ourselves on our automated delivery systems, bank-grade security, and exceptional customer support.</p>
+              <p>Whether you are an individual looking for cheap data or a business looking to resell VTU services, we have the infrastructure to support your needs.</p>
+            </div>
+          );
+          break;
+        case 'contact':
+          title = "Contact Us";
+          content = (
+            <div className="space-y-6 text-gray-600 dark:text-gray-300">
+               <p>We are here to help 24/7. Reach out to us through any of the channels below.</p>
+               
+               <div className="space-y-4">
+                   <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl flex items-center gap-4">
+                      <div className="bg-green-100 dark:bg-green-900/30 p-3 rounded-full text-green-600">
+                          <Mail size={24} />
+                      </div>
+                      <div>
+                          <p className="font-bold text-gray-900 dark:text-white">Email Support</p>
+                          <p className="text-sm">{settings?.supportEmail || 'help@jadanpay.com'}</p>
+                      </div>
+                   </div>
+
+                   <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl flex items-center gap-4">
+                      <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-full text-blue-600">
+                          <Phone size={24} />
+                      </div>
+                      <div>
+                          <p className="font-bold text-gray-900 dark:text-white">Phone / Whatsapp</p>
+                          <p className="text-sm">{settings?.supportPhone || '0800-JADANPAY'}</p>
+                      </div>
+                   </div>
+
+                   <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl flex items-center gap-4">
+                      <div className="bg-purple-100 dark:bg-purple-900/30 p-3 rounded-full text-purple-600">
+                          <MapPin size={24} />
+                      </div>
+                      <div>
+                          <p className="font-bold text-gray-900 dark:text-white">Head Office</p>
+                          <p className="text-sm">12 Innovation Drive, Yaba, Lagos State, Nigeria.</p>
+                      </div>
+                   </div>
+               </div>
+            </div>
+          );
+          break;
+        case 'privacy':
+          title = "Privacy Policy";
+          content = (
+            <div className="space-y-4 text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
+               <p><strong>1. Information Collection</strong><br/>We collect information you provide directly to us, such as when you create an account, update your profile, or communicate with us. This includes your name, email, phone number, and payment information.</p>
+               <p><strong>2. Use of Information</strong><br/>We use the information we collect to provide, maintain, and improve our services, process transactions, send you technical notices, and communicate with you about products, services, offers, and events.</p>
+               <p><strong>3. Data Security</strong><br/>We implement appropriate technical and organizational measures to protect your personal data against unauthorized access, alteration, disclosure, or destruction.</p>
+               <p><strong>4. Third-Party Sharing</strong><br/>We do not sell your personal data. We may share data with service providers who need access to such information to carry out work on our behalf (e.g., payment processors).</p>
+            </div>
+          );
+          break;
+         case 'terms':
+          title = "Terms of Service";
+          content = (
+            <div className="space-y-4 text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
+               <p><strong>1. Acceptance of Terms</strong><br/>By accessing or using our Services, you agree to be bound by these Terms. If you do not agree to these Terms, do not use our Services.</p>
+               <p><strong>2. Account Security</strong><br/>You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account. You must immediately notify us of any unauthorized use.</p>
+               <p><strong>3. Transactions</strong><br/>All transactions performed on our platform are final once successful. Please ensure you enter the correct beneficiary details (Phone Number, Meter Number, IUC) before confirming any purchase.</p>
+               <p><strong>4. Service Availability</strong><br/>While we strive for 100% uptime, network providers may experience occasional downtime. We are not liable for delays caused by third-party network providers.</p>
+            </div>
+          );
+          break;
+      }
+
+      return (
+        <div className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+           <div className="bg-white dark:bg-gray-900 w-full max-w-lg rounded-3xl p-8 relative shadow-2xl border border-gray-100 dark:border-gray-800 max-h-[85vh] overflow-y-auto">
+              <button 
+                onClick={() => setActiveInfoModal(null)}
+                className="absolute top-6 right-6 p-2 bg-gray-100 dark:bg-gray-800 rounded-full text-gray-500 hover:bg-red-50 hover:text-red-500 transition-colors z-10"
+              >
+                <X size={20} />
+              </button>
+              <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white pr-10">{title}</h2>
+              {content}
+              <div className="mt-8 pt-6 border-t border-gray-100 dark:border-gray-800">
+                  <button 
+                    onClick={() => setActiveInfoModal(null)}
+                    className="w-full py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 transition-colors"
+                  >
+                      Close
+                  </button>
+              </div>
+           </div>
+        </div>
+      );
+  };
+
   return (
     <div className="min-h-screen bg-white text-gray-900 dark:bg-black dark:text-white overflow-x-hidden font-sans selection:bg-green-500 selection:text-black transition-colors duration-300">
       
@@ -60,6 +169,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
           <div className="hidden md:flex gap-8 text-sm font-medium text-gray-600 dark:text-gray-400">
             <a href="#features" className="hover:text-green-600 dark:hover:text-white transition-colors">Features</a>
             <a href="#reviews" className="hover:text-green-600 dark:hover:text-white transition-colors">Reviews</a>
+            <button onClick={() => setActiveInfoModal('about')} className="hover:text-green-600 dark:hover:text-white transition-colors">About</button>
+            <button onClick={() => setActiveInfoModal('contact')} className="hover:text-green-600 dark:hover:text-white transition-colors">Contact</button>
           </div>
           <div className="flex gap-4 items-center">
             <button 
@@ -365,27 +476,27 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
                   <div>
                       <h4 className="font-bold mb-4 text-gray-900 dark:text-white">Services</h4>
                       <ul className="space-y-2 text-sm text-gray-500">
-                          <li><a href="#" className="hover:text-green-600 dark:hover:text-green-400">Buy Data</a></li>
-                          <li><a href="#" className="hover:text-green-600 dark:hover:text-green-400">Airtime Top-up</a></li>
-                          <li><a href="#" className="hover:text-green-600 dark:hover:text-green-400">Cable TV</a></li>
-                          <li><a href="#" className="hover:text-green-600 dark:hover:text-green-400">Electricity</a></li>
+                          <li><button onClick={onLogin} className="hover:text-green-600 dark:hover:text-green-400">Buy Data</button></li>
+                          <li><button onClick={onLogin} className="hover:text-green-600 dark:hover:text-green-400">Airtime Top-up</button></li>
+                          <li><button onClick={onLogin} className="hover:text-green-600 dark:hover:text-green-400">Cable TV</button></li>
+                          <li><button onClick={onLogin} className="hover:text-green-600 dark:hover:text-green-400">Electricity</button></li>
                       </ul>
                   </div>
                   <div>
                       <h4 className="font-bold mb-4 text-gray-900 dark:text-white">Company</h4>
                       <ul className="space-y-2 text-sm text-gray-500">
-                          <li><a href="#" className="hover:text-green-600 dark:hover:text-green-400">About Us</a></li>
-                          <li><a href="#" className="hover:text-green-600 dark:hover:text-green-400">Contact</a></li>
-                          <li><a href="#" className="hover:text-green-600 dark:hover:text-green-400">Privacy Policy</a></li>
-                          <li><a href="#" className="hover:text-green-600 dark:hover:text-green-400">Terms of Service</a></li>
+                          <li><button onClick={() => setActiveInfoModal('about')} className="hover:text-green-600 dark:hover:text-green-400">About Us</button></li>
+                          <li><button onClick={() => setActiveInfoModal('contact')} className="hover:text-green-600 dark:hover:text-green-400">Contact</button></li>
+                          <li><button onClick={() => setActiveInfoModal('privacy')} className="hover:text-green-600 dark:hover:text-green-400">Privacy Policy</button></li>
+                          <li><button onClick={() => setActiveInfoModal('terms')} className="hover:text-green-600 dark:hover:text-green-400">Terms of Service</button></li>
                       </ul>
                   </div>
                   <div>
                       <h4 className="font-bold mb-4 text-gray-900 dark:text-white">Connect</h4>
                       <ul className="space-y-2 text-sm text-gray-500">
-                          <li><a href={settings?.socialLinks?.twitter || "#"} className="hover:text-green-600 dark:hover:text-green-400">Twitter</a></li>
-                          <li><a href={settings?.socialLinks?.instagram || "#"} className="hover:text-green-600 dark:hover:text-green-400">Instagram</a></li>
-                          <li><a href={settings?.socialLinks?.facebook || "#"} className="hover:text-green-600 dark:hover:text-green-400">Facebook</a></li>
+                          <li><a href={settings?.socialLinks?.twitter || "#"} target="_blank" rel="noreferrer" className="hover:text-green-600 dark:hover:text-green-400">Twitter</a></li>
+                          <li><a href={settings?.socialLinks?.instagram || "#"} target="_blank" rel="noreferrer" className="hover:text-green-600 dark:hover:text-green-400">Instagram</a></li>
+                          <li><a href={settings?.socialLinks?.facebook || "#"} target="_blank" rel="noreferrer" className="hover:text-green-600 dark:hover:text-green-400">Facebook</a></li>
                       </ul>
                   </div>
               </div>
@@ -394,6 +505,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
               </div>
           </div>
       </footer>
+      
+      {/* Info Modal Overlay */}
+      {renderInfoModal()}
       
       <div className="hidden"><CheckCircle size={0} /></div>
     </div>
