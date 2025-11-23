@@ -16,10 +16,10 @@ interface DatabaseSchema {
     announcements: Announcement[];
     templates: CommunicationTemplate[];
     notifications: AppNotification[];
-    settings: AppSettings | null; // We can cache settings here too
+    settings: AppSettings | null;
 }
 
-// Default Data (used if LocalStorage is empty)
+// Default Data
 const DEFAULT_BUNDLES: Bundle[] = SAMPLE_BUNDLES.map(b => ({...b, planId: b.id}));
 const DEFAULT_USERS: User[] = MOCK_USERS_DATA.map(u => ({
     ...u,
@@ -29,7 +29,7 @@ const DEFAULT_USERS: User[] = MOCK_USERS_DATA.map(u => ({
     bonusBalance: 0
 })) as User[];
 
-// In-Memory State (Sync with LocalStorage)
+// In-Memory State
 let db: DatabaseSchema = {
     users: [],
     transactions: [],
@@ -43,28 +43,62 @@ let db: DatabaseSchema = {
     settings: null
 };
 
-// --- CORE PERSISTENCE LOGIC ---
+// --- DATA SANITIZATION ---
+// This ensures that even if local storage has old data formats, the app won't crash
+const sanitizeUser = (u: any): User => ({
+    id: u.id || Math.random().toString(36),
+    name: u.name || 'Unknown User',
+    email: u.email || 'missing@email.com',
+    phone: u.phone || '',
+    role: u.role || UserRole.USER,
+    balance: typeof u.balance === 'number' ? u.balance : 0,
+    savings: typeof u.savings === 'number' ? u.savings : 0,
+    bonusBalance: typeof u.bonusBalance === 'number' ? u.bonusBalance : 0,
+    walletNumber: u.walletNumber || '0000000000',
+    referralCode: u.referralCode || 'REF000',
+    referredBy: u.referredBy,
+    referralCount: typeof u.referralCount === 'number' ? u.referralCount : 0,
+    isVerified: !!u.isVerified,
+    avatarUrl: u.avatarUrl,
+    status: u.status || UserStatus.ACTIVE,
+    ipAddress: u.ipAddress || '127.0.0.1',
+    os: u.os || 'Unknown',
+    lastLogin: u.lastLogin || new Date().toISOString()
+});
 
 const loadDatabase = () => {
     try {
         const stored = localStorage.getItem(DB_STORAGE_KEY);
         if (stored) {
             const parsed = JSON.parse(stored);
-            // Merge defaults in case of new schema updates
-            db = { ...db, ...parsed };
-            console.log("Database loaded from LocalStorage");
+            
+            // Deep Merge / Sanitize
+            db = {
+                users: Array.isArray(parsed.users) ? parsed.users.map(sanitizeUser) : DEFAULT_USERS,
+                transactions: Array.isArray(parsed.transactions) ? parsed.transactions : [],
+                bundles: Array.isArray(parsed.bundles) ? parsed.bundles : DEFAULT_BUNDLES,
+                tickets: Array.isArray(parsed.tickets) ? parsed.tickets : [],
+                staffMembers: Array.isArray(parsed.staffMembers) ? parsed.staffMembers : [],
+                roles: Array.isArray(parsed.roles) ? parsed.roles : [],
+                announcements: Array.isArray(parsed.announcements) ? parsed.announcements : [],
+                templates: Array.isArray(parsed.templates) ? parsed.templates : [],
+                notifications: Array.isArray(parsed.notifications) ? parsed.notifications : [],
+                settings: parsed.settings || null // Settings handled by SettingsService mostly
+            };
+            
+            console.log("Database loaded and sanitized.");
         } else {
             console.log("Initializing new Database");
             db.users = DEFAULT_USERS;
             db.bundles = DEFAULT_BUNDLES;
-            // Initialize other arrays as empty
             saveDatabase();
         }
     } catch (e) {
-        console.error("Failed to load database:", e);
+        console.error("Failed to load database (Corrupt Data). Resetting...", e);
         // Fallback to defaults to prevent crash
         db.users = DEFAULT_USERS;
         db.bundles = DEFAULT_BUNDLES;
+        saveDatabase();
     }
 };
 
@@ -76,10 +110,8 @@ const saveDatabase = () => {
     }
 };
 
-// Helper to simulate network delay
 export const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-// Helper Generators
 const generateWalletNumber = () => '2' + Math.random().toString().slice(2, 11);
 const generateReferralCode = (name: string) => name.substring(0,3).toUpperCase() + Math.floor(1000 + Math.random() * 9000);
 
@@ -92,7 +124,6 @@ export const MockDB = {
   getDatabaseDump: async () => {
       await delay(500);
       const currentSettings = await SettingsService.getSettings();
-      // Update DB with latest settings before dump
       db.settings = currentSettings;
       return {
           version: '1.0',
@@ -106,12 +137,10 @@ export const MockDB = {
       if (!dump || !dump.data) throw new Error("Invalid Backup File");
       
       const { data } = dump;
-      // Validate critical keys
       if (!Array.isArray(data.users)) throw new Error("Corrupt Data: Missing Users");
       
       db = data;
       
-      // Update settings service
       if (data.settings) {
           await SettingsService.updateSettings(data.settings);
       }
@@ -150,7 +179,6 @@ export const MockDB = {
       if (emailExists) throw new Error("This email address is already registered.");
       if (phoneExists) throw new Error("This phone number is already registered.");
 
-      // Resolve Referrer
       let referrerId: string | undefined = undefined;
       if (referrerCode && settings.enableReferral) {
           const referrer = db.users.find(u => u.referralCode === referrerCode);
@@ -159,7 +187,6 @@ export const MockDB = {
               referrer.referralCount += 1;
               referrer.bonusBalance += settings.referralReward;
               
-              // Add Bonus Transaction for Referrer
               db.transactions.unshift({
                   id: Math.random().toString(36),
                   userId: referrer.id,
@@ -172,7 +199,6 @@ export const MockDB = {
                   newBalance: referrer.balance
               });
 
-              // Notify Referrer
               MockDB.addNotification({
                   userId: referrer.id,
                   title: 'Referral Bonus Earned!',
@@ -292,12 +318,10 @@ export const MockDB = {
   deleteUser: async (userId: string) => {
       await delay(400);
       db.users = db.users.filter(u => u.id !== userId);
-      // Clean up transactions? Usually keep them for records, but lets keep it simple
       saveDatabase();
   },
 
   // --- TRANSACTIONS ---
-
   getTransactions: async (userId?: string) => {
     await delay(300);
     if (userId) {
@@ -331,7 +355,6 @@ export const MockDB = {
       tx.status = TransactionStatus.SUCCESS;
       tx.adminActionDate = new Date().toISOString();
 
-      // Credit User
       const user = db.users.find(u => u.id === tx.userId);
       if(user) {
           user.balance += tx.amount;
@@ -370,7 +393,6 @@ export const MockDB = {
   },
 
   // --- NOTIFICATIONS ---
-
   getNotifications: async (userId: string) => {
       return db.notifications.filter(n => n.userId === userId).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   },
@@ -397,7 +419,6 @@ export const MockDB = {
   },
 
   // --- TICKETS ---
-
   getTickets: async (userId?: string) => {
     await delay(300);
     if (userId) {
@@ -446,7 +467,6 @@ export const MockDB = {
   },
 
   // --- STAFF & ROLES ---
-
   getStaff: async () => {
       await delay(200);
       return [...db.staffMembers];
@@ -473,7 +493,6 @@ export const MockDB = {
   },
 
   // --- COMMUNICATION ---
-
   getAnnouncements: async () => {
       await delay(200);
       return [...db.announcements];

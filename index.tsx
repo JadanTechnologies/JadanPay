@@ -1,11 +1,19 @@
-
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 
+interface ErrorBoundaryProps {
+  children: React.ReactNode;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: any;
+}
+
 // Simple Error Boundary to catch crashes and prevent white screen
-class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasError: boolean, error: any}> {
-  constructor(props: any) {
+class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false, error: null };
   }
@@ -18,21 +26,59 @@ class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasErr
     console.error("App Crash:", error, errorInfo);
   }
 
+  handleReset = () => {
+      localStorage.clear();
+      window.location.reload();
+  };
+
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{ padding: '20px', textAlign: 'center', fontFamily: 'sans-serif' }}>
-          <h1 style={{color: '#dc2626'}}>Something went wrong.</h1>
-          <p>The application encountered an error. Please try refreshing the page.</p>
+        <div style={{ 
+            padding: '40px', 
+            textAlign: 'center', 
+            fontFamily: 'sans-serif', 
+            height: '100vh', 
+            display: 'flex', 
+            flexDirection: 'column', 
+            justifyContent: 'center', 
+            alignItems: 'center',
+            backgroundColor: '#f9fafb',
+            color: '#1f2937'
+        }}>
+          <h1 style={{color: '#dc2626', marginBottom: '10px', fontSize: '24px'}}>Oops! Something went wrong.</h1>
+          <p style={{marginBottom: '20px', color: '#4b5563'}}>The application encountered an unexpected error.</p>
+          
           <button 
-            onClick={() => { localStorage.clear(); window.location.reload(); }}
-            style={{ padding: '10px 20px', background: '#333', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer'}}
+            onClick={this.handleReset}
+            style={{ 
+                padding: '12px 24px', 
+                background: '#16a34a', 
+                color: '#fff', 
+                border: 'none', 
+                borderRadius: '8px', 
+                cursor: 'pointer',
+                fontWeight: 'bold',
+                fontSize: '14px',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+            }}
           >
             Clear Cache & Restart
           </button>
-          <pre style={{textAlign: 'left', background: '#f5f5f5', padding: '15px', borderRadius: '5px', marginTop: '20px', overflow: 'auto'}}>
-            {this.state.error?.toString()}
-          </pre>
+          
+          <details style={{ marginTop: '20px', maxWidth: '500px', width: '100%', textAlign: 'left' }}>
+              <summary style={{cursor: 'pointer', color: '#6b7280', marginBottom: '10px'}}>View Error Details</summary>
+              <pre style={{
+                  background: '#e5e7eb', 
+                  padding: '15px', 
+                  borderRadius: '8px', 
+                  overflow: 'auto', 
+                  fontSize: '12px',
+                  color: '#374151'
+              }}>
+                {this.state.error?.toString()}
+              </pre>
+          </details>
         </div>
       );
     }
@@ -41,27 +87,32 @@ class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasErr
   }
 }
 
-const rootElement = document.getElementById('root');
-if (!rootElement) {
-  // If root is missing, create it (fallback for some environments)
-  const newRoot = document.createElement('div');
-  newRoot.id = 'root';
-  document.body.appendChild(newRoot);
-  const root = ReactDOM.createRoot(newRoot);
-  root.render(
-    <React.StrictMode>
-      <ErrorBoundary>
-        <App />
-      </ErrorBoundary>
-    </React.StrictMode>
-  );
+const renderApp = () => {
+    const rootElement = document.getElementById('root');
+    let rootNode = rootElement;
+
+    if (!rootElement) {
+        // Create root if missing
+        rootNode = document.createElement('div');
+        rootNode.id = 'root';
+        document.body.appendChild(rootNode);
+    }
+
+    if (rootNode) {
+        const root = ReactDOM.createRoot(rootNode);
+        root.render(
+            <React.StrictMode>
+            <ErrorBoundary>
+                <App />
+            </ErrorBoundary>
+            </React.StrictMode>
+        );
+    }
+};
+
+// Ensure DOM is ready before rendering to prevent "Target container is not a DOM element" errors
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', renderApp);
 } else {
-  const root = ReactDOM.createRoot(rootElement);
-  root.render(
-    <React.StrictMode>
-      <ErrorBoundary>
-        <App />
-      </ErrorBoundary>
-    </React.StrictMode>
-  );
+    renderApp();
 }

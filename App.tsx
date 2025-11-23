@@ -28,14 +28,12 @@ export default function App() {
   // Theme Management
   const [isDarkMode, setIsDarkMode] = useState(false);
 
-  // Initialize theme from system preference
   useEffect(() => {
     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
        setIsDarkMode(true);
     }
   }, []);
 
-  // Update HTML class for Tailwind Dark Mode
   useEffect(() => {
     const root = window.document.documentElement;
     if (isDarkMode) {
@@ -45,20 +43,26 @@ export default function App() {
     }
   }, [isDarkMode]);
 
-  // Try to load user if we have a "session" (simplified logic for this mock)
   useEffect(() => {
-      // In a real app, we check for a token. Here we rely on Auth component to set state.
-      // But if we want persistence across reload without re-login for the user:
-      // We could store the loggedInUserId in localStorage.
-      const savedUserId = localStorage.getItem('JADANPAY_CURRENT_USER_ID');
-      if (savedUserId && !user) {
-          MockDB.getUsers().then(users => {
-              const found = users.find(u => u.id === savedUserId);
-              if (found) {
-                  setUser(found);
-                  setShowLanding(false);
-              }
-          });
+      try {
+          const savedUserId = localStorage.getItem('JADANPAY_CURRENT_USER_ID');
+          if (savedUserId && !user) {
+              MockDB.getUsers().then(users => {
+                  const found = users.find(u => u.id === savedUserId);
+                  if (found) {
+                      setUser(found);
+                      setShowLanding(false);
+                  } else {
+                      // Session invalid
+                      localStorage.removeItem('JADANPAY_CURRENT_USER_ID');
+                  }
+              }).catch(err => {
+                  console.error("Failed to restore session", err);
+                  localStorage.removeItem('JADANPAY_CURRENT_USER_ID');
+              });
+          }
+      } catch (e) {
+          console.error("Critical session error", e);
       }
   }, []);
 
@@ -69,11 +73,15 @@ export default function App() {
   const handleRefreshUser = async () => {
     if(!user) return;
     setIsLoadingUser(true);
-    // Fetch latest user state (balance updates etc)
-    const updatedUserList = await MockDB.getUsers();
-    const currentUser = updatedUserList.find(u => u.id === user.id);
-    if(currentUser) setUser(currentUser);
-    setIsLoadingUser(false);
+    try {
+        const updatedUserList = await MockDB.getUsers();
+        const currentUser = updatedUserList.find(u => u.id === user.id);
+        if(currentUser) setUser(currentUser);
+    } catch (e) {
+        console.error("Failed to refresh user", e);
+    } finally {
+        setIsLoadingUser(false);
+    }
   };
 
   const handleViewReceipt = (txId: string) => {
@@ -88,8 +96,7 @@ export default function App() {
   
   const handleAuthSuccess = (u: User) => {
       setUser(u);
-      localStorage.setItem('JADANPAY_CURRENT_USER_ID', u.id); // Persist session
-      // Redirect Admin strictly to admin dashboard, others to user dashboard
+      localStorage.setItem('JADANPAY_CURRENT_USER_ID', u.id); 
       if (u.role === UserRole.ADMIN) {
           setActiveTab('admin');
       } else {
@@ -129,8 +136,6 @@ export default function App() {
         return <UserProfile user={user} onUpdate={handleRefreshUser} />;
       case 'support':
         return <Support user={user} />;
-      
-      // Admin Routes
       case 'admin':
          return <AdminDashboard />;
       case 'admin-users':
@@ -145,11 +150,9 @@ export default function App() {
          return <AdminStaff />;
       case 'admin-settings':
          return <AdminSettings />;
-      
       case 'reseller':
          return user.role === UserRole.RESELLER ? <ResellerZone /> : <div className="p-10 text-center dark:text-white">Unauthorized</div>;
       default:
-        // Fallback based on role
         if (user.role === UserRole.ADMIN) return <AdminDashboard />;
         return <Dashboard user={user} refreshUser={handleRefreshUser} onViewReceipt={handleViewReceipt} />;
     }
