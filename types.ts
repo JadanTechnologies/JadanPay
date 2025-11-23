@@ -18,6 +18,12 @@ export enum Provider {
   NMOBILE = '9MOBILE',
 }
 
+export enum PlanType {
+  SME = 'SME',
+  GIFTING = 'GIFTING',
+  CORPORATE = 'CORPORATE',
+}
+
 export enum TransactionStatus {
   PENDING = 'PENDING',
   SUCCESS = 'SUCCESS',
@@ -52,6 +58,7 @@ export interface User {
 export interface Bundle {
   id: string;
   provider: Provider;
+  type: PlanType; // New field for plan categorization
   name: string;
   price: number;
   dataAmount: string;

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Save, Globe, Smartphone, Building, Mail, Phone, ShieldAlert, CreditCard, Bell, Clock, FileText, Upload, Link as LinkIcon, Server, Database, Plus, Trash2, Edit2, Check, X } from 'lucide-react';
-import { Provider, Bundle } from '../types';
+import { Provider, Bundle, PlanType } from '../types';
 import { PROVIDER_LOGOS, PROVIDER_COLORS } from '../constants';
 import { SettingsService, AppSettings } from '../services/settingsService';
 import { MockDB } from '../services/mockDb';
@@ -13,7 +13,7 @@ export const AdminSettings: React.FC = () => {
 
   // Bundle Modal State
   const [showBundleModal, setShowBundleModal] = useState(false);
-  const [editingBundle, setEditingBundle] = useState<Partial<Bundle>>({ isAvailable: true, isBestValue: false });
+  const [editingBundle, setEditingBundle] = useState<Partial<Bundle>>({ isAvailable: true, isBestValue: false, type: PlanType.SME });
 
   useEffect(() => {
     loadSettings();
@@ -75,6 +75,7 @@ export const AdminSettings: React.FC = () => {
       const b: Bundle = {
           id: editingBundle.id || Math.random().toString(36).substr(2, 9),
           provider: editingBundle.provider as Provider,
+          type: editingBundle.type || PlanType.SME,
           name: editingBundle.name || `${editingBundle.dataAmount} ${editingBundle.validity}`,
           price: Number(editingBundle.price),
           dataAmount: editingBundle.dataAmount || '0MB',
@@ -86,7 +87,7 @@ export const AdminSettings: React.FC = () => {
 
       await MockDB.saveBundle(b);
       setShowBundleModal(false);
-      setEditingBundle({ isAvailable: true, isBestValue: false });
+      setEditingBundle({ isAvailable: true, isBestValue: false, type: PlanType.SME });
       loadBundles();
   };
 
@@ -228,7 +229,7 @@ export const AdminSettings: React.FC = () => {
                       </h3>
                       <button 
                           onClick={() => {
-                              setEditingBundle({ isAvailable: true, isBestValue: false });
+                              setEditingBundle({ isAvailable: true, isBestValue: false, type: PlanType.SME });
                               setShowBundleModal(true);
                           }}
                           className="flex items-center gap-2 px-4 py-2 bg-green-700 text-white rounded-lg text-sm font-bold shadow-sm hover:bg-green-800"
@@ -242,6 +243,7 @@ export const AdminSettings: React.FC = () => {
                           <thead className="bg-gray-50 text-gray-500 uppercase font-semibold">
                               <tr>
                                   <th className="p-3">Provider</th>
+                                  <th className="p-3">Type</th>
                                   <th className="p-3">Plan Name</th>
                                   <th className="p-3">API Plan ID</th>
                                   <th className="p-3">Price (₦)</th>
@@ -256,6 +258,9 @@ export const AdminSettings: React.FC = () => {
                                           <span className={`px-2 py-1 rounded text-[10px] font-bold text-white ${PROVIDER_COLORS[b.provider]}`}>
                                               {PROVIDER_LOGOS[b.provider]}
                                           </span>
+                                      </td>
+                                      <td className="p-3">
+                                          <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded font-bold text-[10px]">{b.type || 'SME'}</span>
                                       </td>
                                       <td className="p-3 font-medium text-gray-800">{b.name}</td>
                                       <td className="p-3 font-mono text-gray-500">{b.planId}</td>
@@ -460,19 +465,34 @@ export const AdminSettings: React.FC = () => {
               <div className="bg-white w-full max-w-md rounded-2xl p-6 shadow-2xl">
                   <h3 className="font-bold text-lg mb-4">{editingBundle.id ? 'Edit' : 'Add'} Data Plan</h3>
                   <div className="space-y-3">
-                      <div>
-                          <label className="text-xs font-bold text-gray-500 block mb-1">Provider</label>
-                          <select 
-                            className="w-full p-3 border rounded-xl bg-white"
-                            value={editingBundle.provider || ''}
-                            onChange={e => setEditingBundle({...editingBundle, provider: e.target.value as Provider})}
-                          >
-                              <option value="" disabled>Select Provider</option>
-                              {Object.values(Provider).map(p => (
-                                  <option key={p} value={p}>{PROVIDER_LOGOS[p]}</option>
-                              ))}
-                          </select>
+                      <div className="grid grid-cols-2 gap-3">
+                          <div>
+                              <label className="text-xs font-bold text-gray-500 block mb-1">Provider</label>
+                              <select 
+                                className="w-full p-3 border rounded-xl bg-white"
+                                value={editingBundle.provider || ''}
+                                onChange={e => setEditingBundle({...editingBundle, provider: e.target.value as Provider})}
+                              >
+                                  <option value="" disabled>Select Provider</option>
+                                  {Object.values(Provider).map(p => (
+                                      <option key={p} value={p}>{PROVIDER_LOGOS[p]}</option>
+                                  ))}
+                              </select>
+                          </div>
+                          <div>
+                              <label className="text-xs font-bold text-gray-500 block mb-1">Plan Type</label>
+                              <select 
+                                className="w-full p-3 border rounded-xl bg-white"
+                                value={editingBundle.type || PlanType.SME}
+                                onChange={e => setEditingBundle({...editingBundle, type: e.target.value as PlanType})}
+                              >
+                                  {Object.values(PlanType).map(t => (
+                                      <option key={t} value={t}>{t}</option>
+                                  ))}
+                              </select>
+                          </div>
                       </div>
+                      
                       <div className="grid grid-cols-2 gap-3">
                           <div>
                               <label className="text-xs font-bold text-gray-500 block mb-1">Data Amount</label>

@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Provider, Bundle, User, TransactionType, Transaction } from '../types';
+import { Provider, Bundle, User, TransactionType, Transaction, PlanType } from '../types';
 import { PROVIDER_COLORS, PROVIDER_LOGOS } from '../constants';
 import { processAirtimePurchase, processDataPurchase } from '../services/topupService';
 import { SettingsService } from '../services/settingsService';
 import { MockDB } from '../services/mockDb';
-import { Smartphone, Wifi, PiggyBank, Loader2, Sparkles, Star, Check, AlertTriangle, Info, Share2, Ban, Signal, SignalHigh, SignalMedium, SignalLow } from 'lucide-react';
+import { Smartphone, Wifi, PiggyBank, Loader2, Sparkles, Star, Check, AlertTriangle, Info, Share2, Ban, Signal, SignalHigh, SignalMedium, SignalLow, Filter } from 'lucide-react';
 
 interface TopUpFormProps {
   user: User;
@@ -13,7 +13,6 @@ interface TopUpFormProps {
 }
 
 // Define specific limits per provider to mimic real-world restrictions
-// Updated to enforce reasonable range (100 - 50,000) as requested
 const PROVIDER_LIMITS: Record<Provider, { min: number; max: number }> = {
   [Provider.MTN]: { min: 100, max: 50000 },
   [Provider.GLO]: { min: 100, max: 50000 },
@@ -27,6 +26,11 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
   const [phone, setPhone] = useState<string>('');
   const [amount, setAmount] = useState<number | ''>('');
   const [selectedBundle, setSelectedBundle] = useState<Bundle | null>(null);
+  
+  // Plan Type State
+  const [selectedPlanType, setSelectedPlanType] = useState<PlanType>(PlanType.SME);
+  const [availablePlanTypes, setAvailablePlanTypes] = useState<PlanType[]>([]);
+
   const [loading, setLoading] = useState(false);
   const [roundUp, setRoundUp] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -76,6 +80,23 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
       }
     }
   }, [phone, providerStatus]);
+
+  // Update available plan types when provider or bundles change
+  useEffect(() => {
+      if (type === TransactionType.DATA) {
+          const typesForProvider = Array.from(new Set(
+              bundles.filter(b => b.provider === provider).map(b => b.type)
+          ));
+          setAvailablePlanTypes(typesForProvider);
+          
+          // Default to SME if available, else first available
+          if (typesForProvider.includes(PlanType.SME)) {
+              setSelectedPlanType(PlanType.SME);
+          } else if (typesForProvider.length > 0) {
+              setSelectedPlanType(typesForProvider[0]);
+          }
+      }
+  }, [provider, bundles, type]);
 
   // Reset selection when provider changes to prevent invalid states
   useEffect(() => {
@@ -157,12 +178,13 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
             return;
         }
         
+        // Validation: Check if bundle is marked as available
         if (selectedBundle.isAvailable === false) {
              setError("Selected bundle is currently unavailable.");
              return;
         }
 
-        // Ensure bundle belongs to selected provider (Availability check)
+        // Validation: Ensure bundle belongs to selected provider
         const isBundleValid = bundles.some(
             b => b.id === selectedBundle.id && b.provider === provider
         );
@@ -185,7 +207,6 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
       if (type === TransactionType.AIRTIME) {
         tx = await processAirtimePurchase(user, provider, Number(amount), phone, roundUp);
       } else {
-        // We validated selectedBundle exists in handleFormSubmit
         tx = await processDataPurchase(user, selectedBundle!, phone, roundUp);
       }
       
@@ -203,7 +224,8 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
     }
   };
 
-  const filteredBundles = bundles.filter(b => b.provider === provider);
+  // Filter bundles by provider AND selected plan type
+  const filteredBundles = bundles.filter(b => b.provider === provider && b.type === selectedPlanType);
   const currentLimits = PROVIDER_LIMITS[provider];
   const successRate = providerStats[provider] ?? 100;
 
@@ -216,7 +238,7 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
          desc = `Airtime Top-up`;
      } else {
          cost = selectedBundle ? selectedBundle.price : 0;
-         desc = selectedBundle ? `${selectedBundle.name} Data` : '';
+         desc = selectedBundle ? `${selectedBundle.name} (${selectedBundle.type})` : '';
      }
 
      let total = cost;
@@ -382,82 +404,106 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3 animate-fade-in pb-2">
-            {filteredBundles.map((b) => {
-              const isAvailable = b.isAvailable !== false; // Default true if undefined
-              return (
-              <div
-                key={b.id}
-                onClick={() => handleBundleSelect(b)}
-                className={`group relative p-3 rounded-2xl border-2 transition-all duration-300 ease-out overflow-hidden flex flex-col justify-between min-h-[140px] ${
-                  !isAvailable 
-                    ? 'border-gray-100 bg-gray-50 opacity-60 cursor-not-allowed grayscale'
-                    : selectedBundle?.id === b.id 
-                        ? 'cursor-pointer border-green-600 bg-green-50 shadow-lg scale-[1.02] ring-2 ring-green-400 ring-offset-2 z-10' 
-                        : 'cursor-pointer border-gray-100 bg-white hover:border-green-200 hover:shadow-xl hover:-translate-y-1 hover:bg-green-50/20'
-                }`}
-              >
-                {/* Best Value Badge */}
-                {b.isBestValue && isAvailable && (
-                  <div className="absolute top-0 right-0 z-20">
-                    <div className="bg-gradient-to-br from-yellow-400 to-orange-500 text-white text-[9px] font-black px-2 py-1 rounded-bl-xl shadow-sm flex items-center gap-1">
-                       <Star size={8} className="fill-white" /> BEST VALUE
-                    </div>
-                  </div>
-                )}
+          <div className="animate-fade-in">
+             {/* Plan Type Selector */}
+             {availablePlanTypes.length > 0 ? (
+                <div className="flex gap-2 mb-4 overflow-x-auto pb-1 scrollbar-hide">
+                    {availablePlanTypes.map(pt => (
+                        <button
+                            key={pt}
+                            type="button"
+                            onClick={() => { setSelectedPlanType(pt); setSelectedBundle(null); }}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all ${
+                                selectedPlanType === pt 
+                                ? 'bg-green-700 text-white shadow-md' 
+                                : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                            }`}
+                        >
+                            {pt === PlanType.CORPORATE ? 'CORP. GIFTING' : pt}
+                        </button>
+                    ))}
+                </div>
+             ) : (
+                 <div className="text-xs text-center text-gray-400 mb-2">Fetching plans...</div>
+             )}
 
-                {/* Unavailable Badge */}
-                {!isAvailable && (
-                     <div className="absolute top-0 right-0 z-20">
-                        <div className="bg-gray-400 text-white text-[9px] font-black px-2 py-1 rounded-bl-xl shadow-sm flex items-center gap-1">
-                           <Ban size={8} /> SOLD OUT
+             <div className="grid grid-cols-2 gap-3 pb-2">
+                {filteredBundles.map((b) => {
+                const isAvailable = b.isAvailable !== false; // Default true if undefined
+                return (
+                <div
+                    key={b.id}
+                    onClick={() => handleBundleSelect(b)}
+                    className={`group relative p-3 rounded-2xl border-2 transition-all duration-300 ease-out overflow-hidden flex flex-col justify-between min-h-[140px] ${
+                    !isAvailable 
+                        ? 'border-gray-100 bg-gray-50 opacity-60 cursor-not-allowed grayscale'
+                        : selectedBundle?.id === b.id 
+                            ? 'cursor-pointer border-green-600 bg-green-50 shadow-lg scale-[1.02] ring-2 ring-green-400 ring-offset-2 z-10' 
+                            : 'cursor-pointer border-gray-100 bg-white hover:border-green-200 hover:shadow-xl hover:-translate-y-1 hover:bg-green-50/20'
+                    }`}
+                >
+                    {/* Best Value Badge */}
+                    {b.isBestValue && isAvailable && (
+                    <div className="absolute top-0 right-0 z-20">
+                        <div className="bg-gradient-to-br from-yellow-400 to-orange-500 text-white text-[9px] font-black px-2 py-1 rounded-bl-xl shadow-sm flex items-center gap-1">
+                        <Star size={8} className="fill-white" /> BEST VALUE
                         </div>
-                     </div>
-                )}
-                
-                {/* Checkmark Indicator */}
-                {selectedBundle?.id === b.id && isAvailable && (
-                    <div className="absolute top-3 left-3 bg-green-600 text-white rounded-full p-0.5 shadow-sm animate-in zoom-in duration-200">
-                        <Check size={12} strokeWidth={4} />
                     </div>
-                )}
+                    )}
 
-                <div className="flex flex-col items-center text-center relative z-10 mt-2">
-                    <div className={`text-2xl font-black tracking-tight transition-colors ${
-                        selectedBundle?.id === b.id ? 'text-green-800' : 'text-gray-800 group-hover:text-green-700'
+                    {/* Unavailable Badge */}
+                    {!isAvailable && (
+                        <div className="absolute top-0 right-0 z-20">
+                            <div className="bg-gray-400 text-white text-[9px] font-black px-2 py-1 rounded-bl-xl shadow-sm flex items-center gap-1">
+                            <Ban size={8} /> SOLD OUT
+                            </div>
+                        </div>
+                    )}
+                    
+                    {/* Checkmark Indicator */}
+                    {selectedBundle?.id === b.id && isAvailable && (
+                        <div className="absolute top-3 left-3 bg-green-600 text-white rounded-full p-0.5 shadow-sm animate-in zoom-in duration-200">
+                            <Check size={12} strokeWidth={4} />
+                        </div>
+                    )}
+
+                    <div className="flex flex-col items-center text-center relative z-10 mt-2">
+                        <div className={`text-2xl font-black tracking-tight transition-colors ${
+                            selectedBundle?.id === b.id ? 'text-green-800' : 'text-gray-800 group-hover:text-green-700'
+                        }`}>
+                            {b.dataAmount}
+                        </div>
+                        <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1 mb-2 bg-gray-100 px-2 py-0.5 rounded-md">
+                            {b.validity}
+                        </div>
+                    </div>
+
+                    {/* Price Section */}
+                    <div className={`w-full py-2 rounded-xl font-mono font-bold text-sm text-center transition-all duration-300 mt-auto ${
+                        selectedBundle?.id === b.id 
+                        ? 'bg-green-600 text-white shadow-md transform scale-105' 
+                        : 'bg-gray-50 text-gray-600 group-hover:bg-white group-hover:shadow-md group-hover:text-green-700 border border-gray-100 group-hover:border-green-100'
                     }`}>
-                        {b.dataAmount}
+                        ₦{b.price.toLocaleString()}
                     </div>
-                    <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1 mb-2 bg-gray-100 px-2 py-0.5 rounded-md">
-                        {b.validity}
+                    
+                    {/* Subtle Background Decoration */}
+                    <div className={`absolute -bottom-5 -right-5 transition-all duration-500 ${
+                        selectedBundle?.id === b.id 
+                        ? 'text-green-200 opacity-30 rotate-0 scale-125' 
+                        : 'text-gray-50 opacity-0 group-hover:opacity-100 group-hover:text-green-50 -rotate-12'
+                    } pointer-events-none`}>
+                        <Wifi size={64} />
                     </div>
                 </div>
-
-                {/* Price Section */}
-                <div className={`w-full py-2 rounded-xl font-mono font-bold text-sm text-center transition-all duration-300 mt-auto ${
-                    selectedBundle?.id === b.id 
-                    ? 'bg-green-600 text-white shadow-md transform scale-105' 
-                    : 'bg-gray-50 text-gray-600 group-hover:bg-white group-hover:shadow-md group-hover:text-green-700 border border-gray-100 group-hover:border-green-100'
-                }`}>
-                    ₦{b.price.toLocaleString()}
-                </div>
-                
-                {/* Subtle Background Decoration */}
-                 <div className={`absolute -bottom-5 -right-5 transition-all duration-500 ${
-                     selectedBundle?.id === b.id 
-                     ? 'text-green-200 opacity-30 rotate-0 scale-125' 
-                     : 'text-gray-50 opacity-0 group-hover:opacity-100 group-hover:text-green-50 -rotate-12'
-                 } pointer-events-none`}>
-                    <Wifi size={64} />
-                 </div>
-              </div>
-            )})}
-            {filteredBundles.length === 0 && (
-                <div className="col-span-2 text-center py-8 text-gray-400 border border-dashed rounded-xl">
-                    <Wifi className="mx-auto mb-2 opacity-30"/>
-                    <p className="text-xs">No plans available for {PROVIDER_LOGOS[provider]}</p>
-                </div>
-            )}
+                )})}
+                {filteredBundles.length === 0 && (
+                    <div className="col-span-2 text-center py-8 text-gray-400 border border-dashed rounded-xl">
+                        <Wifi className="mx-auto mb-2 opacity-30"/>
+                        <p className="text-xs">No {selectedPlanType.toLowerCase()} plans available for {PROVIDER_LOGOS[provider]}</p>
+                    </div>
+                )}
+            </div>
           </div>
         )}
 

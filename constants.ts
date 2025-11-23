@@ -1,4 +1,4 @@
-import { Provider, Bundle, UserStatus, UserRole } from './types';
+import { Provider, Bundle, UserStatus, UserRole, PlanType } from './types';
 
 export const PROVIDER_COLORS = {
   [Provider.MTN]: 'bg-yellow-400 text-black',
@@ -17,17 +17,18 @@ export const PROVIDER_LOGOS = {
 // IDs updated to mock realistic Plan IDs for BilalSadaSub
 export const SAMPLE_BUNDLES: Bundle[] = [
   // MTN
-  { id: '1001', planId: '1001', provider: Provider.MTN, name: '1.5GB Monthly', price: 1000, dataAmount: '1.5GB', validity: '30 Days', isBestValue: true, isAvailable: true },
-  { id: '1002', planId: '1002', provider: Provider.MTN, name: '2GB Weekly', price: 500, dataAmount: '2GB', validity: '7 Days', isAvailable: false },
-  { id: '1003', planId: '1003', provider: Provider.MTN, name: '10GB Monthly', price: 3000, dataAmount: '10GB', validity: '30 Days', isAvailable: true },
+  { id: '1001', planId: '1001', provider: Provider.MTN, type: PlanType.SME, name: '1.5GB SME Monthly', price: 1000, dataAmount: '1.5GB', validity: '30 Days', isBestValue: true, isAvailable: true },
+  { id: '1002', planId: '1002', provider: Provider.MTN, type: PlanType.SME, name: '2GB SME Weekly', price: 500, dataAmount: '2GB', validity: '7 Days', isAvailable: false },
+  { id: '1003', planId: '1003', provider: Provider.MTN, type: PlanType.CORPORATE, name: '10GB Corporate', price: 3000, dataAmount: '10GB', validity: '30 Days', isAvailable: true },
+  { id: '1004', planId: '1004', provider: Provider.MTN, type: PlanType.GIFTING, name: '5GB Gifting', price: 2500, dataAmount: '5GB', validity: '30 Days', isAvailable: true },
   // GLO
-  { id: '2001', planId: '2001', provider: Provider.GLO, name: '1.8GB Monthly', price: 1000, dataAmount: '1.8GB', validity: '30 Days', isAvailable: true },
-  { id: '2002', planId: '2002', provider: Provider.GLO, name: '7GB Monthly', price: 2500, dataAmount: '7GB', validity: '30 Days', isBestValue: true, isAvailable: true },
+  { id: '2001', planId: '2001', provider: Provider.GLO, type: PlanType.GIFTING, name: '1.8GB Monthly', price: 1000, dataAmount: '1.8GB', validity: '30 Days', isAvailable: true },
+  { id: '2002', planId: '2002', provider: Provider.GLO, type: PlanType.CORPORATE, name: '7GB Monthly', price: 2500, dataAmount: '7GB', validity: '30 Days', isBestValue: true, isAvailable: true },
   // AIRTEL
-  { id: '3001', planId: '3001', provider: Provider.AIRTEL, name: '1.5GB Monthly', price: 1000, dataAmount: '1.5GB', validity: '30 Days', isAvailable: true },
-  { id: '3002', planId: '3002', provider: Provider.AIRTEL, name: '4.5GB Monthly', price: 2000, dataAmount: '4.5GB', validity: '30 Days', isAvailable: true },
+  { id: '3001', planId: '3001', provider: Provider.AIRTEL, type: PlanType.CORPORATE, name: '1.5GB Corporate', price: 1000, dataAmount: '1.5GB', validity: '30 Days', isAvailable: true },
+  { id: '3002', planId: '3002', provider: Provider.AIRTEL, type: PlanType.GIFTING, name: '4.5GB Gifting', price: 2000, dataAmount: '4.5GB', validity: '30 Days', isAvailable: true },
   // 9MOBILE
-  { id: '4001', planId: '4001', provider: Provider.NMOBILE, name: '1.5GB Monthly', price: 1000, dataAmount: '1.5GB', validity: '30 Days', isAvailable: true },
+  { id: '4001', planId: '4001', provider: Provider.NMOBILE, type: PlanType.SME, name: '1.5GB SME', price: 1000, dataAmount: '1.5GB', validity: '30 Days', isAvailable: true },
 ];
 
 export const MOCK_USERS_DATA = [
