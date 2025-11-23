@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { User, Ticket } from '../types';
 import { MockDB } from '../services/mockDb';
-import { MessageSquare, Send, Plus, X, AlertCircle, LifeBuoy } from 'lucide-react';
+import { MessageSquare, Send, Plus, X, LifeBuoy } from 'lucide-react';
 import { playNotification } from '../utils/audio';
 
 interface SupportProps {
@@ -34,9 +34,10 @@ export const Support: React.FC<SupportProps> = ({ user }) => {
     setLoading(true);
     try {
         const data = await MockDB.getTickets(user.id);
-        setTickets(data);
+        setTickets(data || []); // Ensure data is array
     } catch (e) {
         console.error("Failed to load tickets", e);
+        setTickets([]);
     } finally {
         setLoading(false);
     }
@@ -48,12 +49,14 @@ export const Support: React.FC<SupportProps> = ({ user }) => {
     
     setIsSubmitting(true);
     try {
-        await MockDB.createTicket(user.id, newSubject, newMessage, newPriority);
+        const ticket = await MockDB.createTicket(user.id, newSubject, newMessage, newPriority);
         playNotification("Support ticket created successfully.");
         setShowCreateModal(false);
         setNewSubject('');
         setNewMessage('');
+        // Refresh and select
         await loadTickets();
+        setSelectedTicket(ticket);
     } catch (error) {
         alert("Failed to create ticket");
     } finally {

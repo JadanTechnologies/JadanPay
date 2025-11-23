@@ -364,59 +364,191 @@ export const AdminSettings: React.FC = () => {
 
               {/* --- PAYMENT SETTINGS --- */}
               {activeTab === 'payment' && (
-                  <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-6">
-                       <h3 className="font-bold text-gray-800 mb-4 border-b pb-2">Manual Funding (Bank Transfer)</h3>
-                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                           <div>
-                               <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Bank Name</label>
-                               <input 
-                                  value={settings.bankName}
-                                  onChange={e => setSettings({...settings, bankName: e.target.value})}
-                                  className="w-full p-3 border rounded-xl"
-                               />
+                  <div className="space-y-6">
+                      {/* Manual Funding Config */}
+                      <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-4">
+                           <h3 className="font-bold text-gray-800 mb-4 border-b pb-2">Manual Funding (Bank Transfer)</h3>
+                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                               <div>
+                                   <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Bank Name</label>
+                                   <input 
+                                      value={settings.bankName}
+                                      onChange={e => setSettings({...settings, bankName: e.target.value})}
+                                      className="w-full p-3 border rounded-xl"
+                                   />
+                               </div>
+                               <div>
+                                   <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Account Number</label>
+                                   <input 
+                                      value={settings.accountNumber}
+                                      onChange={e => setSettings({...settings, accountNumber: e.target.value})}
+                                      className="w-full p-3 border rounded-xl"
+                                   />
+                               </div>
+                                <div>
+                                   <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Account Name</label>
+                                   <input 
+                                      value={settings.accountName}
+                                      onChange={e => setSettings({...settings, accountName: e.target.value})}
+                                      className="w-full p-3 border rounded-xl"
+                                   />
+                               </div>
+                           </div>
+                      </div>
+
+                      {/* Paystack Config */}
+                      <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-4 relative overflow-hidden">
+                           <div className="absolute top-0 right-0 w-2 h-full bg-blue-500"></div>
+                           <h3 className="font-bold text-gray-800 mb-2">Paystack Integration</h3>
+                           <div className="flex items-center gap-4 mb-4">
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input 
+                                        type="checkbox" 
+                                        checked={settings.enablePaystack}
+                                        onChange={e => setSettings({...settings, enablePaystack: e.target.checked})}
+                                        className="w-5 h-5 accent-blue-600"
+                                    />
+                                    <span className="font-medium text-sm">Enable Paystack</span>
+                                </label>
+                           </div>
+                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                               <div>
+                                   <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Public Key</label>
+                                   <input 
+                                      type="password"
+                                      value={settings.paystackPublicKey}
+                                      onChange={e => setSettings({...settings, paystackPublicKey: e.target.value})}
+                                      className="w-full p-3 border rounded-xl font-mono text-sm"
+                                      placeholder="pk_test_..."
+                                   />
+                               </div>
+                               <div>
+                                   <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Secret Key</label>
+                                   <input 
+                                      type="password"
+                                      value={settings.paystackSecretKey}
+                                      onChange={e => setSettings({...settings, paystackSecretKey: e.target.value})}
+                                      className="w-full p-3 border rounded-xl font-mono text-sm"
+                                      placeholder="sk_test_..."
+                                   />
+                               </div>
+                           </div>
+                      </div>
+
+                       {/* Flutterwave Config */}
+                      <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-4 relative overflow-hidden">
+                           <div className="absolute top-0 right-0 w-2 h-full bg-orange-500"></div>
+                           <h3 className="font-bold text-gray-800 mb-2">Flutterwave Integration</h3>
+                           <div className="flex items-center gap-4 mb-4">
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input 
+                                        type="checkbox" 
+                                        checked={settings.enableFlutterwave}
+                                        onChange={e => setSettings({...settings, enableFlutterwave: e.target.checked})}
+                                        className="w-5 h-5 accent-orange-600"
+                                    />
+                                    <span className="font-medium text-sm">Enable Flutterwave</span>
+                                </label>
+                           </div>
+                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                               <div>
+                                   <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Public Key</label>
+                                   <input 
+                                      type="password"
+                                      value={settings.flutterwavePublicKey}
+                                      onChange={e => setSettings({...settings, flutterwavePublicKey: e.target.value})}
+                                      className="w-full p-3 border rounded-xl font-mono text-sm"
+                                      placeholder="FLWPUBK_TEST..."
+                                   />
+                               </div>
+                               <div>
+                                   <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Secret Key</label>
+                                   <input 
+                                      type="password"
+                                      value={settings.flutterwaveSecretKey}
+                                      onChange={e => setSettings({...settings, flutterwaveSecretKey: e.target.value})}
+                                      className="w-full p-3 border rounded-xl font-mono text-sm"
+                                      placeholder="FLWSECK_TEST..."
+                                   />
+                               </div>
+                           </div>
+                      </div>
+
+                       {/* Monnify Config */}
+                      <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-4 relative overflow-hidden">
+                           <div className="absolute top-0 right-0 w-2 h-full bg-indigo-500"></div>
+                           <h3 className="font-bold text-gray-800 mb-2">Monnify Integration</h3>
+                           <div className="flex items-center gap-4 mb-4">
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input 
+                                        type="checkbox" 
+                                        checked={settings.enableMonnify}
+                                        onChange={e => setSettings({...settings, enableMonnify: e.target.checked})}
+                                        className="w-5 h-5 accent-indigo-600"
+                                    />
+                                    <span className="font-medium text-sm">Enable Monnify</span>
+                                </label>
+                           </div>
+                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                               <div>
+                                   <label className="block text-xs font-bold text-gray-500 uppercase mb-1">API Key</label>
+                                   <input 
+                                      type="password"
+                                      value={settings.monnifyApiKey}
+                                      onChange={e => setSettings({...settings, monnifyApiKey: e.target.value})}
+                                      className="w-full p-3 border rounded-xl font-mono text-sm"
+                                      placeholder="MK_TEST..."
+                                   />
+                               </div>
+                               <div>
+                                   <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Secret Key</label>
+                                   <input 
+                                      type="password"
+                                      value={settings.monnifySecretKey}
+                                      onChange={e => setSettings({...settings, monnifySecretKey: e.target.value})}
+                                      className="w-full p-3 border rounded-xl font-mono text-sm"
+                                      placeholder="MS_TEST..."
+                                   />
+                               </div>
+                               <div>
+                                   <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Contract Code</label>
+                                   <input 
+                                      value={settings.monnifyContractCode}
+                                      onChange={e => setSettings({...settings, monnifyContractCode: e.target.value})}
+                                      className="w-full p-3 border rounded-xl font-mono text-sm"
+                                      placeholder="1234567890"
+                                   />
+                               </div>
+                           </div>
+                      </div>
+
+                      {/* Referral Config */}
+                       <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-4">
+                           <h3 className="font-bold text-gray-800 mb-4 border-b pb-2">Referral System</h3>
+                           <div className="flex items-center gap-4 mb-4">
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input 
+                                        type="checkbox" 
+                                        checked={settings.enableReferral}
+                                        onChange={e => setSettings({...settings, enableReferral: e.target.checked})}
+                                        className="w-5 h-5 accent-green-600"
+                                    />
+                                    <span className="font-medium">Enable Referral Bonus</span>
+                                </label>
                            </div>
                            <div>
-                               <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Account Number</label>
+                               <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Bonus Amount (₦)</label>
                                <input 
-                                  value={settings.accountNumber}
-                                  onChange={e => setSettings({...settings, accountNumber: e.target.value})}
-                                  className="w-full p-3 border rounded-xl"
-                               />
-                           </div>
-                            <div>
-                               <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Account Name</label>
-                               <input 
-                                  value={settings.accountName}
-                                  onChange={e => setSettings({...settings, accountName: e.target.value})}
-                                  className="w-full p-3 border rounded-xl"
+                                  type="number"
+                                  value={settings.referralReward}
+                                  onChange={e => setSettings({...settings, referralReward: Number(e.target.value)})}
+                                  className="w-full max-w-xs p-3 border rounded-xl"
                                />
                            </div>
                        </div>
 
-                       <h3 className="font-bold text-gray-800 mb-4 border-b pb-2 pt-4">Referral System</h3>
-                       <div className="flex items-center gap-4 mb-4">
-                            <label className="flex items-center gap-2 cursor-pointer">
-                                <input 
-                                    type="checkbox" 
-                                    checked={settings.enableReferral}
-                                    onChange={e => setSettings({...settings, enableReferral: e.target.checked})}
-                                    className="w-5 h-5 accent-green-600"
-                                />
-                                <span className="font-medium">Enable Referral Bonus</span>
-                            </label>
-                       </div>
-                       <div>
-                           <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Bonus Amount (₦)</label>
-                           <input 
-                              type="number"
-                              value={settings.referralReward}
-                              onChange={e => setSettings({...settings, referralReward: Number(e.target.value)})}
-                              className="w-full max-w-xs p-3 border rounded-xl"
-                           />
-                       </div>
-
-                       <button onClick={handleSave} disabled={isSaving} className="mt-4 px-6 py-3 bg-green-700 text-white rounded-xl font-bold hover:bg-green-800">
-                          {isSaving ? 'Saving...' : 'Save Payment Settings'}
+                       <button onClick={handleSave} disabled={isSaving} className="px-6 py-3 bg-green-700 text-white rounded-xl font-bold hover:bg-green-800 w-full md:w-auto">
+                          {isSaving ? 'Saving...' : 'Save Payment Configuration'}
                       </button>
                   </div>
               )}

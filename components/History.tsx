@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import { Transaction, TransactionStatus, Provider, User } from '../types';
 import { MockDB } from '../services/mockDb';
-import { X, Share2, CheckCircle2, Download, RefreshCw, Check, Search, Calendar } from 'lucide-react';
+import { X, Share2, CheckCircle2, Download, RefreshCw, Check, Search, Calendar, Copy } from 'lucide-react';
 import { PROVIDER_LOGOS, PROVIDER_COLORS } from '../constants';
 
 interface HistoryProps {
@@ -78,6 +79,11 @@ export const History: React.FC<HistoryProps> = ({ user, highlightId }) => {
     }).catch(err => {
       console.error('Failed to copy', err);
     });
+  };
+  
+  const handleCopyRef = (ref: string) => {
+      navigator.clipboard.writeText(ref);
+      // Could show toast here, but for now simple UX
   };
 
   const filteredTransactions = transactions.filter(t => 
@@ -194,12 +200,24 @@ export const History: React.FC<HistoryProps> = ({ user, highlightId }) => {
                 <div className="absolute top-0 left-0 w-full h-3 bg-green-700" style={{clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%, 0 0, 5% 50%, 10% 0, 15% 50%, 20% 0, 25% 50%, 30% 0, 35% 50%, 40% 0, 45% 50%, 50% 0, 55% 50%, 60% 0, 65% 50%, 70% 0, 75% 50%, 80% 0, 85% 50%, 90% 0, 95% 50%, 100% 0)"}}></div>
 
                 {/* Prominent Amount Display */}
-                <div className="flex flex-col items-center mb-8 pb-8 border-b border-dashed border-gray-200">
-                    <span className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-2">Total Amount</span>
+                <div className="flex flex-col items-center mb-6 text-center">
+                    <span className="text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-1">Total Amount</span>
                     <span className="text-5xl font-black text-gray-900 tracking-tighter">
                         ₦{selectedTx.amount.toLocaleString()}
                     </span>
+                    
+                    {/* Reference ID Pill */}
+                    <button 
+                        onClick={() => handleCopyRef(selectedTx.reference)}
+                        className="mt-3 flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-600 px-3 py-1 rounded-full text-xs font-mono transition-colors group"
+                        title="Click to copy"
+                    >
+                        <span>{selectedTx.reference}</span>
+                        <Copy size={10} className="opacity-50 group-hover:opacity-100"/>
+                    </button>
                 </div>
+                
+                <div className="h-px bg-gray-100 w-full mb-6"></div>
 
                 <div className="space-y-4">
                     {/* Provider with Logo */}
@@ -233,12 +251,6 @@ export const History: React.FC<HistoryProps> = ({ user, highlightId }) => {
                                 {selectedTx.destinationNumber || user.email}
                             </span>
                         </div>
-                    </div>
-
-                    {/* Reference */}
-                    <div className="flex justify-between items-center pt-4 border-t border-dashed border-gray-200 mt-2">
-                        <span className="text-gray-400 text-xs font-medium">Ref ID</span>
-                        <span className="font-mono text-xs text-gray-500">{selectedTx.reference}</span>
                     </div>
                 </div>
 

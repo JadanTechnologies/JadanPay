@@ -2,8 +2,8 @@
 import React, { useEffect, useState } from 'react';
 import { Transaction, User } from '../types';
 import { MockDB } from '../services/mockDb';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
-import { Download, Users, TrendingUp, AlertCircle, DollarSign, Wallet } from 'lucide-react';
+import { PieChart, Pie, Cell, Legend, Tooltip, ResponsiveContainer } from 'recharts';
+import { Download, Users, TrendingUp, DollarSign, Wallet } from 'lucide-react';
 
 export const AdminDashboard: React.FC = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -103,10 +103,9 @@ export const AdminDashboard: React.FC = () => {
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
          {/* Chart Container - Fixed Height to prevent Recharts crash */}
-         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col h-[450px]">
+         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col h-[400px]">
             <h3 className="font-bold text-gray-700 mb-4 h-6 shrink-0">Transaction Volume by Provider</h3>
-            {/* Explicit width and height for container */}
-            <div className="w-full h-[350px] min-w-0">
+            <div className="w-full h-[300px] relative">
                 {providerData.length > 0 ? (
                     <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
@@ -128,14 +127,14 @@ export const AdminDashboard: React.FC = () => {
                         </PieChart>
                     </ResponsiveContainer>
                 ) : (
-                    <div className="flex items-center justify-center h-full text-gray-400 border-2 border-dashed rounded-xl">
+                    <div className="absolute inset-0 flex items-center justify-center text-gray-400 border-2 border-dashed rounded-xl">
                         No transaction data available
                     </div>
                 )}
             </div>
          </div>
          
-         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 h-[450px] flex flex-col">
+         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 h-[400px] flex flex-col">
              <h3 className="font-bold text-gray-700 mb-4 shrink-0">Recent Transactions</h3>
              <div className="overflow-y-auto flex-1">
                  <table className="w-full text-xs text-left">

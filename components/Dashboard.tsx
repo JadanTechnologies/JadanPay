@@ -4,9 +4,9 @@ import { User, Announcement, AppNotification, TransactionType, TransactionStatus
 import { TopUpForm } from './TopUpForm';
 import { fundWallet } from '../services/topupService';
 import { MockDB } from '../services/mockDb';
-import { SettingsService } from '../services/settingsService';
+import { SettingsService, AppSettings } from '../services/settingsService';
 import { playNotification } from '../utils/audio';
-import { Wallet, TrendingUp, Plus, ArrowRight, Activity, Zap, Bell, X, PieChart, AlertTriangle, Smartphone, Copy, Upload, CreditCard, Landmark, CheckCircle, Gift, Share2 } from 'lucide-react';
+import { Wallet, TrendingUp, Plus, ArrowRight, Bell, X, AlertTriangle, Smartphone, Copy, Upload, CreditCard, Landmark, CheckCircle, Gift, Share2, Loader2, Lock } from 'lucide-react';
 
 interface DashboardProps {
   user: User;
@@ -22,6 +22,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [isRedeeming, setIsRedeeming] = useState(false);
+  const [settings, setSettings] = useState<AppSettings | null>(null);
   
   // Funding State
   const [fundingMethod, setFundingMethod] = useState<'card' | 'manual'>('card');
@@ -29,6 +30,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
   const [fundAmount, setFundAmount] = useState<string>('');
   const [bankDetails, setBankDetails] = useState({ bankName: '', accountNumber: '', accountName: '' });
   
+  // Simulated Payment Modal State
+  const [activeGateway, setActiveGateway] = useState<'PAYSTACK' | 'FLUTTERWAVE' | 'MONNIFY' | null>(null);
+  const [paymentSimulating, setPaymentSimulating] = useState(false);
+
   // Mock Data Usage State
   const [dataBalance, setDataBalance] = useState({ total: 10, used: 8.2, unit: 'GB' });
 
@@ -41,6 +46,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
 
   const loadSettings = async () => {
       const s = await SettingsService.getSettings();
+      setSettings(s);
       setBankDetails({
           bankName: s.bankName,
           accountNumber: s.accountNumber,
@@ -95,17 +101,20 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
   };
 
   const handleFundWallet = async () => {
-    if (!fundAmount) return;
-    setIsFunding(true);
-    
-    try {
-        if (fundingMethod === 'manual') {
+    if (!fundAmount) {
+        alert("Please enter amount");
+        return;
+    }
+
+    if (fundingMethod === 'manual') {
+        // Manual Flow
+        setIsFunding(true);
+        try {
             if (!manualProofFile) {
                 alert("Please upload payment proof.");
                 setIsFunding(false);
                 return;
             }
-            // Create pending transaction
             await MockDB.addTransaction({
                 id: Math.random().toString(36),
                 userId: user.id,
@@ -119,23 +128,49 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
             });
             alert("Payment proof submitted! Pending Admin Approval.");
             playNotification("Proof submitted successfully. Awaiting approval.");
-        } else {
-            // Mock Card Payment (Instant)
-            await fundWallet(user, Number(fundAmount)); 
-            playNotification("Payment Received. Your wallet has been funded successfully.");
-            alert("Wallet funded successfully!");
+            refreshUser();
+            setShowFundModal(false);
+            setManualProofFile(null);
+            setFundAmount('');
+        } catch(e: any) {
+            alert("Error: " + e.message);
+        } finally {
+            setIsFunding(false);
         }
+    } else {
+        // Just triggered, but we need to know WHICH gateway.
+        // If 'Card' is selected but user clicks "Pay Now", we should probably show the gateway selector or default to first.
+        // The UI below handles the gateway selection buttons directly.
+    }
+  };
+
+  const initiatePayment = (gateway: 'PAYSTACK' | 'FLUTTERWAVE' | 'MONNIFY') => {
+      if (!fundAmount || Number(fundAmount) <= 0) {
+          alert("Please enter a valid amount");
+          return;
+      }
+      setActiveGateway(gateway);
+      setPaymentSimulating(true);
+      
+      // Simulate Payment Processing Time
+      setTimeout(() => {
+          setPaymentSimulating(false); // Stop loading, show success modal
+      }, 2500);
+  };
+
+  const completePayment = async () => {
+      // Called when user clicks "Authorize" on mock modal
+      try {
+        await fundWallet(user, Number(fundAmount)); 
+        playNotification("Payment Successful! Wallet funded.");
         
         refreshUser();
         setShowFundModal(false);
-        setManualProofFile(null);
+        setActiveGateway(null);
         setFundAmount('');
-    } catch(e: any) {
-        alert("Funding failed: " + e.message);
-        playNotification("Funding failed. Please try again.", 'error');
-    } finally {
-        setIsFunding(false);
-    }
+      } catch (e: any) {
+          alert("Funding failed: " + e.message);
+      }
   };
 
   const handleRedeemBonus = async () => {
@@ -267,23 +302,18 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
       {/* Main Grid Content */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
          <div className="lg:col-span-7 xl:col-span-8 space-y-6">
-             <div className="flex items-center justify-between mb-2">
-                <h3 className="font-bold text-gray-800 flex items-center gap-2">
-                    <Zap className="text-yellow-500 fill-current" size={20}/> Quick Action
-                </h3>
-             </div>
              <TopUpForm user={user} onSuccess={refreshUser} onViewReceipt={onViewReceipt} />
          </div>
 
          <div className="lg:col-span-5 xl:col-span-4 space-y-6">
             
-            {/* Referral Card (New) */}
+            {/* Referral Card */}
             <div className="bg-gradient-to-br from-purple-800 to-indigo-900 rounded-3xl p-6 text-white shadow-lg relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
                 
                 <div className="flex justify-between items-start mb-4 relative z-10">
                     <div>
-                        <h3 className="font-bold flex items-center gap-2"><Gift size={18}/> Refer & Earn Data</h3>
+                        <h3 className="font-bold flex items-center gap-2"><Gift size={18}/> Refer & Earn</h3>
                         <p className="text-xs text-purple-200 mt-1">Share code, earn bonus, buy free data.</p>
                     </div>
                     <div className="bg-white/20 p-2 rounded-lg">
@@ -359,56 +389,20 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
                         </div>
                     </div>
                 </div>
-
-                <div className="flex justify-between text-xs text-gray-500 mt-2 px-2">
-                    <div className="text-center">
-                        <p className="mb-1">Used</p>
-                        <p className="font-bold text-gray-800">{dataBalance.used} {dataBalance.unit}</p>
-                    </div>
-                    <div className="text-center">
-                        <p className="mb-1">Total</p>
-                        <p className="font-bold text-gray-800">{dataBalance.total} {dataBalance.unit}</p>
-                    </div>
-                </div>
-            </div>
-
-            <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
-                <div className="flex justify-between items-center mb-6">
-                    <h3 className="font-bold text-gray-800 text-sm">Quick Repay</h3>
-                    <button className="text-green-600 text-xs font-bold hover:underline flex items-center gap-1">
-                        Edit <ArrowRight size={12}/>
-                    </button>
-                </div>
-                <div className="grid grid-cols-4 gap-2">
-                    {[1,2,3,4].map(i => (
-                        <div key={i} className="flex flex-col items-center gap-2 cursor-pointer group">
-                            <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center border-2 border-transparent group-hover:border-green-500 group-hover:bg-green-50 transition-all relative overflow-hidden">
-                                <img src={`https://ui-avatars.com/api/?name=User+${i}&background=random`} className="w-full h-full object-cover" alt="" />
-                            </div>
-                            <span className="text-[10px] font-medium text-gray-500 group-hover:text-green-700">Fam {i}</span>
-                        </div>
-                    ))}
-                    <div className="flex flex-col items-center gap-2 cursor-pointer group">
-                         <div className="w-14 h-14 rounded-2xl border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400 group-hover:border-green-400 group-hover:text-green-500 transition-colors">
-                            <Plus size={20} />
-                         </div>
-                         <span className="text-[10px] font-medium text-gray-400">Add</span>
-                    </div>
-                </div>
             </div>
          </div>
       </div>
 
        {/* Fund Modal */}
        {showFundModal && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-             <div className="bg-white w-full max-w-sm rounded-3xl p-8 shadow-2xl animate-fade-in-up">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+             <div className="bg-white w-full max-w-sm rounded-3xl p-8 shadow-2xl animate-fade-in-up max-h-[90vh] overflow-y-auto">
                 <div className="text-center mb-6">
                     <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
                         <Wallet size={32} />
                     </div>
                     <h3 className="text-xl font-bold text-gray-900">Fund Wallet</h3>
-                    <p className="text-gray-500 text-sm mt-1">Select payment method below.</p>
+                    <p className="text-gray-500 text-sm mt-1">Secure online payment or transfer.</p>
                 </div>
                 
                 {/* Method Switcher */}
@@ -417,13 +411,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
                         onClick={() => setFundingMethod('card')}
                         className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1 ${fundingMethod === 'card' ? 'bg-white shadow text-green-700' : 'text-gray-500'}`}
                     >
-                        <CreditCard size={14}/> Card / Instant
+                        <CreditCard size={14}/> Online / Card
                     </button>
                     <button 
                          onClick={() => setFundingMethod('manual')}
                          className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1 ${fundingMethod === 'manual' ? 'bg-white shadow text-green-700' : 'text-gray-500'}`}
                     >
-                        <Landmark size={14}/> Manual Transfer
+                        <Landmark size={14}/> Transfer
                     </button>
                 </div>
                 
@@ -437,6 +431,39 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
                         className="w-full bg-transparent text-2xl font-mono font-bold text-gray-800 outline-none placeholder:text-gray-300"
                     />
                 </div>
+
+                {fundingMethod === 'card' && (
+                    <div className="space-y-3 mb-6">
+                         <p className="text-xs font-bold text-gray-400 uppercase">Select Gateway</p>
+                         
+                         {settings?.enablePaystack ? (
+                             <button onClick={() => initiatePayment('PAYSTACK')} className="w-full p-4 border rounded-xl flex items-center gap-3 hover:border-blue-500 hover:bg-blue-50 transition-all group">
+                                 <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold">P</div>
+                                 <span className="font-bold text-gray-700 group-hover:text-blue-700">Paystack</span>
+                             </button>
+                         ) : null}
+
+                         {settings?.enableFlutterwave ? (
+                             <button onClick={() => initiatePayment('FLUTTERWAVE')} className="w-full p-4 border rounded-xl flex items-center gap-3 hover:border-orange-500 hover:bg-orange-50 transition-all group">
+                                 <div className="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-bold">F</div>
+                                 <span className="font-bold text-gray-700 group-hover:text-orange-700">Flutterwave</span>
+                             </button>
+                         ) : null}
+
+                         {settings?.enableMonnify ? (
+                             <button onClick={() => initiatePayment('MONNIFY')} className="w-full p-4 border rounded-xl flex items-center gap-3 hover:border-indigo-500 hover:bg-indigo-50 transition-all group">
+                                 <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold">M</div>
+                                 <span className="font-bold text-gray-700 group-hover:text-indigo-700">Monnify</span>
+                             </button>
+                         ) : null}
+
+                         {!settings?.enablePaystack && !settings?.enableFlutterwave && !settings?.enableMonnify && (
+                             <div className="p-4 bg-yellow-50 text-yellow-700 rounded-xl text-xs font-bold text-center">
+                                 Online payment is currently disabled. Please use Manual Transfer.
+                             </div>
+                         )}
+                    </div>
+                )}
 
                 {fundingMethod === 'manual' && (
                     <div className="mb-6 space-y-4 animate-fade-in">
@@ -465,27 +492,66 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
                                 </div>
                             )}
                         </div>
+                         <button 
+                            onClick={handleFundWallet}
+                            disabled={isFunding}
+                            className="w-full py-3.5 bg-green-700 text-white rounded-xl font-bold hover:bg-green-800 transition-colors shadow-lg shadow-green-200 flex items-center justify-center gap-2 mt-4"
+                        >
+                            {isFunding ? 'Submitting...' : 'Submit Proof'}
+                        </button>
                     </div>
                 )}
-
-                <div className="flex gap-3">
-                    <button 
-                        onClick={() => { setShowFundModal(false); setManualProofFile(null); }}
-                        className="flex-1 py-3.5 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-200 transition-colors"
-                    >
-                        Cancel
-                    </button>
-                    <button 
-                        onClick={handleFundWallet}
-                        disabled={isFunding}
-                        className="flex-1 py-3.5 bg-green-700 text-white rounded-xl font-bold hover:bg-green-800 transition-colors shadow-lg shadow-green-200 flex items-center justify-center gap-2"
-                    >
-                         {isFunding ? 'Processing...' : (fundingMethod === 'manual' ? 'Submit Proof' : 'Pay Now')}
-                    </button>
-                </div>
+                
+                <button 
+                    onClick={() => { setShowFundModal(false); setManualProofFile(null); setActiveGateway(null); }}
+                    className="w-full py-3 text-gray-400 text-sm font-bold hover:text-gray-600"
+                >
+                    Cancel
+                </button>
              </div>
         </div>
       )}
+
+      {/* Simulated Payment Gateway Modal */}
+      {activeGateway && (
+          <div className="fixed inset-0 z-[60] bg-black/80 flex items-center justify-center p-4">
+              <div className="bg-white w-full max-w-sm rounded-lg overflow-hidden shadow-2xl relative">
+                  {/* Mock Gateway Header */}
+                  <div className={`p-4 flex items-center justify-between ${
+                      activeGateway === 'PAYSTACK' ? 'bg-[#09A5DB]' : 
+                      activeGateway === 'FLUTTERWAVE' ? 'bg-[#f5a623]' : 'bg-[#035BA8]'
+                  } text-white`}>
+                      <span className="font-bold flex items-center gap-2">
+                          <Lock size={14} /> Secured by {activeGateway.charAt(0) + activeGateway.slice(1).toLowerCase()}
+                      </span>
+                      <button onClick={() => setActiveGateway(null)}><X size={18} /></button>
+                  </div>
+                  
+                  <div className="p-8 text-center">
+                      {paymentSimulating ? (
+                          <div className="py-8">
+                               <Loader2 className="animate-spin mx-auto text-gray-400 mb-4" size={40} />
+                               <p className="text-gray-500 font-medium">Processing Payment...</p>
+                               <p className="text-xs text-gray-400 mt-2">Please do not refresh.</p>
+                          </div>
+                      ) : (
+                          <div className="py-4 animate-fade-in">
+                              <CheckCircle className="mx-auto text-green-500 mb-4" size={50} />
+                              <h3 className="text-xl font-bold text-gray-800">Transaction Approved</h3>
+                              <p className="text-gray-500 text-sm mb-6">Your payment of ₦{Number(fundAmount).toLocaleString()} was successful.</p>
+                              <button 
+                                onClick={completePayment}
+                                className="w-full py-3 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700"
+                              >
+                                  Return to Merchant
+                              </button>
+                          </div>
+                      )}
+                  </div>
+              </div>
+          </div>
+      )}
+
     </div>
   );
 };
