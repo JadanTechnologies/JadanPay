@@ -19,6 +19,18 @@ export enum Provider {
   NMOBILE = '9MOBILE',
 }
 
+// New Enums for Bills
+export enum BillProvider {
+  DSTV = 'DSTV',
+  GOTV = 'GOTV',
+  STARTIMES = 'STARTIMES',
+  IKEDC = 'IKEDC',
+  EKEDC = 'EKEDC',
+  AEDC = 'AEDC',
+  IBEDC = 'IBEDC',
+  KEDCO = 'KEDCO'
+}
+
 export enum PlanType {
   SME = 'SME',
   GIFTING = 'GIFTING',
@@ -35,6 +47,8 @@ export enum TransactionStatus {
 export enum TransactionType {
   AIRTIME = 'AIRTIME',
   DATA = 'DATA',
+  CABLE = 'CABLE',           // New
+  ELECTRICITY = 'ELECTRICITY', // New
   WALLET_FUND = 'WALLET_FUND',
   ADMIN_CREDIT = 'ADMIN_CREDIT',
   ADMIN_DEBIT = 'ADMIN_DEBIT',
@@ -64,12 +78,12 @@ export interface User {
 
 export interface Bundle {
   id: string;
-  provider: Provider;
-  type: PlanType;
+  provider: Provider | BillProvider | string; // Updated to allow BillProviders
+  type: PlanType | string;
   name: string;
   price: number;
   costPrice: number;
-  dataAmount: string;
+  dataAmount: string; // Can represent Plan Name for Cable
   validity: string;
   planId: string;
   isBestValue?: boolean;
@@ -80,7 +94,7 @@ export interface Transaction {
   id: string;
   userId: string;
   type: TransactionType;
-  provider?: Provider;
+  provider?: Provider | string; // Updated type
   amount: number;
   costPrice?: number;
   profit?: number;
@@ -94,6 +108,7 @@ export interface Transaction {
   paymentMethod?: string;
   proofUrl?: string; // For manual payment evidence
   adminActionDate?: string;
+  customerName?: string; // For Bill Validation
 }
 
 export interface DashboardStats {

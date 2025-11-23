@@ -1,11 +1,20 @@
 
-import { Provider, Bundle, UserStatus, UserRole, PlanType } from './types';
+import { Provider, Bundle, UserStatus, UserRole, PlanType, BillProvider } from './types';
 
 export const PROVIDER_COLORS = {
   [Provider.MTN]: 'bg-yellow-400 text-black',
   [Provider.GLO]: 'bg-green-600 text-white',
   [Provider.AIRTEL]: 'bg-red-600 text-white',
   [Provider.NMOBILE]: 'bg-emerald-800 text-white',
+  // Bills
+  [BillProvider.DSTV]: 'bg-blue-500 text-white',
+  [BillProvider.GOTV]: 'bg-green-500 text-white',
+  [BillProvider.STARTIMES]: 'bg-orange-500 text-white',
+  [BillProvider.IKEDC]: 'bg-purple-600 text-white',
+  [BillProvider.EKEDC]: 'bg-red-500 text-white',
+  [BillProvider.AEDC]: 'bg-yellow-500 text-white',
+  [BillProvider.IBEDC]: 'bg-blue-800 text-white',
+  [BillProvider.KEDCO]: 'bg-green-700 text-white',
 };
 
 export const PROVIDER_LOGOS = {
@@ -13,9 +22,23 @@ export const PROVIDER_LOGOS = {
   [Provider.GLO]: 'Glo',
   [Provider.AIRTEL]: 'Airtel',
   [Provider.NMOBILE]: '9mobile',
+  // Bills
+  [BillProvider.DSTV]: 'DSTV',
+  [BillProvider.GOTV]: 'GOtv',
+  [BillProvider.STARTIMES]: 'StarTimes',
+  [BillProvider.IKEDC]: 'Ikeja Electric',
+  [BillProvider.EKEDC]: 'Eko Electric',
+  [BillProvider.AEDC]: 'Abuja Electric',
+  [BillProvider.IBEDC]: 'Ibadan Electric',
+  [BillProvider.KEDCO]: 'Kano Electric',
 };
 
-// IDs updated to mock realistic Plan IDs for BilalSadaSub
+export const BILL_PROVIDERS = {
+    CABLE: [BillProvider.DSTV, BillProvider.GOTV, BillProvider.STARTIMES],
+    ELECTRICITY: [BillProvider.IKEDC, BillProvider.EKEDC, BillProvider.AEDC, BillProvider.IBEDC, BillProvider.KEDCO]
+};
+
+// IDs updated to mock realistic Plan IDs
 export const SAMPLE_BUNDLES: Bundle[] = [
   // MTN
   { id: '1001', planId: '1001', provider: Provider.MTN, type: PlanType.SME, name: '1.5GB SME Monthly', price: 1000, costPrice: 950, dataAmount: '1.5GB', validity: '30 Days', isBestValue: true, isAvailable: true },
@@ -30,6 +53,21 @@ export const SAMPLE_BUNDLES: Bundle[] = [
   { id: '3002', planId: '3002', provider: Provider.AIRTEL, type: PlanType.GIFTING, name: '4.5GB Gifting', price: 2000, costPrice: 1900, dataAmount: '4.5GB', validity: '30 Days', isAvailable: true },
   // 9MOBILE
   { id: '4001', planId: '4001', provider: Provider.NMOBILE, type: PlanType.SME, name: '1.5GB SME', price: 1000, costPrice: 920, dataAmount: '1.5GB', validity: '30 Days', isAvailable: true },
+];
+
+export const CABLE_PLANS: Bundle[] = [
+    // DSTV
+    { id: 'dstv1', planId: 'dstv-padi', provider: BillProvider.DSTV, type: 'CABLE', name: 'DSTV Padi', price: 2950, costPrice: 2900, dataAmount: 'Padi', validity: '30 Days', isAvailable: true },
+    { id: 'dstv2', planId: 'dstv-yanga', provider: BillProvider.DSTV, type: 'CABLE', name: 'DSTV Yanga', price: 4200, costPrice: 4150, dataAmount: 'Yanga', validity: '30 Days', isAvailable: true },
+    { id: 'dstv3', planId: 'dstv-confam', provider: BillProvider.DSTV, type: 'CABLE', name: 'DSTV Confam', price: 7400, costPrice: 7300, dataAmount: 'Confam', validity: '30 Days', isAvailable: true, isBestValue: true },
+    { id: 'dstv4', planId: 'dstv-premium', provider: BillProvider.DSTV, type: 'CABLE', name: 'DSTV Premium', price: 29500, costPrice: 29400, dataAmount: 'Premium', validity: '30 Days', isAvailable: true },
+    // GOtv
+    { id: 'gotv1', planId: 'gotv-smallie', provider: BillProvider.GOTV, type: 'CABLE', name: 'GOtv Smallie', price: 1300, costPrice: 1250, dataAmount: 'Smallie', validity: '30 Days', isAvailable: true },
+    { id: 'gotv2', planId: 'gotv-jinja', provider: BillProvider.GOTV, type: 'CABLE', name: 'GOtv Jinja', price: 2700, costPrice: 2650, dataAmount: 'Jinja', validity: '30 Days', isAvailable: true },
+    { id: 'gotv3', planId: 'gotv-jolli', provider: BillProvider.GOTV, type: 'CABLE', name: 'GOtv Jolli', price: 3950, costPrice: 3900, dataAmount: 'Jolli', validity: '30 Days', isAvailable: true, isBestValue: true },
+    // StarTimes
+    { id: 'startimes1', planId: 'nova', provider: BillProvider.STARTIMES, type: 'CABLE', name: 'Nova', price: 1200, costPrice: 1150, dataAmount: 'Nova', validity: '30 Days', isAvailable: true },
+    { id: 'startimes2', planId: 'basic', provider: BillProvider.STARTIMES, type: 'CABLE', name: 'Basic', price: 2600, costPrice: 2550, dataAmount: 'Basic', validity: '30 Days', isAvailable: true },
 ];
 
 export const MOCK_USERS_DATA = [

@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { User, UserRole } from '../types';
-import { Home, History, LogOut, ShieldCheck, Briefcase, User as UserIcon, Menu, LayoutDashboard, Settings, Users, MessageSquare, Lock, Megaphone, CreditCard, LifeBuoy } from 'lucide-react';
+import { Home, History, LogOut, Briefcase, User as UserIcon, LayoutDashboard, Settings, Users, MessageSquare, Lock, Megaphone, CreditCard, LifeBuoy, ChevronLeft, ChevronRight } from 'lucide-react';
 import { SettingsService } from '../services/settingsService';
 
 interface LayoutProps {
@@ -16,6 +15,12 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, activeTab, onTab
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [logoUrl, setLogoUrl] = useState('');
   const [appName, setAppName] = useState('JadanPay');
+  
+  // Persist collapsed state
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    const saved = localStorage.getItem('sidebar_collapsed');
+    return saved === 'true';
+  });
 
   useEffect(() => {
       SettingsService.getSettings().then(s => {
@@ -23,6 +28,12 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, activeTab, onTab
           setAppName(s.appName);
       });
   }, []);
+
+  const toggleSidebar = () => {
+    const newState = !isCollapsed;
+    setIsCollapsed(newState);
+    localStorage.setItem('sidebar_collapsed', String(newState));
+  };
   
   const handleLogoutClick = () => {
     setShowLogoutConfirm(true);
@@ -32,20 +43,23 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, activeTab, onTab
     setShowLogoutConfirm(false);
     onLogout();
   };
-  
+
   const NavItem = ({ id, icon: Icon, label, mobile = false }: { id: string; icon: any; label: string, mobile?: boolean }) => (
     <button
       onClick={() => onTabChange(id)}
       className={`
         flex items-center gap-3 px-4 py-3 rounded-xl transition-all w-full
         ${mobile ? 'flex-col justify-center p-2 gap-1' : ''}
+        ${isCollapsed && !mobile ? 'justify-center px-2' : ''}
         ${activeTab === id 
           ? 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 font-bold shadow-sm' 
           : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'}
       `}
+      title={isCollapsed ? label : ''}
     >
       <Icon size={mobile ? 24 : 20} className={activeTab === id ? 'fill-current' : ''} />
-      <span className={mobile ? "text-[10px] font-medium" : "text-sm font-medium"}>{label}</span>
+      {!isCollapsed && !mobile && <span className="text-sm font-medium whitespace-nowrap">{label}</span>}
+      {mobile && <span className="text-[10px] font-medium">{label}</span>}
     </button>
   );
 
@@ -53,71 +67,82 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, activeTab, onTab
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col md:flex-row font-sans transition-colors duration-300">
       
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex flex-col w-64 bg-white dark:bg-black border-r border-gray-200 dark:border-gray-800 fixed inset-y-0 left-0 z-30 transition-colors duration-300">
-         <div className="p-6 border-b border-gray-100 dark:border-gray-800">
-            <h1 className="text-2xl font-bold text-green-700 dark:text-green-500 tracking-tight flex items-center gap-2">
-              {logoUrl ? (
-                  <img src={logoUrl} alt="Logo" className="w-8 h-8 object-contain" />
-              ) : (
-                  <div className="w-8 h-8 bg-green-700 rounded-lg flex items-center justify-center text-white text-lg font-black">{appName.charAt(0)}</div>
-              )}
-              {appName}
-            </h1>
+      <aside className={`hidden md:flex flex-col bg-white dark:bg-black border-r border-gray-200 dark:border-gray-800 fixed inset-y-0 left-0 z-30 transition-all duration-300 ease-in-out ${isCollapsed ? 'w-20' : 'w-64'}`}>
+         <div className={`p-6 border-b border-gray-100 dark:border-gray-800 flex items-center ${isCollapsed ? 'justify-center' : ''}`}>
+            {logoUrl ? (
+                <img src={logoUrl} alt="Logo" className="w-8 h-8 object-contain" />
+            ) : (
+                <div className="w-8 h-8 bg-green-700 rounded-lg flex items-center justify-center text-white text-lg font-black shrink-0">{appName.charAt(0)}</div>
+            )}
+            {!isCollapsed && (
+                <h1 className="text-xl font-bold text-green-700 dark:text-green-500 tracking-tight ml-2 whitespace-nowrap overflow-hidden">{appName}</h1>
+            )}
          </div>
          
-         <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+         <nav className="flex-1 p-3 space-y-2 overflow-y-auto overflow-x-hidden">
             {user.role === UserRole.ADMIN ? (
-                // ADMIN NAVIGATION ONLY
                 <>
-                    <div className="px-4 py-2 mb-2">
-                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Administration</p>
-                    </div>
-                    <NavItem id="admin" icon={LayoutDashboard} label="Admin Overview" />
+                    {!isCollapsed && <div className="px-4 py-2 mb-2"><p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Admin</p></div>}
+                    <NavItem id="admin" icon={LayoutDashboard} label="Overview" />
                     <NavItem id="admin-payments" icon={CreditCard} label="Payments" />
-                    <NavItem id="admin-users" icon={Users} label="User Management" />
-                    <NavItem id="admin-support" icon={MessageSquare} label="Support Tickets" />
-                    <NavItem id="admin-communication" icon={Megaphone} label="Communication" />
-                    <NavItem id="admin-staff" icon={Lock} label="Staff & Roles" />
-                    <NavItem id="admin-settings" icon={Settings} label="Global Settings" />
+                    <NavItem id="admin-users" icon={Users} label="Users" />
+                    <NavItem id="admin-support" icon={MessageSquare} label="Tickets" />
+                    <NavItem id="admin-communication" icon={Megaphone} label="Comm." />
+                    <NavItem id="admin-staff" icon={Lock} label="Staff" />
+                    <NavItem id="admin-settings" icon={Settings} label="Settings" />
                 </>
             ) : (
-                // USER / RESELLER NAVIGATION
                 <>
                     <NavItem id="dashboard" icon={Home} label="Dashboard" />
                     <NavItem id="history" icon={History} label="Transactions" />
                     <NavItem id="support" icon={LifeBuoy} label="Support" />
-                    <NavItem id="profile" icon={UserIcon} label="My Profile" />
+                    <NavItem id="profile" icon={UserIcon} label="Profile" />
                     
                     {user.role === UserRole.RESELLER && (
                     <div className="pt-4 mt-4 border-t border-gray-100 dark:border-gray-800">
-                        <p className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Business</p>
-                        <NavItem id="reseller" icon={Briefcase} label="Reseller Zone" />
+                        {!isCollapsed && <p className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Business</p>}
+                        <NavItem id="reseller" icon={Briefcase} label="Reseller" />
                     </div>
                     )}
                 </>
             )}
          </nav>
 
-         <div className="p-4 border-t border-gray-100 dark:border-gray-800">
-            <div 
-               onClick={() => onTabChange('profile')}
-               className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-900 mb-3 border border-gray-100 dark:border-gray-800 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+         <div className="p-4 border-t border-gray-100 dark:border-gray-800 space-y-2">
+            {!isCollapsed && (
+                <div 
+                   onClick={() => onTabChange('profile')}
+                   className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                >
+                   <img src={`https://ui-avatars.com/api/?name=${user.name}&background=0D8ABC&color=fff`} className="w-8 h-8 rounded-full shrink-0" alt="" />
+                   <div className="overflow-hidden">
+                      <p className="text-sm font-bold text-gray-900 dark:text-white">{user.name}</p>
+                      <p className="text-xs text-gray-500 truncate capitalize">{user.role}</p>
+                   </div>
+                </div>
+            )}
+            
+            <button 
+                onClick={handleLogoutClick} 
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 w-full transition-colors group ${isCollapsed ? 'justify-center' : ''}`}
+                title="Sign Out"
             >
-               <img src={`https://ui-avatars.com/api/?name=${user.name}&background=0D8ABC&color=fff`} className="w-10 h-10 rounded-full" alt="" />
-               <div className="overflow-hidden">
-                  <p className="text-sm font-bold text-gray-900 dark:text-white truncate">{user.name}</p>
-                  <p className="text-xs text-gray-500 truncate capitalize">{user.role}</p>
-               </div>
-            </div>
-            <button onClick={handleLogoutClick} className="flex items-center gap-3 px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 w-full transition-colors group">
                <LogOut size={20} className="group-hover:-translate-x-1 transition-transform" />
-               <span className="text-sm font-medium">Sign Out</span>
+               {!isCollapsed && <span className="text-sm font-medium">Sign Out</span>}
+            </button>
+            
+            {/* Collapse Toggle */}
+            <button 
+                onClick={toggleSidebar}
+                className="w-full flex items-center justify-center p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg mt-2 transition-colors"
+            >
+                {isCollapsed ? <ChevronRight size={16}/> : <ChevronLeft size={16}/>}
             </button>
          </div>
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col md:ml-64 min-w-0 h-screen transition-all">
+      <div className={`flex-1 flex flex-col min-w-0 h-screen transition-all duration-300 ease-in-out ${isCollapsed ? 'md:ml-20' : 'md:ml-64'}`}>
         
         {/* Mobile Header */}
         <header className="md:hidden bg-white dark:bg-black px-4 py-3 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center sticky top-0 z-20 shadow-sm transition-colors duration-300">
@@ -143,40 +168,8 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, activeTab, onTab
         <header className="hidden md:flex bg-white/90 dark:bg-black/90 px-8 py-5 border-b border-gray-200 dark:border-gray-800 justify-between items-center sticky top-0 z-20 shadow-sm/50 backdrop-blur-sm transition-colors duration-300">
            <div>
               <h2 className="text-xl font-bold text-gray-800 dark:text-white capitalize">
-                {activeTab === 'dashboard' 
-                    ? `Welcome back, ${user.name.split(' ')[0]} 👋` 
-                    : activeTab === 'admin' 
-                        ? 'Administrator Portal' 
-                        : activeTab === 'profile'
-                            ? 'My Profile'
-                        : activeTab === 'support'
-                            ? 'Customer Support'
-                        : activeTab === 'admin-users' ? 'User Management'
-                        : activeTab === 'admin-payments' ? 'Payment Approvals'
-                        : activeTab === 'admin-support' ? 'Support Desk'
-                        : activeTab === 'admin-communication' ? 'Communication Hub'
-                        : activeTab === 'admin-staff' ? 'Staff Access Control'
-                        : activeTab === 'admin-settings'
-                            ? 'Platform Settings'
-                            : activeTab.replace(/([A-Z])/g, ' $1').trim()}
+                {activeTab === 'dashboard' ? `Welcome back, ${user.name.split(' ')[0]} 👋` : activeTab.replace(/([A-Z])/g, ' $1').replace('-', ' ').trim()}
               </h2>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                 {activeTab === 'dashboard' 
-                    ? 'Here is what is happening with your wallet today.' 
-                    : activeTab === 'admin' 
-                        ? 'Manage platform activities and users.'
-                        : activeTab === 'profile'
-                            ? 'Update your personal details.'
-                        : activeTab === 'support'
-                            ? 'Get help with your transactions and account.'
-                        : activeTab === 'admin-communication'
-                            ? 'Manage broadcasts, announcements and templates.'
-                        : activeTab === 'admin-payments'
-                            ? 'Review and approve manual fundings.'
-                        : activeTab === 'admin-settings'
-                            ? 'Configure brand settings and service providers.'
-                        : 'Manage your activities.'}
-              </p>
            </div>
            
            <div className="flex items-center gap-6">
@@ -194,70 +187,57 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, activeTab, onTab
            </div>
         </header>
 
-        {/* Scrollable Content */}
-        <main className="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth bg-gray-50/50 dark:bg-gray-900/50 transition-colors duration-300">
-           <div className="max-w-7xl mx-auto">
-              {children}
-           </div>
+        {/* Content Scroll Area */}
+        <main className="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth">
+          <div className="max-w-6xl mx-auto">
+            {children}
+          </div>
         </main>
-
+        
         {/* Mobile Bottom Nav */}
-        <nav className="md:hidden bg-white dark:bg-black border-t border-gray-200 dark:border-gray-800 fixed bottom-0 w-full z-30 pb-safe shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] transition-colors duration-300">
-            <div className="flex justify-around items-center h-16">
-              {user.role === UserRole.ADMIN ? (
-                 // ADMIN MOBILE NAV
-                 <>
-                    <NavItem id="admin" icon={LayoutDashboard} label="Admin" mobile />
-                    <NavItem id="admin-payments" icon={CreditCard} label="Pay" mobile />
-                    <NavItem id="admin-users" icon={Users} label="Users" mobile />
-                    <NavItem id="admin-support" icon={MessageSquare} label="Support" mobile />
-                    <NavItem id="admin-settings" icon={Settings} label="Settings" mobile />
-                 </>
-              ) : (
-                 // USER MOBILE NAV
-                 <>
-                    <NavItem id="dashboard" icon={Home} label="Home" mobile />
-                    <NavItem id="history" icon={History} label="History" mobile />
-                    <NavItem id="support" icon={LifeBuoy} label="Support" mobile />
-                    <NavItem id="profile" icon={UserIcon} label="Profile" mobile />
-                 </>
-              )}
-               
-              <button onClick={handleLogoutClick} className="flex flex-col items-center justify-center w-full p-2 text-gray-400 hover:text-red-500 gap-1 transition-colors">
-                 <LogOut size={24} />
-                 <span className="text-[10px] font-medium">Logout</span>
-              </button>
-            </div>
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-black border-t border-gray-200 dark:border-gray-800 px-4 py-2 z-30 flex justify-between items-center safe-area-pb">
+           {user.role === UserRole.ADMIN ? (
+              <>
+                <NavItem id="admin" icon={LayoutDashboard} label="Admin" mobile />
+                <NavItem id="admin-users" icon={Users} label="Users" mobile />
+                <NavItem id="admin-payments" icon={CreditCard} label="Pay" mobile />
+                <NavItem id="admin-settings" icon={Settings} label="Settings" mobile />
+              </>
+           ) : (
+              <>
+                <NavItem id="dashboard" icon={Home} label="Home" mobile />
+                <NavItem id="history" icon={History} label="History" mobile />
+                <NavItem id="support" icon={LifeBuoy} label="Support" mobile />
+                <NavItem id="profile" icon={UserIcon} label="Account" mobile />
+              </>
+           )}
         </nav>
 
-      </div>
-
-      {/* Logout Modal */}
-      {showLogoutConfirm && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-900 w-full max-w-xs rounded-2xl p-6 shadow-2xl animate-fade-in-up transform transition-all scale-100">
-            <div className="w-12 h-12 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center mb-4 mx-auto text-red-600">
-                <LogOut size={24} />
-            </div>
-            <h3 className="text-lg font-bold mb-2 text-gray-900 dark:text-white text-center">Sign Out?</h3>
-            <p className="text-gray-500 dark:text-gray-400 text-sm mb-6 text-center">Are you sure you want to log out of JadanPay?</p>
-            <div className="flex gap-3">
-                <button
-                    onClick={() => setShowLogoutConfirm(false)}
-                    className="flex-1 py-2.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-xl font-medium hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                >
-                    Cancel
-                </button>
-                <button
-                    onClick={confirmLogout}
-                    className="flex-1 py-2.5 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition-colors shadow-lg shadow-red-200 dark:shadow-red-900/20"
-                >
-                    Logout
-                </button>
-            </div>
+        {/* Logout Confirmation Modal */}
+        {showLogoutConfirm && (
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+             <div className="bg-white dark:bg-gray-900 w-full max-w-sm rounded-2xl p-6 shadow-2xl animate-fade-in-up">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Sign Out</h3>
+                <p className="text-gray-500 dark:text-gray-400 mb-6">Are you sure you want to sign out of your account?</p>
+                <div className="flex gap-3">
+                   <button 
+                      onClick={() => setShowLogoutConfirm(false)}
+                      className="flex-1 py-3 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-xl font-bold"
+                   >
+                      Cancel
+                   </button>
+                   <button 
+                      onClick={confirmLogout}
+                      className="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700"
+                   >
+                      Sign Out
+                   </button>
+                </div>
+             </div>
           </div>
-        </div>
-      )}
+        )}
+
+      </div>
     </div>
   );
 };

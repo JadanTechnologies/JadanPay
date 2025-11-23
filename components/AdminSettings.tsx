@@ -398,7 +398,7 @@ export const AdminSettings: React.FC = () => {
 
                       {/* Paystack Config */}
                       <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-4 relative overflow-hidden">
-                           <div className="absolute top-0 right-0 w-2 h-full bg-blue-500"></div>
+                           <div className="absolute top-0 right-0 w-2 h-full bg-[#09A5DB]"></div>
                            <h3 className="font-bold text-gray-800 mb-2">Paystack Integration</h3>
                            <div className="flex items-center gap-4 mb-4">
                                 <label className="flex items-center gap-2 cursor-pointer">
@@ -437,7 +437,7 @@ export const AdminSettings: React.FC = () => {
 
                        {/* Flutterwave Config */}
                       <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-4 relative overflow-hidden">
-                           <div className="absolute top-0 right-0 w-2 h-full bg-orange-500"></div>
+                           <div className="absolute top-0 right-0 w-2 h-full bg-[#f5a623]"></div>
                            <h3 className="font-bold text-gray-800 mb-2">Flutterwave Integration</h3>
                            <div className="flex items-center gap-4 mb-4">
                                 <label className="flex items-center gap-2 cursor-pointer">
@@ -476,7 +476,7 @@ export const AdminSettings: React.FC = () => {
 
                        {/* Monnify Config */}
                       <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-4 relative overflow-hidden">
-                           <div className="absolute top-0 right-0 w-2 h-full bg-indigo-500"></div>
+                           <div className="absolute top-0 right-0 w-2 h-full bg-[#035BA8]"></div>
                            <h3 className="font-bold text-gray-800 mb-2">Monnify Integration</h3>
                            <div className="flex items-center gap-4 mb-4">
                                 <label className="flex items-center gap-2 cursor-pointer">

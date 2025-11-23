@@ -56,7 +56,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
 
   const loadAnnouncements = async () => {
       const data = await MockDB.getAnnouncements();
-      // Filter active ones
       setAnnouncements(data.filter(a => a.isActive));
   };
 
@@ -72,11 +71,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
   };
 
   const checkLowData = () => {
-      // Simulate a check. If used > 80%, warn user.
       const percentageUsed = (dataBalance.used / dataBalance.total) * 100;
       if (percentageUsed >= 80) {
-          // Only play if not recently dismissed (logic simplified for demo)
-          // setTimeout(() => playNotification("Warning. Your data bundle is about to finish."), 3000);
+          // Logic for low data warning
       }
   };
 
@@ -137,10 +134,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
         } finally {
             setIsFunding(false);
         }
-    } else {
-        // Just triggered, but we need to know WHICH gateway.
-        // If 'Card' is selected but user clicks "Pay Now", we should probably show the gateway selector or default to first.
-        // The UI below handles the gateway selection buttons directly.
     }
   };
 
@@ -159,7 +152,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
   };
 
   const completePayment = async () => {
-      // Called when user clicks "Authorize" on mock modal
+      // Called when user clicks "Authorize" or "Return" on mock modal
       try {
         await fundWallet(user, Number(fundAmount)); 
         playNotification("Payment Successful! Wallet funded.");
@@ -439,27 +432,36 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
                          {settings?.enablePaystack ? (
                              <button onClick={() => initiatePayment('PAYSTACK')} className="w-full p-4 border rounded-xl flex items-center gap-3 hover:border-blue-500 hover:bg-blue-50 transition-all group">
                                  <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold">P</div>
-                                 <span className="font-bold text-gray-700 group-hover:text-blue-700">Paystack</span>
+                                 <div className="text-left">
+                                     <span className="block font-bold text-gray-700 group-hover:text-blue-700">Paystack</span>
+                                     <span className="text-[10px] text-gray-400">Cards, USSD, Transfer</span>
+                                 </div>
                              </button>
                          ) : null}
 
                          {settings?.enableFlutterwave ? (
                              <button onClick={() => initiatePayment('FLUTTERWAVE')} className="w-full p-4 border rounded-xl flex items-center gap-3 hover:border-orange-500 hover:bg-orange-50 transition-all group">
                                  <div className="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-bold">F</div>
-                                 <span className="font-bold text-gray-700 group-hover:text-orange-700">Flutterwave</span>
+                                  <div className="text-left">
+                                     <span className="block font-bold text-gray-700 group-hover:text-orange-700">Flutterwave</span>
+                                     <span className="text-[10px] text-gray-400">International Cards, Bank</span>
+                                 </div>
                              </button>
                          ) : null}
 
                          {settings?.enableMonnify ? (
                              <button onClick={() => initiatePayment('MONNIFY')} className="w-full p-4 border rounded-xl flex items-center gap-3 hover:border-indigo-500 hover:bg-indigo-50 transition-all group">
                                  <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold">M</div>
-                                 <span className="font-bold text-gray-700 group-hover:text-indigo-700">Monnify</span>
+                                 <div className="text-left">
+                                     <span className="block font-bold text-gray-700 group-hover:text-indigo-700">Monnify</span>
+                                     <span className="text-[10px] text-gray-400">Account Transfer</span>
+                                 </div>
                              </button>
                          ) : null}
 
                          {!settings?.enablePaystack && !settings?.enableFlutterwave && !settings?.enableMonnify && (
-                             <div className="p-4 bg-yellow-50 text-yellow-700 rounded-xl text-xs font-bold text-center">
-                                 Online payment is currently disabled. Please use Manual Transfer.
+                             <div className="p-4 bg-yellow-50 text-yellow-700 rounded-xl text-xs font-bold text-center border border-yellow-100">
+                                 Online payment is currently disabled by Admin. Please use Manual Transfer.
                              </div>
                          )}
                     </div>
@@ -469,11 +471,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
                     <div className="mb-6 space-y-4 animate-fade-in">
                         <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg text-xs text-blue-800">
                             <p className="font-bold">Bank: {bankDetails.bankName}</p>
-                            <p>Account: {bankDetails.accountNumber}</p>
-                            <p>Name: {bankDetails.accountName}</p>
+                            <p className="font-mono mt-1">Acct: {bankDetails.accountNumber}</p>
+                            <p className="mt-1">Name: {bankDetails.accountName}</p>
                         </div>
                         
-                        <div className="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center cursor-pointer hover:bg-gray-50 relative">
+                        <div className="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center cursor-pointer hover:bg-gray-50 relative h-24 flex items-center justify-center">
                             <input 
                                 type="file" 
                                 onChange={handleFileChange}
@@ -514,8 +516,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
 
       {/* Simulated Payment Gateway Modal */}
       {activeGateway && (
-          <div className="fixed inset-0 z-[60] bg-black/80 flex items-center justify-center p-4">
-              <div className="bg-white w-full max-w-sm rounded-lg overflow-hidden shadow-2xl relative">
+          <div className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+              <div className="bg-white w-full max-w-sm rounded-xl overflow-hidden shadow-2xl relative animate-fade-in-up">
                   {/* Mock Gateway Header */}
                   <div className={`p-4 flex items-center justify-between ${
                       activeGateway === 'PAYSTACK' ? 'bg-[#09A5DB]' : 
@@ -527,26 +529,35 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
                       <button onClick={() => setActiveGateway(null)}><X size={18} /></button>
                   </div>
                   
-                  <div className="p-8 text-center">
+                  <div className="p-8 text-center bg-gray-50/50">
                       {paymentSimulating ? (
                           <div className="py-8">
                                <Loader2 className="animate-spin mx-auto text-gray-400 mb-4" size={40} />
-                               <p className="text-gray-500 font-medium">Processing Payment...</p>
-                               <p className="text-xs text-gray-400 mt-2">Please do not refresh.</p>
+                               <p className="text-gray-800 font-bold text-lg">Processing...</p>
+                               <p className="text-xs text-gray-400 mt-2">Connecting to bank...</p>
                           </div>
                       ) : (
                           <div className="py-4 animate-fade-in">
-                              <CheckCircle className="mx-auto text-green-500 mb-4" size={50} />
+                              <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-white shadow-lg">
+                                  <CheckCircle size={32} />
+                              </div>
                               <h3 className="text-xl font-bold text-gray-800">Transaction Approved</h3>
-                              <p className="text-gray-500 text-sm mb-6">Your payment of ₦{Number(fundAmount).toLocaleString()} was successful.</p>
+                              <p className="text-gray-500 text-sm mb-6 mt-2">Your payment of <span className="text-gray-900 font-bold">₦{Number(fundAmount).toLocaleString()}</span> was successful.</p>
                               <button 
                                 onClick={completePayment}
-                                className="w-full py-3 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700"
+                                className={`w-full py-3.5 text-white rounded-lg font-bold shadow-lg ${
+                                    activeGateway === 'PAYSTACK' ? 'bg-[#09A5DB] hover:bg-[#0894c4]' : 
+                                    activeGateway === 'FLUTTERWAVE' ? 'bg-[#f5a623] hover:bg-[#e0961f]' : 'bg-[#035BA8] hover:bg-[#024a8a]'
+                                }`}
                               >
                                   Return to Merchant
                               </button>
                           </div>
                       )}
+                  </div>
+                  
+                  <div className="p-4 border-t text-center text-[10px] text-gray-400 bg-white">
+                      <p>Test Mode enabled. No real money is charged.</p>
                   </div>
               </div>
           </div>

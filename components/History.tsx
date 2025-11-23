@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Transaction, TransactionStatus, Provider, User } from '../types';
 import { MockDB } from '../services/mockDb';
-import { X, Share2, CheckCircle2, Download, RefreshCw, Check, Search, Calendar, Copy } from 'lucide-react';
+import { X, Share2, CheckCircle2, Download, RefreshCw, Check, Search, Calendar, Copy, Receipt } from 'lucide-react';
 import { PROVIDER_LOGOS, PROVIDER_COLORS } from '../constants';
 
 interface HistoryProps {
@@ -83,7 +83,8 @@ export const History: React.FC<HistoryProps> = ({ user, highlightId }) => {
   
   const handleCopyRef = (ref: string) => {
       navigator.clipboard.writeText(ref);
-      // Could show toast here, but for now simple UX
+      setShareState('copied');
+      setTimeout(() => setShareState('idle'), 1500);
   };
 
   const filteredTransactions = transactions.filter(t => 
@@ -94,7 +95,9 @@ export const History: React.FC<HistoryProps> = ({ user, highlightId }) => {
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-        <h2 className="text-xl font-bold text-gray-800">Transaction History</h2>
+        <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+            <Receipt size={24} className="text-green-600"/> Transaction History
+        </h2>
         
         <div className="flex gap-2 w-full md:w-auto">
             <div className="relative flex-1 md:w-64">
@@ -209,11 +212,13 @@ export const History: React.FC<HistoryProps> = ({ user, highlightId }) => {
                     {/* Reference ID Pill */}
                     <button 
                         onClick={() => handleCopyRef(selectedTx.reference)}
-                        className="mt-3 flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-600 px-3 py-1 rounded-full text-xs font-mono transition-colors group"
+                        className={`mt-4 flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-mono transition-all group border ${
+                            shareState === 'copied' ? 'bg-green-50 border-green-200 text-green-700' : 'bg-gray-50 border-gray-100 text-gray-500 hover:bg-gray-100'
+                        }`}
                         title="Click to copy"
                     >
                         <span>{selectedTx.reference}</span>
-                        <Copy size={10} className="opacity-50 group-hover:opacity-100"/>
+                        {shareState === 'copied' ? <Check size={12}/> : <Copy size={12} className="opacity-50 group-hover:opacity-100"/>}
                     </button>
                 </div>
                 
@@ -258,14 +263,9 @@ export const History: React.FC<HistoryProps> = ({ user, highlightId }) => {
                 <div className="grid grid-cols-2 gap-4 mt-8">
                     <button 
                         onClick={handleShare}
-                        className={`flex items-center justify-center gap-2 py-3.5 rounded-xl border font-bold text-sm transition-all duration-300 ${
-                            shareState === 'copied' 
-                                ? 'bg-green-600 border-green-600 text-white shadow-md' 
-                                : 'border-green-100 bg-green-50 text-green-700 hover:bg-green-100 hover:border-green-200'
-                        }`}
+                        className="flex items-center justify-center gap-2 py-3.5 rounded-xl border border-green-100 bg-green-50 text-green-700 font-bold text-sm hover:bg-green-100 hover:border-green-200 transition-all duration-300"
                     >
-                        {shareState === 'copied' ? <Check size={18} /> : <Share2 size={18} />} 
-                        {shareState === 'copied' ? 'Copied!' : 'Share'}
+                        <Share2 size={18} /> Share
                     </button>
                      <button className="flex items-center justify-center gap-2 py-3.5 rounded-xl bg-gray-900 text-white font-bold text-sm hover:bg-black transition-colors shadow-lg shadow-gray-200">
                         <Download size={18} /> Save

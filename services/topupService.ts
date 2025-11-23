@@ -1,5 +1,5 @@
 
-import { Transaction, TransactionType, TransactionStatus, Provider, Bundle, User } from '../types';
+import { Transaction, TransactionType, TransactionStatus, Provider, Bundle, User, BillProvider } from '../types';
 import { MockDB } from './mockDb';
 import { ApiService } from './apiService';
 
@@ -116,7 +116,7 @@ export const processDataPurchase = async (
           throw new Error("Configuration Error: This bundle is missing an API Plan ID. Please contact support.");
       }
       
-      const apiResponse = await ApiService.buyData(bundle.provider, phone, bundle.planId);
+      const apiResponse = await ApiService.buyData(bundle.provider as string, phone, bundle.planId);
       
       if (!apiResponse.success) {
           throw new Error(apiResponse.error || "Data Provider failed to process transaction");
@@ -156,6 +156,56 @@ export const processDataPurchase = async (
 
   await MockDB.addTransaction(tx);
   return tx;
+};
+
+export const processBillPayment = async (
+    user: User,
+    type: TransactionType,
+    provider: BillProvider,
+    number: string, // IUC or Meter
+    amount: number,
+    bundle?: Bundle // For Cable
+): Promise<Transaction> => {
+    
+    if (user.balance < amount) {
+        throw new Error("Insufficient wallet balance.");
+    }
+
+    // --- MOCK API CALL START ---
+    // In a real app, call ApiService.payBill()
+    // For now, we simulate a latency and success
+    await new Promise(r => setTimeout(r, 1500));
+    // --- MOCK API CALL END ---
+
+    // Deduct Balance
+    const updatedUser = await MockDB.updateUserBalance(user.id, -amount);
+
+    // Calculate Profit (Assume small fee or markup)
+    // For bills, usually there is a N100 fee, or we get a commission. 
+    // Let's assume we charge flat N50 profit on the price shown to user.
+    const costPrice = amount - 50; 
+    const profit = 50;
+
+    const tx: Transaction = {
+        id: generateId(),
+        userId: user.id,
+        type: type,
+        provider: provider,
+        amount: amount,
+        costPrice: costPrice,
+        profit: profit,
+        destinationNumber: number,
+        bundleName: bundle ? bundle.name : 'Top-up',
+        status: TransactionStatus.SUCCESS,
+        date: new Date().toISOString(),
+        reference: generateRef(),
+        previousBalance: user.balance,
+        newBalance: updatedUser.balance,
+        customerName: 'MOCKED CUSTOMER' // In real app, this comes from validation step
+    };
+
+    await MockDB.addTransaction(tx);
+    return tx;
 };
 
 export const fundWallet = async (user: User, amount: number): Promise<Transaction> => {
