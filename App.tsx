@@ -41,7 +41,15 @@ export default function App() {
   };
 
   if (!user) {
-    return <Auth onAuthSuccess={setUser} />;
+    return <Auth onAuthSuccess={(u) => {
+        setUser(u);
+        // Redirect Admin strictly to admin dashboard, others to user dashboard
+        if (u.role === UserRole.ADMIN) {
+            setActiveTab('admin');
+        } else {
+            setActiveTab('dashboard');
+        }
+    }} />;
   }
 
   const renderContent = () => {
@@ -55,6 +63,8 @@ export default function App() {
       case 'reseller':
          return user.role === UserRole.RESELLER ? <ResellerZone /> : <div className="p-10 text-center">Unauthorized</div>;
       default:
+        // Fallback based on role
+        if (user.role === UserRole.ADMIN) return <AdminDashboard />;
         return <Dashboard user={user} refreshUser={handleRefreshUser} onViewReceipt={handleViewReceipt} />;
     }
   };
@@ -64,7 +74,10 @@ export default function App() {
         user={user} 
         activeTab={activeTab} 
         onTabChange={handleTabChange}
-        onLogout={() => setUser(null)}
+        onLogout={() => {
+            setUser(null);
+            setActiveTab('dashboard'); // Reset tab on logout
+        }}
     >
       {renderContent()}
     </Layout>

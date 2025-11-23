@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { User, UserRole } from '../types';
-import { Home, History, LogOut, ShieldCheck, Briefcase, User as UserIcon, Menu } from 'lucide-react';
+import { Home, History, LogOut, ShieldCheck, Briefcase, User as UserIcon, Menu, LayoutDashboard } from 'lucide-react';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -51,21 +51,27 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, activeTab, onTab
          </div>
          
          <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-            <NavItem id="dashboard" icon={Home} label="Dashboard" />
-            <NavItem id="history" icon={History} label="Transactions" />
-            
-            {user.role === UserRole.RESELLER && (
-               <div className="pt-4 mt-4 border-t border-gray-100">
-                  <p className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Business</p>
-                  <NavItem id="reseller" icon={Briefcase} label="Reseller Zone" />
-               </div>
-            )}
-            
-            {user.role === UserRole.ADMIN && (
-               <div className="pt-4 mt-4 border-t border-gray-100">
-                   <p className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Administration</p>
-                   <NavItem id="admin" icon={ShieldCheck} label="Admin Portal" />
-               </div>
+            {user.role === UserRole.ADMIN ? (
+                // ADMIN NAVIGATION ONLY
+                <>
+                    <div className="px-4 py-2 mb-2">
+                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Administration</p>
+                    </div>
+                    <NavItem id="admin" icon={LayoutDashboard} label="Admin Overview" />
+                </>
+            ) : (
+                // USER / RESELLER NAVIGATION
+                <>
+                    <NavItem id="dashboard" icon={Home} label="Dashboard" />
+                    <NavItem id="history" icon={History} label="Transactions" />
+                    
+                    {user.role === UserRole.RESELLER && (
+                    <div className="pt-4 mt-4 border-t border-gray-100">
+                        <p className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Business</p>
+                        <NavItem id="reseller" icon={Briefcase} label="Reseller Zone" />
+                    </div>
+                    )}
+                </>
             )}
          </nav>
 
@@ -107,10 +113,18 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, activeTab, onTab
         <header className="hidden md:flex bg-white px-8 py-5 border-b justify-between items-center sticky top-0 z-20 shadow-sm/50 backdrop-blur-sm bg-white/90">
            <div>
               <h2 className="text-xl font-bold text-gray-800 capitalize">
-                {activeTab === 'dashboard' ? `Welcome back, ${user.name.split(' ')[0]} 👋` : activeTab.replace(/([A-Z])/g, ' $1').trim()}
+                {activeTab === 'dashboard' 
+                    ? `Welcome back, ${user.name.split(' ')[0]} 👋` 
+                    : activeTab === 'admin' 
+                        ? 'Administrator Portal' 
+                        : activeTab.replace(/([A-Z])/g, ' $1').trim()}
               </h2>
               <p className="text-xs text-gray-500 mt-1">
-                 {activeTab === 'dashboard' ? 'Here is what is happening with your wallet today.' : 'Manage your activities.'}
+                 {activeTab === 'dashboard' 
+                    ? 'Here is what is happening with your wallet today.' 
+                    : activeTab === 'admin' 
+                        ? 'Manage platform activities and users.' 
+                        : 'Manage your activities.'}
               </p>
            </div>
            
@@ -136,16 +150,24 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, activeTab, onTab
         {/* Mobile Bottom Nav */}
         <nav className="md:hidden bg-white border-t border-gray-200 fixed bottom-0 w-full z-30 pb-safe shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
             <div className="flex justify-around items-center h-16">
-              <NavItem id="dashboard" icon={Home} label="Home" mobile />
-              <NavItem id="history" icon={History} label="History" mobile />
-              
-              {(user.role === UserRole.RESELLER || user.role === UserRole.ADMIN) && (
-                 <NavItem 
-                    id={user.role === UserRole.ADMIN ? 'admin' : 'reseller'} 
-                    icon={user.role === UserRole.ADMIN ? ShieldCheck : Briefcase} 
-                    label="Menu" 
-                    mobile 
-                 />
+              {user.role === UserRole.ADMIN ? (
+                 // ADMIN MOBILE NAV
+                 <NavItem id="admin" icon={LayoutDashboard} label="Admin" mobile />
+              ) : (
+                 // USER MOBILE NAV
+                 <>
+                    <NavItem id="dashboard" icon={Home} label="Home" mobile />
+                    <NavItem id="history" icon={History} label="History" mobile />
+                    
+                    {user.role === UserRole.RESELLER && (
+                        <NavItem 
+                            id="reseller" 
+                            icon={Briefcase} 
+                            label="Reseller" 
+                            mobile 
+                        />
+                    )}
+                 </>
               )}
                
               <button onClick={handleLogoutClick} className="flex flex-col items-center justify-center w-full p-2 text-gray-400 hover:text-red-500 gap-1 transition-colors">
