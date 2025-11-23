@@ -216,19 +216,8 @@ export const AdminSettings: React.FC = () => {
                    </div>
                </div>
 
-               {/* Templates */}
-               <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-                   <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2"><FileText size={18}/> Message Templates</h3>
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                       <div>
-                           <label className="text-xs font-bold text-gray-500 uppercase">Welcome Email</label>
-                           <textarea className="w-full h-32 p-3 mt-1 bg-gray-50 border rounded-xl text-sm" defaultValue="Welcome to JadanPay, {name}! We are glad to have you."></textarea>
-                       </div>
-                       <div>
-                           <label className="text-xs font-bold text-gray-500 uppercase">Transaction Receipt (SMS)</label>
-                           <textarea className="w-full h-32 p-3 mt-1 bg-gray-50 border rounded-xl text-sm" defaultValue="Tx Successful: {amount} {type} for {number}. Ref: {ref}"></textarea>
-                       </div>
-                   </div>
+               <div className="text-center p-6 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                   <p className="text-sm text-gray-500">To create and manage message templates, please visit the <strong className="text-green-700">Communication Hub</strong>.</p>
                </div>
           </div>
       )}

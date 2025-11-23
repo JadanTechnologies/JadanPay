@@ -8,6 +8,7 @@ import { AdminSettings } from './components/AdminSettings';
 import { AdminUsers } from './components/AdminUsers';
 import { AdminSupport } from './components/AdminSupport';
 import { AdminStaff } from './components/AdminStaff';
+import { AdminCommunication } from './components/AdminCommunication';
 import { ResellerZone } from './components/ResellerZone';
 import { User, UserRole } from './types';
 import { MockDB } from './services/mockDb';
@@ -75,6 +76,8 @@ export default function App() {
          return <AdminUsers />;
       case 'admin-support':
          return <AdminSupport />;
+      case 'admin-communication':
+         return <AdminCommunication />;
       case 'admin-staff':
          return <AdminStaff />;
       case 'admin-settings':

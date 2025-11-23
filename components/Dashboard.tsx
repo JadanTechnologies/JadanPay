@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { User } from '../types';
+import React, { useState, useEffect } from 'react';
+import { User, Announcement } from '../types';
 import { TopUpForm } from './TopUpForm';
 import { fundWallet } from '../services/topupService';
-import { Wallet, TrendingUp, Plus, ArrowRight, Activity, Zap } from 'lucide-react';
+import { MockDB } from '../services/mockDb';
+import { Wallet, TrendingUp, Plus, ArrowRight, Activity, Zap, Bell, X } from 'lucide-react';
 
 interface DashboardProps {
   user: User;
@@ -13,6 +14,22 @@ interface DashboardProps {
 export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewReceipt }) => {
   const [showFundModal, setShowFundModal] = useState(false);
   const [isFunding, setIsFunding] = useState(false);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [dismissedAnnouncements, setDismissedAnnouncements] = useState<string[]>([]);
+
+  useEffect(() => {
+      loadAnnouncements();
+  }, []);
+
+  const loadAnnouncements = async () => {
+      const data = await MockDB.getAnnouncements();
+      // Filter active ones
+      setAnnouncements(data.filter(a => a.isActive));
+  };
+
+  const handleDismiss = (id: string) => {
+      setDismissedAnnouncements([...dismissedAnnouncements, id]);
+  };
 
   const handleFundWallet = async () => {
     setIsFunding(true);
@@ -28,8 +45,39 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
     }
   };
 
+  const visibleAnnouncements = announcements.filter(a => !dismissedAnnouncements.includes(a.id));
+
   return (
     <div className="space-y-6 md:space-y-8 animate-fade-in">
+      
+      {/* Announcements Section */}
+      {visibleAnnouncements.length > 0 && (
+          <div className="space-y-2">
+              {visibleAnnouncements.map(ann => (
+                  <div 
+                    key={ann.id} 
+                    className={`p-4 rounded-xl border flex items-start gap-3 relative ${
+                        ann.type === 'info' ? 'bg-blue-50 border-blue-100 text-blue-800' :
+                        ann.type === 'warning' ? 'bg-yellow-50 border-yellow-100 text-yellow-800' :
+                        ann.type === 'success' ? 'bg-green-50 border-green-100 text-green-800' :
+                        'bg-purple-50 border-purple-100 text-purple-800'
+                    }`}
+                  >
+                      <Bell size={20} className="shrink-0 mt-0.5" />
+                      <div className="flex-1 pr-6">
+                          <h4 className="font-bold text-sm">{ann.title}</h4>
+                          <p className="text-xs opacity-90 mt-1">{ann.message}</p>
+                      </div>
+                      <button 
+                        onClick={() => handleDismiss(ann.id)}
+                        className="absolute top-3 right-3 text-current opacity-50 hover:opacity-100"
+                      >
+                          <X size={16} />
+                      </button>
+                  </div>
+              ))}
+          </div>
+      )}
       
       {/* Wallet Banner Section */}
       <div className="bg-gradient-to-r from-green-800 to-green-900 rounded-3xl p-6 md:p-8 text-white shadow-xl relative overflow-hidden group">

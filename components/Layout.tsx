@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { User, UserRole } from '../types';
-import { Home, History, LogOut, ShieldCheck, Briefcase, User as UserIcon, Menu, LayoutDashboard, Settings, Users, MessageSquare, Lock } from 'lucide-react';
+import { Home, History, LogOut, ShieldCheck, Briefcase, User as UserIcon, Menu, LayoutDashboard, Settings, Users, MessageSquare, Lock, Megaphone } from 'lucide-react';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -60,6 +60,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, activeTab, onTab
                     <NavItem id="admin" icon={LayoutDashboard} label="Admin Overview" />
                     <NavItem id="admin-users" icon={Users} label="User Management" />
                     <NavItem id="admin-support" icon={MessageSquare} label="Support Tickets" />
+                    <NavItem id="admin-communication" icon={Megaphone} label="Communication" />
                     <NavItem id="admin-staff" icon={Lock} label="Staff & Roles" />
                     <NavItem id="admin-settings" icon={Settings} label="Global Settings" />
                 </>
@@ -123,6 +124,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, activeTab, onTab
                         ? 'Administrator Portal' 
                         : activeTab === 'admin-users' ? 'User Management'
                         : activeTab === 'admin-support' ? 'Support Desk'
+                        : activeTab === 'admin-communication' ? 'Communication Hub'
                         : activeTab === 'admin-staff' ? 'Staff Access Control'
                         : activeTab === 'admin-settings'
                             ? 'Platform Settings'
@@ -133,6 +135,8 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, activeTab, onTab
                     ? 'Here is what is happening with your wallet today.' 
                     : activeTab === 'admin' 
                         ? 'Manage platform activities and users.'
+                        : activeTab === 'admin-communication'
+                            ? 'Manage broadcasts, announcements and templates.'
                         : activeTab === 'admin-settings'
                             ? 'Configure brand settings and service providers.'
                         : 'Manage your activities.'}
@@ -167,6 +171,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, activeTab, onTab
                     <NavItem id="admin" icon={LayoutDashboard} label="Admin" mobile />
                     <NavItem id="admin-users" icon={Users} label="Users" mobile />
                     <NavItem id="admin-support" icon={MessageSquare} label="Support" mobile />
+                    <NavItem id="admin-communication" icon={Megaphone} label="Comms" mobile />
                     <NavItem id="admin-settings" icon={Settings} label="Settings" mobile />
                  </>
               ) : (

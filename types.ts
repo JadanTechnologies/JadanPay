@@ -118,3 +118,22 @@ export interface Staff {
   roleId: string;
   status: 'active' | 'inactive';
 }
+
+export interface Announcement {
+  id: string;
+  title: string;
+  message: string;
+  type: 'info' | 'warning' | 'success' | 'promo';
+  audience: 'all' | 'resellers' | 'staff';
+  isActive: boolean;
+  date: string;
+}
+
+export interface CommunicationTemplate {
+  id: string;
+  name: string;
+  channel: 'email' | 'sms' | 'push';
+  subject?: string;
+  body: string;
+  variables: string[];
+}

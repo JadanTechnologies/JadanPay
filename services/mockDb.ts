@@ -1,4 +1,4 @@
-import { User, Transaction, TransactionType, TransactionStatus, UserRole, Provider, Ticket, UserStatus, Staff, Role } from '../types';
+import { User, Transaction, TransactionType, TransactionStatus, UserRole, Provider, Ticket, UserStatus, Staff, Role, Announcement, CommunicationTemplate } from '../types';
 import { MOCK_USERS_DATA } from '../constants';
 
 // Initial Mock State
@@ -50,6 +50,36 @@ let staffMembers: Staff[] = [];
 let roles: Role[] = [
     { id: 'r1', name: 'Support Agent', permissions: ['view_users', 'reply_tickets'] },
     { id: 'r2', name: 'Manager', permissions: ['view_users', 'manage_staff', 'view_analytics'] }
+];
+
+let announcements: Announcement[] = [
+    {
+        id: 'a1',
+        title: 'Maintenance Update',
+        message: 'MTN Data services will be experiencing downtime between 1AM - 3AM tonight.',
+        type: 'warning',
+        audience: 'all',
+        isActive: true,
+        date: new Date().toISOString()
+    }
+];
+
+let templates: CommunicationTemplate[] = [
+    {
+        id: 'tmp1',
+        name: 'Welcome Email',
+        channel: 'email',
+        subject: 'Welcome to JadanPay!',
+        body: 'Hi {name}, welcome to the platform. We are glad to have you.',
+        variables: ['name']
+    },
+    {
+        id: 'tmp2',
+        name: 'Transaction Receipt',
+        channel: 'sms',
+        body: 'Tx Successful: {amount} {type} for {number}. Ref: {ref}',
+        variables: ['amount', 'type', 'number', 'ref']
+    }
 ];
 
 // Helper to simulate network delay
@@ -144,5 +174,34 @@ export const MockDB = {
   addRole: async (role: Role) => {
       roles.push(role);
       return role;
+  },
+
+  // Communication Methods
+  getAnnouncements: async () => {
+      await delay(200);
+      return announcements;
+  },
+  addAnnouncement: async (a: Announcement) => {
+      announcements.unshift(a);
+      return a;
+  },
+  deleteAnnouncement: async (id: string) => {
+      announcements = announcements.filter(a => a.id !== id);
+  },
+  getTemplates: async () => {
+      await delay(200);
+      return templates;
+  },
+  saveTemplate: async (t: CommunicationTemplate) => {
+      const idx = templates.findIndex(temp => temp.id === t.id);
+      if (idx >= 0) {
+          templates[idx] = t;
+      } else {
+          templates.push(t);
+      }
+      return t;
+  },
+  deleteTemplate: async (id: string) => {
+      templates = templates.filter(t => t.id !== id);
   }
 };
