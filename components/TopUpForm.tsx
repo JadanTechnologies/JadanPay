@@ -6,7 +6,7 @@ import { processAirtimePurchase, processDataPurchase } from '../services/topupSe
 import { SettingsService } from '../services/settingsService';
 import { MockDB } from '../services/mockDb';
 import { playNotification } from '../utils/audio';
-// Replaced Signal with Activity/BarChart2 for better CDN compatibility if Signal is missing in older lucide versions
+// Replaced Signal with Activity for better compatibility
 import { Smartphone, Wifi, PiggyBank, Loader2, Sparkles, Star, Check, AlertTriangle, Info, Share2, Ban, Activity, ChevronDown } from 'lucide-react';
 
 interface TopUpFormProps {
@@ -57,14 +57,18 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
   }, []);
 
   const loadData = async () => {
-      // Load enabled/disabled providers and stats from Admin Settings
-      const settings = await SettingsService.getSettings();
-      setProviderStatus(settings.providerStatus || {});
-      setProviderStats(settings.providerStats || {});
-      
-      // Load dynamic bundles
-      const dbBundles = await MockDB.getBundles();
-      setBundles(dbBundles);
+      try {
+        // Load enabled/disabled providers and stats from Admin Settings
+        const settings = await SettingsService.getSettings();
+        setProviderStatus(settings.providerStatus || {});
+        setProviderStats(settings.providerStats || {});
+        
+        // Load dynamic bundles
+        const dbBundles = await MockDB.getBundles();
+        setBundles(dbBundles);
+      } catch (e) {
+        console.error("Failed to load top-up data", e);
+      }
   };
 
   // Smart Suggest Logic
@@ -72,10 +76,10 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
     if (phone.length === 11) {
       // Simple mock logic to detect network from prefix
       let suggested: Provider | null = null;
-      if (phone.startsWith('0803') || phone.startsWith('0806')) suggested = Provider.MTN;
-      else if (phone.startsWith('0805') || phone.startsWith('0815')) suggested = Provider.GLO;
-      else if (phone.startsWith('0802') || phone.startsWith('0812')) suggested = Provider.AIRTEL;
-      else if (phone.startsWith('0809') || phone.startsWith('0819')) suggested = Provider.NMOBILE;
+      if (phone.startsWith('0803') || phone.startsWith('0806') || phone.startsWith('0813') || phone.startsWith('0816')) suggested = Provider.MTN;
+      else if (phone.startsWith('0805') || phone.startsWith('0815') || phone.startsWith('0811')) suggested = Provider.GLO;
+      else if (phone.startsWith('0802') || phone.startsWith('0812') || phone.startsWith('0902')) suggested = Provider.AIRTEL;
+      else if (phone.startsWith('0809') || phone.startsWith('0819') || phone.startsWith('0909')) suggested = Provider.NMOBILE;
 
       // Only switch if the suggested provider is enabled
       if (suggested && providerStatus[suggested]) {
@@ -286,7 +290,7 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
   };
 
   const renderSignalIcon = (rate: number) => {
-      // Use Activity as a safer alternative to Signal if icon package is old
+      // Use Activity as a safer alternative to Signal if icon package is old or incompatible
       if (rate >= 90) return <Activity size={12} className="text-green-500" />;
       if (rate >= 60) return <Activity size={12} className="text-yellow-500" />;
       return <Activity size={12} className="text-red-500" />;

@@ -30,6 +30,16 @@ export const BilalService = {
      */
     _simulateRequest: async (endpoint: string, payload: any): Promise<ServiceResponse> => {
         const settings = await SettingsService.getSettings();
+        
+        // Safety check if settings are not fully loaded
+        if (!settings || !settings.apiKeys) {
+             return {
+                success: false,
+                error: "System Configuration Error: Settings not loaded.",
+                statusCode: 500
+            };
+        }
+
         const apiKey = settings.apiKeys.BILALSADA;
         const isActive = settings.activeApiVendor === 'BILALSADA';
 
@@ -128,15 +138,22 @@ export const BilalService = {
      * Check Balance (Admin function)
      */
     getBalance: async () => {
-        const settings = await SettingsService.getSettings();
-        const apiKey = settings.apiKeys.BILALSADA;
-        const isActive = settings.activeApiVendor === 'BILALSADA';
+        try {
+            const settings = await SettingsService.getSettings();
+            if (!settings) return { balance: 0 };
+            
+            const apiKey = settings.apiKeys?.BILALSADA;
+            const isActive = settings.activeApiVendor === 'BILALSADA';
 
-        if (!isActive || !apiKey) return { balance: 0 };
+            if (!isActive || !apiKey) return { balance: 0 };
 
-        console.log(`[Bilal Integration] GET ${BASE_URL}/balance`);
-        await new Promise(r => setTimeout(r, 800));
-        
-        return { balance: 54000.50 }; // Mocked balance on provider side
+            console.log(`[Bilal Integration] GET ${BASE_URL}/balance`);
+            await new Promise(r => setTimeout(r, 800));
+            
+            return { balance: 54000.50 }; // Mocked balance on provider side
+        } catch (e) {
+            console.error("Failed to fetch balance", e);
+            return { balance: 0 };
+        }
     }
 };

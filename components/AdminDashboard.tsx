@@ -54,7 +54,6 @@ export const AdminDashboard: React.FC = () => {
       link.setAttribute("download", "transactions_ledger.csv");
       document.body.appendChild(link);
       link.click();
-      link.click();
       link.remove();
   };
 
@@ -103,66 +102,68 @@ export const AdminDashboard: React.FC = () => {
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col min-h-[400px]">
-            <h3 className="font-bold text-gray-700 mb-4 shrink-0">Transaction Volume by Provider</h3>
-            {/* Added min-w-0 to prevent flexbox overflow issues and fixed height container for Recharts */}
-            <div className="flex-1 w-full min-w-0 min-h-[300px] relative">
+         {/* Chart Container - Fixed Height to prevent Recharts crash */}
+         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col h-[450px]">
+            <h3 className="font-bold text-gray-700 mb-4 h-6 shrink-0">Transaction Volume by Provider</h3>
+            {/* Explicit width and height for container */}
+            <div className="w-full h-[350px] min-w-0">
                 {providerData.length > 0 ? (
-                    <div style={{ width: '100%', height: '100%', minHeight: 300 }}>
-                        <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                                <Pie
-                                    data={providerData}
-                                    cx="50%"
-                                    cy="50%"
-                                    innerRadius={60}
-                                    outerRadius={80}
-                                    paddingAngle={5}
-                                    dataKey="value"
-                                >
-                                    {providerData.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                    ))}
-                                </Pie>
-                                <Tooltip />
-                                <Legend verticalAlign="bottom" height={36}/>
-                            </PieChart>
-                        </ResponsiveContainer>
-                    </div>
+                    <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                            <Pie
+                                data={providerData}
+                                cx="50%"
+                                cy="50%"
+                                innerRadius={60}
+                                outerRadius={80}
+                                paddingAngle={5}
+                                dataKey="value"
+                            >
+                                {providerData.map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                ))}
+                            </Pie>
+                            <Tooltip />
+                            <Legend verticalAlign="bottom" height={36}/>
+                        </PieChart>
+                    </ResponsiveContainer>
                 ) : (
-                    <div className="flex items-center justify-center h-full text-gray-400">
+                    <div className="flex items-center justify-center h-full text-gray-400 border-2 border-dashed rounded-xl">
                         No transaction data available
                     </div>
                 )}
             </div>
          </div>
-         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 h-[400px] overflow-y-auto">
-             <h3 className="font-bold text-gray-700 mb-4">Recent Transactions</h3>
-             <table className="w-full text-xs text-left">
-                <thead className="text-gray-400 bg-gray-50 uppercase font-semibold">
-                    <tr>
-                        <th className="px-2 py-2">User</th>
-                        <th className="px-2 py-2">Type</th>
-                        <th className="px-2 py-2 text-right">Profit</th>
-                        <th className="px-2 py-2 text-right">Amount</th>
-                    </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                    {transactions.slice(0, 10).map(t => (
-                        <tr key={t.id}>
-                            <td className="px-2 py-2 font-medium">{t.userId}</td>
-                            <td className="px-2 py-2">{t.type}</td>
-                            <td className="px-2 py-2 text-right text-green-600">
-                                {t.profit ? `+₦${t.profit}` : '-'}
-                            </td>
-                            <td className="px-2 py-2 text-right">₦{t.amount}</td>
+         
+         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 h-[450px] flex flex-col">
+             <h3 className="font-bold text-gray-700 mb-4 shrink-0">Recent Transactions</h3>
+             <div className="overflow-y-auto flex-1">
+                 <table className="w-full text-xs text-left">
+                    <thead className="text-gray-400 bg-gray-50 uppercase font-semibold sticky top-0">
+                        <tr>
+                            <th className="px-2 py-2">User</th>
+                            <th className="px-2 py-2">Type</th>
+                            <th className="px-2 py-2 text-right">Profit</th>
+                            <th className="px-2 py-2 text-right">Amount</th>
                         </tr>
-                    ))}
-                    {transactions.length === 0 && (
-                        <tr><td colSpan={4} className="p-4 text-center text-gray-400">No transactions yet</td></tr>
-                    )}
-                </tbody>
-             </table>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                        {transactions.slice(0, 15).map(t => (
+                            <tr key={t.id}>
+                                <td className="px-2 py-2 font-medium truncate max-w-[80px]" title={t.userId}>{t.userId}</td>
+                                <td className="px-2 py-2">{t.type}</td>
+                                <td className="px-2 py-2 text-right text-green-600">
+                                    {t.profit ? `+₦${t.profit}` : '-'}
+                                </td>
+                                <td className="px-2 py-2 text-right">₦{t.amount.toLocaleString()}</td>
+                            </tr>
+                        ))}
+                        {transactions.length === 0 && (
+                            <tr><td colSpan={4} className="p-4 text-center text-gray-400">No transactions yet</td></tr>
+                        )}
+                    </tbody>
+                 </table>
+             </div>
          </div>
       </div>
     </div>
