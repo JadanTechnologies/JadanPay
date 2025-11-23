@@ -11,11 +11,12 @@ interface TopUpFormProps {
 }
 
 // Define specific limits per provider to mimic real-world restrictions
+// Updated to enforce reasonable range (100 - 50,000) as requested
 const PROVIDER_LIMITS: Record<Provider, { min: number; max: number }> = {
-  [Provider.MTN]: { min: 50, max: 200000 },
+  [Provider.MTN]: { min: 100, max: 50000 },
   [Provider.GLO]: { min: 100, max: 50000 },
-  [Provider.AIRTEL]: { min: 50, max: 100000 },
-  [Provider.NMOBILE]: { min: 50, max: 50000 },
+  [Provider.AIRTEL]: { min: 100, max: 50000 },
+  [Provider.NMOBILE]: { min: 100, max: 50000 },
 };
 
 export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewReceipt }) => {
@@ -80,11 +81,11 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
             return;
         }
         if (val < limits.min) {
-            setError(`Minimum top-up for ${PROVIDER_LOGOS[provider]} is ₦${limits.min}`);
+            setError(`Amount too low. Minimum for ${PROVIDER_LOGOS[provider]} is ₦${limits.min}`);
             return;
         }
         if (val > limits.max) {
-            setError(`Maximum top-up for ${PROVIDER_LOGOS[provider]} is ₦${limits.max.toLocaleString()}`);
+            setError(`Amount too high. Maximum for ${PROVIDER_LOGOS[provider]} is ₦${limits.max.toLocaleString()}`);
             return;
         }
     }
@@ -250,15 +251,31 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
              <input
               type="number"
               value={amount}
-              onChange={(e) => setAmount(e.target.value === '' ? '' : Number(e.target.value))}
+              onChange={(e) => {
+                  setAmount(e.target.value === '' ? '' : Number(e.target.value));
+                  setError(null); // Clear error on change
+              }}
+              min={currentLimits.min}
+              max={currentLimits.max}
               placeholder="0.00"
-              className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none font-mono text-lg"
+              className={`w-full p-3 bg-gray-50 border rounded-xl focus:ring-2 outline-none font-mono text-lg ${
+                error && error.includes('Amount') 
+                ? 'border-red-300 focus:ring-red-200' 
+                : 'border-gray-200 focus:ring-green-500'
+              }`}
               required
             />
             
             {/* Limit Helper Text */}
-            <div className="flex items-center gap-1 mt-2 text-xs text-gray-500 bg-gray-50 p-2 rounded-lg border border-gray-100">
-                <Info size={12} className="text-blue-400" />
+            <div className={`flex items-center gap-1 mt-2 text-xs p-2 rounded-lg border transition-colors ${
+                (Number(amount) > 0 && (Number(amount) < currentLimits.min || Number(amount) > currentLimits.max))
+                ? 'text-red-600 bg-red-50 border-red-100'
+                : 'text-gray-500 bg-gray-50 border-gray-100'
+            }`}>
+                { (Number(amount) > 0 && (Number(amount) < currentLimits.min || Number(amount) > currentLimits.max)) 
+                  ? <AlertTriangle size={12} /> 
+                  : <Info size={12} className="text-blue-400" /> 
+                }
                 <span>Range: ₦{currentLimits.min} - ₦{currentLimits.max.toLocaleString()}</span>
             </div>
 
