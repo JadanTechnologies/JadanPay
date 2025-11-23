@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { Smartphone, Zap, Shield, ArrowRight, Star, ChevronDown, Activity, Wifi, Box, CheckCircle, Moon, Sun, Quote, X, Mail, MapPin, Phone } from 'lucide-react';
+import { Smartphone, Zap, Shield, ArrowRight, Star, ChevronDown, Activity, Wifi, Box, CheckCircle, Moon, Sun, Quote, X, Mail, MapPin, Phone, Code2 } from 'lucide-react';
 import { SettingsService, AppSettings } from '../services/settingsService';
 
 interface LandingPageProps {
@@ -540,13 +540,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
                   </div>
               </div>
               
-              <div className="text-center pt-8 border-t border-gray-200 dark:border-gray-800">
-                  <p className="text-gray-500 text-xs">
+              <div className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-800 flex flex-col items-center">
+                  <p className="text-gray-500 text-xs mb-2">
                       &copy; {new Date().getFullYear()} {appName}. All rights reserved.
                   </p>
-                  <p className="text-[10px] text-gray-400 mt-2">
-                      Developed by <span className="font-bold text-gray-600 dark:text-gray-300">Jadan Technologies</span>
-                  </p>
+                  <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-full border border-gray-200 dark:border-gray-700">
+                      <Code2 size={12} className="text-gray-400" />
+                      <span className="text-[10px] text-gray-500">Developed by</span>
+                      <span className="text-xs font-bold text-gray-900 dark:text-white">Jadan Technologies</span>
+                  </div>
               </div>
           </div>
       </footer>
