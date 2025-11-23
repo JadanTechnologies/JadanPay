@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Provider, Bundle, User, TransactionType, Transaction } from '../types';
 import { PROVIDER_COLORS, PROVIDER_LOGOS, SAMPLE_BUNDLES } from '../constants';
 import { processAirtimePurchase, processDataPurchase } from '../services/topupService';
+import { SettingsService } from '../services/settingsService';
 import { Smartphone, Wifi, PiggyBank, Loader2, Sparkles, Star, Check, AlertTriangle, Info, Share2, Ban } from 'lucide-react';
 
 interface TopUpFormProps {
@@ -31,21 +32,35 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
   const [lastTx, setLastTx] = useState<Transaction | null>(null);
+  const [providerStatus, setProviderStatus] = useState<Record<string, boolean>>({
+      [Provider.MTN]: true, [Provider.GLO]: true, [Provider.AIRTEL]: true, [Provider.NMOBILE]: true
+  });
 
   // State for Provider Change Confirmation
   const [showProviderConfirm, setShowProviderConfirm] = useState(false);
   const [pendingProvider, setPendingProvider] = useState<Provider | null>(null);
 
+  useEffect(() => {
+      // Load enabled/disabled providers from Admin Settings
+      SettingsService.getSettings().then(s => setProviderStatus(s.providerStatus));
+  }, []);
+
   // Smart Suggest Logic
   useEffect(() => {
     if (phone.length === 11) {
       // Simple mock logic to detect network from prefix
-      if (phone.startsWith('0803') || phone.startsWith('0806')) setProvider(Provider.MTN);
-      else if (phone.startsWith('0805') || phone.startsWith('0815')) setProvider(Provider.GLO);
-      else if (phone.startsWith('0802') || phone.startsWith('0812')) setProvider(Provider.AIRTEL);
-      else if (phone.startsWith('0809') || phone.startsWith('0819')) setProvider(Provider.NMOBILE);
+      let suggested: Provider | null = null;
+      if (phone.startsWith('0803') || phone.startsWith('0806')) suggested = Provider.MTN;
+      else if (phone.startsWith('0805') || phone.startsWith('0815')) suggested = Provider.GLO;
+      else if (phone.startsWith('0802') || phone.startsWith('0812')) suggested = Provider.AIRTEL;
+      else if (phone.startsWith('0809') || phone.startsWith('0819')) suggested = Provider.NMOBILE;
+
+      // Only switch if the suggested provider is enabled
+      if (suggested && providerStatus[suggested]) {
+         setProvider(suggested);
+      }
     }
-  }, [phone]);
+  }, [phone, providerStatus]);
 
   // Reset selection when provider changes to prevent invalid states
   useEffect(() => {
@@ -54,6 +69,12 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
   }, [provider, type]);
 
   const handleProviderClick = (newProvider: Provider) => {
+    // Check if provider is enabled in settings
+    if (!providerStatus[newProvider]) {
+        setError(`Sorry, ${PROVIDER_LOGOS[newProvider]} services are currently unavailable.`);
+        return;
+    }
+
     if (newProvider === provider) return;
 
     // Only prompt if we are in Data mode and a bundle is selected, as switching resets it
@@ -252,7 +273,9 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
 
         {/* Provider Selection */}
         <div className="grid grid-cols-4 gap-2">
-          {Object.values(Provider).map((p) => (
+          {Object.values(Provider).map((p) => {
+            const isEnabled = providerStatus[p];
+            return (
             <button
               key={p}
               type="button"
@@ -260,12 +283,14 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
               className={`py-2 rounded-lg text-xs font-bold transition-all active:scale-95 border-2 ${
                 provider === p 
                   ? `${PROVIDER_COLORS[p]} border-transparent shadow-md ring-2 ring-offset-1 ring-gray-200 scale-105` 
-                  : 'bg-white border-gray-100 text-gray-400 grayscale hover:grayscale-0 hover:border-gray-300'
+                  : isEnabled 
+                    ? 'bg-white border-gray-100 text-gray-400 grayscale hover:grayscale-0 hover:border-gray-300'
+                    : 'bg-gray-50 border-gray-100 text-gray-300 cursor-not-allowed opacity-50'
               }`}
             >
               {PROVIDER_LOGOS[p]}
             </button>
-          ))}
+          )})}
         </div>
 
         {/* Amount or Bundles */}

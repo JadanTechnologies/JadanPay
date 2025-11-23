@@ -1,41 +1,47 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Save, Globe, Smartphone, Building, Mail, Phone, ShieldAlert, Check, X } from 'lucide-react';
 import { Provider } from '../types';
 import { PROVIDER_LOGOS, PROVIDER_COLORS } from '../constants';
+import { SettingsService, AppSettings } from '../services/settingsService';
 
 export const AdminSettings: React.FC = () => {
-  const [settings, setSettings] = useState({
-    appName: 'JadanPay',
-    supportEmail: 'help@jadanpay.com',
-    supportPhone: '0800-JADANPAY',
-    maintenanceMode: false,
-  });
-
-  const [providerStatus, setProviderStatus] = useState<Record<string, boolean>>({
-    [Provider.MTN]: true,
-    [Provider.GLO]: true,
-    [Provider.AIRTEL]: true,
-    [Provider.NMOBILE]: true,
-  });
-
+  const [settings, setSettings] = useState<AppSettings | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  const handleSave = () => {
+  useEffect(() => {
+    loadSettings();
+  }, []);
+
+  const loadSettings = async () => {
+    const data = await SettingsService.getSettings();
+    setSettings(data);
+  };
+
+  const handleSave = async () => {
+    if (!settings) return;
     setIsSaving(true);
-    // Simulate API call
-    setTimeout(() => {
-        setIsSaving(false);
+    try {
+        await SettingsService.updateSettings(settings);
         alert("Settings updated successfully!");
-    }, 800);
+    } catch (e) {
+        alert("Failed to save settings");
+    } finally {
+        setIsSaving(false);
+    }
   };
 
   const toggleProvider = (key: string) => {
-      setProviderStatus(prev => ({
-          ...prev,
-          [key]: !prev[key]
-      }));
+      if (!settings) return;
+      setSettings({
+          ...settings,
+          providerStatus: {
+              ...settings.providerStatus,
+              [key]: !settings.providerStatus[key]
+          }
+      });
   };
+
+  if (!settings) return <div className="p-10 text-center text-gray-400">Loading settings...</div>;
 
   return (
     <div className="p-6 space-y-8 animate-fade-in pb-24">
@@ -139,8 +145,8 @@ export const AdminSettings: React.FC = () => {
                             <div>
                                 <p className="font-bold text-gray-800">{PROVIDER_LOGOS[p]}</p>
                                 <div className="flex items-center gap-1">
-                                    <span className={`w-1.5 h-1.5 rounded-full ${providerStatus[p] ? 'bg-green-500' : 'bg-red-500'}`}></span>
-                                    <p className="text-xs text-gray-500">{providerStatus[p] ? 'Operational' : 'Disabled'}</p>
+                                    <span className={`w-1.5 h-1.5 rounded-full ${settings.providerStatus[p] ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                                    <p className="text-xs text-gray-500">{settings.providerStatus[p] ? 'Operational' : 'Disabled'}</p>
                                 </div>
                             </div>
                         </div>
@@ -148,12 +154,12 @@ export const AdminSettings: React.FC = () => {
                         <button 
                             onClick={() => toggleProvider(p)}
                             className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
-                                providerStatus[p] 
+                                settings.providerStatus[p] 
                                 ? 'bg-white border-gray-200 text-red-600 hover:bg-red-50 hover:border-red-200' 
                                 : 'bg-green-600 border-green-600 text-white shadow-md hover:bg-green-700'
                             }`}
                         >
-                            {providerStatus[p] ? 'Disable' : 'Enable'}
+                            {settings.providerStatus[p] ? 'Disable' : 'Enable'}
                         </button>
                     </div>
                 ))}
