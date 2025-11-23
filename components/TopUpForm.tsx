@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Provider, Bundle, User, TransactionType } from '../types';
 import { PROVIDER_COLORS, PROVIDER_LOGOS, SAMPLE_BUNDLES } from '../constants';
 import { processAirtimePurchase, processDataPurchase } from '../services/topupService';
-import { Smartphone, Wifi, PiggyBank, Loader2, Sparkles, Star, Check } from 'lucide-react';
+import { Smartphone, Wifi, PiggyBank, Loader2, Sparkles, Star, Check, AlertTriangle } from 'lucide-react';
 
 interface TopUpFormProps {
   user: User;
@@ -19,6 +19,7 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess }) => {
   const [roundUp, setRoundUp] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   // Smart Suggest Logic
   useEffect(() => {
@@ -31,19 +32,40 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess }) => {
     }
   }, [phone]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError(null);
     setSuccessMsg(null);
 
+    // Initial Validation
+    if (!phone || phone.length < 11) {
+        setError("Please enter a valid phone number");
+        return;
+    }
+    if (type === TransactionType.AIRTIME && (!amount || Number(amount) <= 0)) {
+        setError("Please enter a valid amount");
+        return;
+    }
+    if (type === TransactionType.DATA && !selectedBundle) {
+        setError("Please select a data bundle");
+        return;
+    }
+
+    setShowConfirm(true);
+  };
+
+  const executeTransaction = async () => {
+    setShowConfirm(false);
+    setLoading(true);
+    
     try {
       if (type === TransactionType.AIRTIME) {
-        if (!amount) throw new Error("Please enter amount");
         await processAirtimePurchase(user, provider, Number(amount), phone, roundUp);
       } else {
-        if (!selectedBundle) throw new Error("Please select a bundle");
-        await processDataPurchase(user, selectedBundle, phone, roundUp);
+        // We know selectedBundle is not null due to validation above, but typescript needs help
+        if (selectedBundle) {
+            await processDataPurchase(user, selectedBundle, phone, roundUp);
+        }
       }
       setSuccessMsg(`Transaction Successful! "E don land!"`);
       onSuccess();
@@ -58,6 +80,32 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess }) => {
   };
 
   const filteredBundles = SAMPLE_BUNDLES.filter(b => b.provider === provider);
+
+  // Helper to calculate total for confirmation modal
+  const getTransactionDetails = () => {
+     let cost = 0;
+     let desc = "";
+     if (type === TransactionType.AIRTIME) {
+         cost = Number(amount);
+         desc = `Airtime Top-up`;
+     } else {
+         cost = selectedBundle ? selectedBundle.price : 0;
+         desc = selectedBundle ? `${selectedBundle.name} Data` : '';
+     }
+
+     let total = cost;
+     let savings = 0;
+     if (roundUp) {
+        const nextHundred = Math.ceil(cost / 100) * 100;
+        if (nextHundred > cost) {
+            savings = nextHundred - cost;
+            total = nextHundred;
+        }
+     }
+     return { cost, desc, total, savings };
+  };
+
+  const details = getTransactionDetails();
 
   return (
     <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 relative overflow-hidden">
@@ -89,7 +137,7 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess }) => {
         </button>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-5 relative z-10">
+      <form onSubmit={handleFormSubmit} className="space-y-5 relative z-10">
         
         {/* Phone Input */}
         <div>
@@ -247,6 +295,60 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess }) => {
           {loading ? <Loader2 className="animate-spin" /> : "Pay Now"}
         </button>
       </form>
+
+      {/* Confirmation Modal */}
+      {showConfirm && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl animate-fade-in-up">
+            <h3 className="text-lg font-bold mb-4 text-gray-900">Confirm Transaction</h3>
+            
+            <div className="bg-gray-50 rounded-xl p-4 space-y-3 mb-6 border border-gray-100">
+                <div className="flex justify-between">
+                    <span className="text-gray-500 text-sm">Service</span>
+                    <span className="font-medium text-gray-900">{details.desc}</span>
+                </div>
+                 <div className="flex justify-between">
+                    <span className="text-gray-500 text-sm">Provider</span>
+                    <span className="font-medium text-gray-900">{provider}</span>
+                </div>
+                 <div className="flex justify-between">
+                    <span className="text-gray-500 text-sm">Phone</span>
+                    <span className="font-mono text-gray-900">{phone}</span>
+                </div>
+                <div className="h-px bg-gray-200 my-2"></div>
+                 <div className="flex justify-between">
+                    <span className="text-gray-500 text-sm">Amount</span>
+                    <span className="font-medium text-gray-900">₦{details.cost.toLocaleString()}</span>
+                </div>
+                 {details.savings > 0 && (
+                    <div className="flex justify-between text-blue-600">
+                        <span className="text-xs flex items-center gap-1"><PiggyBank size={12}/> Round-up Save</span>
+                        <span className="font-medium text-sm">+₦{details.savings}</span>
+                    </div>
+                 )}
+                 <div className="flex justify-between pt-2 border-t border-gray-200">
+                    <span className="font-bold text-gray-800">Total Deducted</span>
+                    <span className="font-bold text-xl text-green-700">₦{details.total.toLocaleString()}</span>
+                </div>
+            </div>
+
+            <div className="flex gap-3">
+                 <button
+                      onClick={() => setShowConfirm(false)}
+                      className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors"
+                  >
+                      Cancel
+                  </button>
+                  <button
+                      onClick={executeTransaction}
+                      className="flex-1 py-3 bg-green-700 text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-green-800 transition-colors"
+                  >
+                      Confirm
+                  </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

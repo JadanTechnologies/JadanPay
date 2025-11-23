@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { User, UserRole } from '../types';
-import { Home, History, Settings, LogOut, ShieldCheck, Briefcase } from 'lucide-react';
+import { Home, History, LogOut, ShieldCheck, Briefcase } from 'lucide-react';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -11,6 +11,16 @@ interface LayoutProps {
 }
 
 export const Layout: React.FC<LayoutProps> = ({ children, user, activeTab, onTabChange, onLogout }) => {
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  
+  const handleLogoutClick = () => {
+    setShowLogoutConfirm(true);
+  };
+
+  const confirmLogout = () => {
+    setShowLogoutConfirm(false);
+    onLogout();
+  };
   
   const NavItem = ({ id, icon: Icon, label }: { id: string; icon: any; label: string }) => (
     <button
@@ -37,11 +47,8 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, activeTab, onTab
              src={`https://ui-avatars.com/api/?name=${user.name}&background=0D8ABC&color=fff`} 
              alt="Profile" 
              className="w-10 h-10 rounded-full border-2 border-green-100 cursor-pointer"
-             onClick={onLogout}
+             onClick={handleLogoutClick}
            />
-           <div className="absolute right-0 top-12 bg-white shadow-lg rounded-lg p-2 text-xs w-24 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-             Click to Logout
-           </div>
         </div>
       </header>
 
@@ -64,12 +71,36 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, activeTab, onTab
              <NavItem id="admin" icon={ShieldCheck} label="Admin" />
           )}
           
-          <button onClick={onLogout} className="flex flex-col items-center justify-center w-full p-2 text-red-500 hover:text-red-700">
+          <button onClick={handleLogoutClick} className="flex flex-col items-center justify-center w-full p-2 text-red-500 hover:text-red-700">
              <LogOut size={24} />
              <span className="text-xs mt-1 font-medium">Logout</span>
           </button>
         </div>
       </nav>
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-xs rounded-2xl p-6 shadow-2xl animate-fade-in-up">
+            <h3 className="text-lg font-bold mb-2 text-gray-900">Sign Out?</h3>
+            <p className="text-gray-500 text-sm mb-6">Are you sure you want to log out of JadanPay?</p>
+            <div className="flex gap-3">
+                <button
+                    onClick={() => setShowLogoutConfirm(false)}
+                    className="flex-1 py-2.5 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors"
+                >
+                    Cancel
+                </button>
+                <button
+                    onClick={confirmLogout}
+                    className="flex-1 py-2.5 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition-colors"
+                >
+                    Logout
+                </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
