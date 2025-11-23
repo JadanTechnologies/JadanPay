@@ -6,6 +6,7 @@ export interface AppSettings {
   supportPhone: string;
   maintenanceMode: boolean;
   providerStatus: Record<string, boolean>;
+  providerStats: Record<string, number>; // Success rate percentage (0-100)
   // Integrations
   bilalApiKey: string;
   useBilalService: boolean;
@@ -22,6 +23,12 @@ const defaultSettings: AppSettings = {
     [Provider.GLO]: true,
     [Provider.AIRTEL]: true,
     [Provider.NMOBILE]: true,
+  },
+  providerStats: {
+    [Provider.MTN]: 98,
+    [Provider.GLO]: 85,
+    [Provider.AIRTEL]: 92,
+    [Provider.NMOBILE]: 90,
   },
   bilalApiKey: '',
   useBilalService: false

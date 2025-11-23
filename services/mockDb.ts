@@ -1,8 +1,12 @@
-import { User, Transaction, TransactionType, TransactionStatus, UserRole, Provider, Ticket, UserStatus, Staff, Role, Announcement, CommunicationTemplate } from '../types';
-import { MOCK_USERS_DATA } from '../constants';
+import { User, Transaction, TransactionType, TransactionStatus, UserRole, Provider, Ticket, UserStatus, Staff, Role, Announcement, CommunicationTemplate, Bundle } from '../types';
+import { MOCK_USERS_DATA, SAMPLE_BUNDLES } from '../constants';
 
 // Initial Mock State
 let users: User[] = [...MOCK_USERS_DATA] as User[];
+
+// Initialize bundles from constants, but allow modification
+// We map the initial ID to planId for consistency if needed, or just assume constants are correct
+let bundles: Bundle[] = SAMPLE_BUNDLES.map(b => ({...b, planId: b.id}));
 
 let transactions: Transaction[] = [
   {
@@ -232,5 +236,23 @@ export const MockDB = {
   },
   deleteTemplate: async (id: string) => {
       templates = templates.filter(t => t.id !== id);
+  },
+
+  // Bundle / Pricing Methods
+  getBundles: async () => {
+      await delay(200);
+      return bundles;
+  },
+  saveBundle: async (b: Bundle) => {
+      const idx = bundles.findIndex(bun => bun.id === b.id);
+      if (idx >= 0) {
+          bundles[idx] = b;
+      } else {
+          bundles.push(b);
+      }
+      return b;
+  },
+  deleteBundle: async (id: string) => {
+      bundles = bundles.filter(b => b.id !== id);
   }
 };

@@ -1,21 +1,33 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Globe, Smartphone, Building, Mail, Phone, ShieldAlert, CreditCard, Bell, Clock, FileText, Upload, Link as LinkIcon, Server } from 'lucide-react';
-import { Provider } from '../types';
+import { Save, Globe, Smartphone, Building, Mail, Phone, ShieldAlert, CreditCard, Bell, Clock, FileText, Upload, Link as LinkIcon, Server, Database, Plus, Trash2, Edit2, Check, X } from 'lucide-react';
+import { Provider, Bundle } from '../types';
 import { PROVIDER_LOGOS, PROVIDER_COLORS } from '../constants';
 import { SettingsService, AppSettings } from '../services/settingsService';
+import { MockDB } from '../services/mockDb';
 
 export const AdminSettings: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'general' | 'payment' | 'communication' | 'automation' | 'integrations'>('general');
+  const [activeTab, setActiveTab] = useState<'general' | 'services' | 'payment' | 'communication' | 'automation' | 'integrations'>('general');
   const [settings, setSettings] = useState<AppSettings | null>(null);
+  const [bundles, setBundles] = useState<Bundle[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Bundle Modal State
+  const [showBundleModal, setShowBundleModal] = useState(false);
+  const [editingBundle, setEditingBundle] = useState<Partial<Bundle>>({ isAvailable: true, isBestValue: false });
 
   useEffect(() => {
     loadSettings();
+    loadBundles();
   }, []);
 
   const loadSettings = async () => {
     const data = await SettingsService.getSettings();
     setSettings(data);
+  };
+
+  const loadBundles = async () => {
+      const data = await MockDB.getBundles();
+      setBundles(data);
   };
 
   const handleSave = async () => {
@@ -40,6 +52,49 @@ export const AdminSettings: React.FC = () => {
               [key]: !settings.providerStatus[key]
           }
       });
+  };
+
+  const updateProviderStat = (key: string, value: number) => {
+      if (!settings) return;
+      setSettings({
+          ...settings,
+          providerStats: {
+              ...settings.providerStats,
+              [key]: value
+          }
+      });
+  };
+
+  // Bundle CRUD
+  const handleSaveBundle = async () => {
+      if(!editingBundle.provider || !editingBundle.price || !editingBundle.planId) {
+          alert("Please fill all required fields (Provider, Price, Plan ID)");
+          return;
+      }
+
+      const b: Bundle = {
+          id: editingBundle.id || Math.random().toString(36).substr(2, 9),
+          provider: editingBundle.provider as Provider,
+          name: editingBundle.name || `${editingBundle.dataAmount} ${editingBundle.validity}`,
+          price: Number(editingBundle.price),
+          dataAmount: editingBundle.dataAmount || '0MB',
+          validity: editingBundle.validity || '1 Day',
+          planId: editingBundle.planId,
+          isBestValue: editingBundle.isBestValue,
+          isAvailable: editingBundle.isAvailable
+      };
+
+      await MockDB.saveBundle(b);
+      setShowBundleModal(false);
+      setEditingBundle({ isAvailable: true, isBestValue: false });
+      loadBundles();
+  };
+
+  const handleDeleteBundle = async (id: string) => {
+      if(window.confirm("Delete this data plan?")) {
+          await MockDB.deleteBundle(id);
+          loadBundles();
+      }
   };
 
   if (!settings) return <div className="p-10 text-center text-gray-400">Loading settings...</div>;
@@ -76,6 +131,7 @@ export const AdminSettings: React.FC = () => {
 
       <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
           <TabButton id="general" icon={Building} label="Brand & General" />
+          <TabButton id="services" icon={Database} label="Services & Pricing" />
           <TabButton id="integrations" icon={Server} label="Service APIs" />
           <TabButton id="payment" icon={CreditCard} label="Payments" />
           <TabButton id="communication" icon={Bell} label="SMS & Email" />
@@ -109,36 +165,131 @@ export const AdminSettings: React.FC = () => {
                      </div>
                 </div>
             </div>
-
-            {/* Service Status */}
-            <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-                <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
-                    <Globe className="text-blue-500" size={20} /> Service Availability
-                </h3>
-                <div className="space-y-3">
-                    {Object.values(Provider).map((p) => (
-                        <div key={p} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
-                            <div className="flex items-center gap-3">
-                                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold text-white ${PROVIDER_COLORS[p]}`}>
-                                    {PROVIDER_LOGOS[p].charAt(0)}
-                                </div>
-                                <span className="font-bold text-gray-800 text-sm">{PROVIDER_LOGOS[p]}</span>
-                            </div>
-                            <button 
-                                onClick={() => toggleProvider(p)}
-                                className={`px-3 py-1 rounded-lg text-xs font-bold border ${
-                                    settings.providerStatus[p] 
-                                    ? 'bg-white text-red-600 border-gray-200' 
-                                    : 'bg-green-600 text-white border-green-600'
-                                }`}
-                            >
-                                {settings.providerStatus[p] ? 'Disable' : 'Enable'}
-                            </button>
-                        </div>
-                    ))}
-                </div>
-            </div>
         </div>
+      )}
+
+      {activeTab === 'services' && (
+          <div className="space-y-6 animate-fade-in">
+              {/* Network Availability Control */}
+              <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                  <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
+                      <Globe className="text-blue-500" size={20} /> Network Availability & Success Rates
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                      {Object.values(Provider).map((p) => (
+                          <div key={p} className="p-4 bg-gray-50 rounded-xl border border-gray-100 space-y-4">
+                              <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold text-white ${PROVIDER_COLORS[p]}`}>
+                                          {PROVIDER_LOGOS[p].charAt(0)}
+                                      </div>
+                                      <span className="font-bold text-gray-800 text-sm">{PROVIDER_LOGOS[p]}</span>
+                                  </div>
+                                  <label className="relative inline-flex items-center cursor-pointer">
+                                      <input 
+                                          type="checkbox" 
+                                          className="sr-only peer"
+                                          checked={settings.providerStatus[p]}
+                                          onChange={() => toggleProvider(p)}
+                                      />
+                                      <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-600"></div>
+                                  </label>
+                              </div>
+                              
+                              <div>
+                                  <div className="flex justify-between text-xs mb-1">
+                                      <span className="text-gray-500 font-bold">Success Rate</span>
+                                      <span className={`font-bold ${
+                                          (settings.providerStats?.[p] ?? 100) > 80 ? 'text-green-600' : 
+                                          (settings.providerStats?.[p] ?? 100) > 50 ? 'text-yellow-600' : 'text-red-600'
+                                      }`}>
+                                          {settings.providerStats?.[p] ?? 100}%
+                                      </span>
+                                  </div>
+                                  <input 
+                                      type="range" 
+                                      min="0" 
+                                      max="100" 
+                                      value={settings.providerStats?.[p] ?? 100}
+                                      onChange={(e) => updateProviderStat(p, Number(e.target.value))}
+                                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-green-600"
+                                  />
+                              </div>
+                          </div>
+                      ))}
+                  </div>
+              </div>
+
+              {/* Data Plans Manager */}
+              <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                  <div className="flex justify-between items-center mb-6">
+                      <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                          <Database className="text-green-600" size={20} /> Data Plans & Pricing
+                      </h3>
+                      <button 
+                          onClick={() => {
+                              setEditingBundle({ isAvailable: true, isBestValue: false });
+                              setShowBundleModal(true);
+                          }}
+                          className="flex items-center gap-2 px-4 py-2 bg-green-700 text-white rounded-lg text-sm font-bold shadow-sm hover:bg-green-800"
+                      >
+                          <Plus size={16}/> Add Plan
+                      </button>
+                  </div>
+                  
+                  <div className="overflow-x-auto">
+                      <table className="w-full text-left text-xs">
+                          <thead className="bg-gray-50 text-gray-500 uppercase font-semibold">
+                              <tr>
+                                  <th className="p-3">Provider</th>
+                                  <th className="p-3">Plan Name</th>
+                                  <th className="p-3">API Plan ID</th>
+                                  <th className="p-3">Price (₦)</th>
+                                  <th className="p-3">Status</th>
+                                  <th className="p-3 text-right">Actions</th>
+                              </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-100">
+                              {bundles.map(b => (
+                                  <tr key={b.id} className="hover:bg-gray-50">
+                                      <td className="p-3">
+                                          <span className={`px-2 py-1 rounded text-[10px] font-bold text-white ${PROVIDER_COLORS[b.provider]}`}>
+                                              {PROVIDER_LOGOS[b.provider]}
+                                          </span>
+                                      </td>
+                                      <td className="p-3 font-medium text-gray-800">{b.name}</td>
+                                      <td className="p-3 font-mono text-gray-500">{b.planId}</td>
+                                      <td className="p-3 font-bold text-green-700">₦{b.price}</td>
+                                      <td className="p-3">
+                                          {b.isAvailable !== false ? (
+                                              <span className="text-green-600 flex items-center gap-1"><Check size={12}/> Active</span>
+                                          ) : (
+                                              <span className="text-red-400 flex items-center gap-1"><X size={12}/> Inactive</span>
+                                          )}
+                                      </td>
+                                      <td className="p-3 text-right">
+                                          <div className="flex justify-end gap-2">
+                                              <button 
+                                                onClick={() => { setEditingBundle(b); setShowBundleModal(true); }}
+                                                className="p-1 text-blue-600 hover:bg-blue-50 rounded"
+                                              >
+                                                  <Edit2 size={14}/>
+                                              </button>
+                                              <button 
+                                                onClick={() => handleDeleteBundle(b.id)}
+                                                className="p-1 text-red-600 hover:bg-red-50 rounded"
+                                              >
+                                                  <Trash2 size={14}/>
+                                              </button>
+                                          </div>
+                                      </td>
+                                  </tr>
+                              ))}
+                          </tbody>
+                      </table>
+                  </div>
+              </div>
+          </div>
       )}
 
       {activeTab === 'integrations' && (
@@ -298,6 +449,103 @@ export const AdminSettings: React.FC = () => {
                               </div>
                           </div>
                       ))}
+                  </div>
+              </div>
+          </div>
+      )}
+
+      {/* Bundle Modal */}
+      {showBundleModal && (
+          <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+              <div className="bg-white w-full max-w-md rounded-2xl p-6 shadow-2xl">
+                  <h3 className="font-bold text-lg mb-4">{editingBundle.id ? 'Edit' : 'Add'} Data Plan</h3>
+                  <div className="space-y-3">
+                      <div>
+                          <label className="text-xs font-bold text-gray-500 block mb-1">Provider</label>
+                          <select 
+                            className="w-full p-3 border rounded-xl bg-white"
+                            value={editingBundle.provider || ''}
+                            onChange={e => setEditingBundle({...editingBundle, provider: e.target.value as Provider})}
+                          >
+                              <option value="" disabled>Select Provider</option>
+                              {Object.values(Provider).map(p => (
+                                  <option key={p} value={p}>{PROVIDER_LOGOS[p]}</option>
+                              ))}
+                          </select>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                          <div>
+                              <label className="text-xs font-bold text-gray-500 block mb-1">Data Amount</label>
+                              <input 
+                                className="w-full p-3 border rounded-xl" 
+                                placeholder="e.g. 1.5GB"
+                                value={editingBundle.dataAmount || ''}
+                                onChange={e => setEditingBundle({...editingBundle, dataAmount: e.target.value})}
+                              />
+                          </div>
+                          <div>
+                              <label className="text-xs font-bold text-gray-500 block mb-1">Validity</label>
+                              <input 
+                                className="w-full p-3 border rounded-xl" 
+                                placeholder="e.g. 30 Days"
+                                value={editingBundle.validity || ''}
+                                onChange={e => setEditingBundle({...editingBundle, validity: e.target.value})}
+                              />
+                          </div>
+                      </div>
+                      <div>
+                           <label className="text-xs font-bold text-gray-500 block mb-1">Plan Name (Display Name)</label>
+                           <input 
+                                className="w-full p-3 border rounded-xl" 
+                                placeholder="e.g. 1.5GB Monthly"
+                                value={editingBundle.name || ''}
+                                onChange={e => setEditingBundle({...editingBundle, name: e.target.value})}
+                              />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                          <div>
+                              <label className="text-xs font-bold text-gray-500 block mb-1">Price (₦)</label>
+                              <input 
+                                type="number"
+                                className="w-full p-3 border rounded-xl" 
+                                value={editingBundle.price || ''}
+                                onChange={e => setEditingBundle({...editingBundle, price: Number(e.target.value)})}
+                              />
+                          </div>
+                          <div>
+                              <label className="text-xs font-bold text-gray-500 block mb-1">API Plan ID</label>
+                              <input 
+                                className="w-full p-3 border rounded-xl font-mono text-sm" 
+                                placeholder="e.g. 1001"
+                                value={editingBundle.planId || ''}
+                                onChange={e => setEditingBundle({...editingBundle, planId: e.target.value})}
+                              />
+                          </div>
+                      </div>
+                      
+                      <div className="flex gap-4 pt-2">
+                          <label className="flex items-center gap-2">
+                              <input 
+                                type="checkbox" 
+                                checked={editingBundle.isAvailable ?? true}
+                                onChange={e => setEditingBundle({...editingBundle, isAvailable: e.target.checked})}
+                              />
+                              <span className="text-sm">Available</span>
+                          </label>
+                          <label className="flex items-center gap-2">
+                              <input 
+                                type="checkbox" 
+                                checked={editingBundle.isBestValue ?? false}
+                                onChange={e => setEditingBundle({...editingBundle, isBestValue: e.target.checked})}
+                              />
+                              <span className="text-sm">Best Value Tag</span>
+                          </label>
+                      </div>
+
+                      <div className="flex gap-3 mt-4">
+                          <button onClick={() => setShowBundleModal(false)} className="flex-1 py-2 bg-gray-100 rounded-xl font-bold text-gray-600">Cancel</button>
+                          <button onClick={handleSaveBundle} className="flex-1 py-2 bg-green-700 text-white rounded-xl font-bold">Save Plan</button>
+                      </div>
                   </div>
               </div>
           </div>

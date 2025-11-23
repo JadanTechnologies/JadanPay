@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Provider, Bundle, User, TransactionType, Transaction } from '../types';
-import { PROVIDER_COLORS, PROVIDER_LOGOS, SAMPLE_BUNDLES } from '../constants';
+import { PROVIDER_COLORS, PROVIDER_LOGOS } from '../constants';
 import { processAirtimePurchase, processDataPurchase } from '../services/topupService';
 import { SettingsService } from '../services/settingsService';
-import { Smartphone, Wifi, PiggyBank, Loader2, Sparkles, Star, Check, AlertTriangle, Info, Share2, Ban } from 'lucide-react';
+import { MockDB } from '../services/mockDb';
+import { Smartphone, Wifi, PiggyBank, Loader2, Sparkles, Star, Check, AlertTriangle, Info, Share2, Ban, Signal, SignalHigh, SignalMedium, SignalLow } from 'lucide-react';
 
 interface TopUpFormProps {
   user: User;
@@ -32,18 +33,32 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
   const [lastTx, setLastTx] = useState<Transaction | null>(null);
+  
+  // Dynamic Settings
   const [providerStatus, setProviderStatus] = useState<Record<string, boolean>>({
       [Provider.MTN]: true, [Provider.GLO]: true, [Provider.AIRTEL]: true, [Provider.NMOBILE]: true
   });
+  const [providerStats, setProviderStats] = useState<Record<string, number>>({});
+  const [bundles, setBundles] = useState<Bundle[]>([]);
 
   // State for Provider Change Confirmation
   const [showProviderConfirm, setShowProviderConfirm] = useState(false);
   const [pendingProvider, setPendingProvider] = useState<Provider | null>(null);
 
   useEffect(() => {
-      // Load enabled/disabled providers from Admin Settings
-      SettingsService.getSettings().then(s => setProviderStatus(s.providerStatus));
+      loadData();
   }, []);
+
+  const loadData = async () => {
+      // Load enabled/disabled providers and stats from Admin Settings
+      const settings = await SettingsService.getSettings();
+      setProviderStatus(settings.providerStatus);
+      setProviderStats(settings.providerStats);
+      
+      // Load dynamic bundles
+      const dbBundles = await MockDB.getBundles();
+      setBundles(dbBundles);
+  };
 
   // Smart Suggest Logic
   useEffect(() => {
@@ -148,7 +163,7 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
         }
 
         // Ensure bundle belongs to selected provider (Availability check)
-        const isBundleValid = SAMPLE_BUNDLES.some(
+        const isBundleValid = bundles.some(
             b => b.id === selectedBundle.id && b.provider === provider
         );
         
@@ -188,8 +203,9 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
     }
   };
 
-  const filteredBundles = SAMPLE_BUNDLES.filter(b => b.provider === provider);
+  const filteredBundles = bundles.filter(b => b.provider === provider);
   const currentLimits = PROVIDER_LIMITS[provider];
+  const successRate = providerStats[provider] ?? 100;
 
   // Helper to calculate total for confirmation modal
   const getTransactionDetails = () => {
@@ -224,6 +240,12 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
     }
     setError(null);
     setSelectedBundle(b);
+  };
+
+  const renderSignalIcon = (rate: number) => {
+      if (rate >= 90) return <SignalHigh size={12} className="text-green-500" />;
+      if (rate >= 60) return <SignalMedium size={12} className="text-yellow-500" />;
+      return <SignalLow size={12} className="text-red-500" />;
   };
 
   return (
@@ -275,12 +297,13 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
         <div className="grid grid-cols-4 gap-2">
           {Object.values(Provider).map((p) => {
             const isEnabled = providerStatus[p];
+            const stats = providerStats[p] ?? 100;
             return (
             <button
               key={p}
               type="button"
               onClick={() => handleProviderClick(p)}
-              className={`py-2 rounded-lg text-xs font-bold transition-all active:scale-95 border-2 ${
+              className={`relative py-3 rounded-lg text-xs font-bold transition-all active:scale-95 border-2 flex flex-col items-center gap-1 ${
                 provider === p 
                   ? `${PROVIDER_COLORS[p]} border-transparent shadow-md ring-2 ring-offset-1 ring-gray-200 scale-105` 
                   : isEnabled 
@@ -289,8 +312,25 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
               }`}
             >
               {PROVIDER_LOGOS[p]}
+              {/* Network Availability Indicator */}
+              {isEnabled && (
+                  <div className={`absolute top-1 right-1 flex items-center gap-0.5 bg-white/80 rounded-full px-1 shadow-sm ${provider === p ? 'text-black' : ''}`}>
+                      {renderSignalIcon(stats)}
+                  </div>
+              )}
             </button>
           )})}
+        </div>
+
+        {/* Selected Provider Info */}
+        <div className="flex justify-between items-center px-2">
+            <span className="text-xs text-gray-400">Network Availability:</span>
+            <div className="flex items-center gap-1 text-xs font-medium">
+                {renderSignalIcon(successRate)}
+                <span className={successRate > 80 ? 'text-green-600' : successRate > 50 ? 'text-yellow-600' : 'text-red-600'}>
+                    {successRate}% Success Rate
+                </span>
+            </div>
         </div>
 
         {/* Amount or Bundles */}
@@ -412,6 +452,12 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
                  </div>
               </div>
             )})}
+            {filteredBundles.length === 0 && (
+                <div className="col-span-2 text-center py-8 text-gray-400 border border-dashed rounded-xl">
+                    <Wifi className="mx-auto mb-2 opacity-30"/>
+                    <p className="text-xs">No plans available for {PROVIDER_LOGOS[provider]}</p>
+                </div>
+            )}
           </div>
         )}
 

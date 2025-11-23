@@ -54,8 +54,9 @@ export interface Bundle {
   provider: Provider;
   name: string;
   price: number;
-  dataAmount?: string;
-  validity?: string;
+  dataAmount: string;
+  validity: string;
+  planId: string; // The ID sent to the external API (Bilal)
   isBestValue?: boolean;
   isAvailable?: boolean;
 }
