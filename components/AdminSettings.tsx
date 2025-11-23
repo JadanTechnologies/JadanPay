@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Globe, Smartphone, Building, Mail, Phone, ShieldAlert, CreditCard, Bell, Clock, FileText, Upload } from 'lucide-react';
+import { Save, Globe, Smartphone, Building, Mail, Phone, ShieldAlert, CreditCard, Bell, Clock, FileText, Upload, Link as LinkIcon, Server } from 'lucide-react';
 import { Provider } from '../types';
 import { PROVIDER_LOGOS, PROVIDER_COLORS } from '../constants';
 import { SettingsService, AppSettings } from '../services/settingsService';
 
 export const AdminSettings: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'general' | 'payment' | 'communication' | 'automation'>('general');
+  const [activeTab, setActiveTab] = useState<'general' | 'payment' | 'communication' | 'automation' | 'integrations'>('general');
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -47,7 +47,7 @@ export const AdminSettings: React.FC = () => {
   const TabButton = ({ id, icon: Icon, label }: { id: any, icon: any, label: string }) => (
     <button
         onClick={() => setActiveTab(id)}
-        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${
             activeTab === id 
             ? 'bg-green-50 text-green-700 border border-green-200' 
             : 'text-gray-500 hover:bg-gray-50'
@@ -74,11 +74,12 @@ export const AdminSettings: React.FC = () => {
         </button>
       </div>
 
-      <div className="flex gap-2 overflow-x-auto pb-2">
+      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
           <TabButton id="general" icon={Building} label="Brand & General" />
-          <TabButton id="payment" icon={CreditCard} label="Payments & Gateways" />
+          <TabButton id="integrations" icon={Server} label="Service APIs" />
+          <TabButton id="payment" icon={CreditCard} label="Payments" />
           <TabButton id="communication" icon={Bell} label="SMS & Email" />
-          <TabButton id="automation" icon={Clock} label="Automation & Cron" />
+          <TabButton id="automation" icon={Clock} label="Automation" />
       </div>
 
       {activeTab === 'general' && (
@@ -112,7 +113,7 @@ export const AdminSettings: React.FC = () => {
             {/* Service Status */}
             <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
                 <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
-                    <Globe className="text-blue-500" size={20} /> Service Providers
+                    <Globe className="text-blue-500" size={20} /> Service Availability
                 </h3>
                 <div className="space-y-3">
                     {Object.values(Provider).map((p) => (
@@ -138,6 +139,60 @@ export const AdminSettings: React.FC = () => {
                 </div>
             </div>
         </div>
+      )}
+
+      {activeTab === 'integrations' && (
+          <div className="space-y-6 animate-fade-in">
+              <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                  <div className="flex justify-between items-start mb-6">
+                      <div>
+                        <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                            <Server className="text-purple-600" size={20} /> BilalSadaSub API
+                        </h3>
+                        <p className="text-xs text-gray-500 mt-1">Primary provider for Airtime and Data services.</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold text-gray-500">Status:</span>
+                          <label className="relative inline-flex items-center cursor-pointer">
+                            <input 
+                                type="checkbox" 
+                                className="sr-only peer"
+                                checked={settings.useBilalService}
+                                onChange={(e) => setSettings({...settings, useBilalService: e.target.checked})}
+                            />
+                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                        </label>
+                      </div>
+                  </div>
+
+                  <div className="space-y-4">
+                      <div>
+                          <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">API Key</label>
+                          <input 
+                              type="password" 
+                              value={settings.bilalApiKey}
+                              onChange={(e) => setSettings({...settings, bilalApiKey: e.target.value})}
+                              placeholder="Paste your BilalSadaSub API Key here"
+                              className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none font-mono text-sm"
+                          />
+                      </div>
+                      <div className="flex gap-4">
+                          <div className="flex-1">
+                              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Base URL</label>
+                              <div className="w-full p-3 bg-gray-100 border border-gray-200 rounded-xl text-gray-500 text-sm flex items-center gap-2">
+                                  <LinkIcon size={14}/> https://app.bilalsadasub.com/api/v1
+                              </div>
+                          </div>
+                      </div>
+                      
+                      {settings.useBilalService && !settings.bilalApiKey && (
+                          <div className="p-3 bg-yellow-50 text-yellow-700 text-xs rounded-lg border border-yellow-100 flex items-center gap-2">
+                              <ShieldAlert size={16}/> Warning: Integration is enabled but API Key is missing.
+                          </div>
+                      )}
+                  </div>
+              </div>
+          </div>
       )}
 
       {activeTab === 'payment' && (

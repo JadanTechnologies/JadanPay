@@ -6,6 +6,9 @@ export interface AppSettings {
   supportPhone: string;
   maintenanceMode: boolean;
   providerStatus: Record<string, boolean>;
+  // Integrations
+  bilalApiKey: string;
+  useBilalService: boolean;
 }
 
 // Initial default settings
@@ -19,7 +22,9 @@ const defaultSettings: AppSettings = {
     [Provider.GLO]: true,
     [Provider.AIRTEL]: true,
     [Provider.NMOBILE]: true,
-  }
+  },
+  bilalApiKey: '',
+  useBilalService: false
 };
 
 // In-memory store (persists until refresh)
