@@ -32,6 +32,10 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
   const [showConfirm, setShowConfirm] = useState(false);
   const [lastTx, setLastTx] = useState<Transaction | null>(null);
 
+  // State for Provider Change Confirmation
+  const [showProviderConfirm, setShowProviderConfirm] = useState(false);
+  const [pendingProvider, setPendingProvider] = useState<Provider | null>(null);
+
   // Smart Suggest Logic
   useEffect(() => {
     if (phone.length === 11) {
@@ -48,6 +52,26 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
     setSelectedBundle(null);
     setError(null);
   }, [provider, type]);
+
+  const handleProviderClick = (newProvider: Provider) => {
+    if (newProvider === provider) return;
+
+    // Only prompt if we are in Data mode and a bundle is selected, as switching resets it
+    if (type === TransactionType.DATA && selectedBundle) {
+        setPendingProvider(newProvider);
+        setShowProviderConfirm(true);
+    } else {
+        setProvider(newProvider);
+    }
+  };
+
+  const confirmProviderChange = () => {
+    if (pendingProvider) {
+        setProvider(pendingProvider);
+    }
+    setShowProviderConfirm(false);
+    setPendingProvider(null);
+  };
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -232,7 +256,7 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
             <button
               key={p}
               type="button"
-              onClick={() => setProvider(p)}
+              onClick={() => handleProviderClick(p)}
               className={`py-2 rounded-lg text-xs font-bold transition-all active:scale-95 border-2 ${
                 provider === p 
                   ? `${PROVIDER_COLORS[p]} border-transparent shadow-md ring-2 ring-offset-1 ring-gray-200 scale-105` 
@@ -417,6 +441,38 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
           {loading ? <Loader2 className="animate-spin" /> : "Pay Now"}
         </button>
       </form>
+
+      {/* Provider Change Confirmation Modal */}
+      {showProviderConfirm && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-white w-full max-w-xs rounded-2xl p-6 shadow-2xl animate-fade-in-up">
+                 <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mb-4 mx-auto text-yellow-600">
+                    <AlertTriangle size={24} />
+                 </div>
+                <h3 className="text-lg font-bold mb-2 text-gray-900 text-center">Change Provider?</h3>
+                <p className="text-gray-500 text-sm mb-6 text-center">
+                    Are you sure you want to change provider? This will reset your selected data bundle.
+                </p>
+                <div className="flex gap-3">
+                    <button
+                        onClick={() => {
+                            setShowProviderConfirm(false);
+                            setPendingProvider(null);
+                        }}
+                        className="flex-1 py-2.5 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        onClick={confirmProviderChange}
+                        className="flex-1 py-2.5 bg-green-700 text-white rounded-xl font-bold hover:bg-green-800 transition-colors"
+                    >
+                        Change
+                    </button>
+                </div>
+            </div>
+        </div>
+      )}
 
       {/* Confirmation Modal */}
       {showConfirm && (
