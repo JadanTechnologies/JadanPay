@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Transaction, TransactionStatus, Provider, User } from '../types';
 import { MockDB } from '../services/mockDb';
-import { X, Share2, CheckCircle2, Download, RefreshCw } from 'lucide-react';
-import { PROVIDER_LOGOS } from '../constants';
+import { X, Share2, CheckCircle2, Download, RefreshCw, Check } from 'lucide-react';
+import { PROVIDER_LOGOS, PROVIDER_COLORS } from '../constants';
 
 interface HistoryProps {
   user: User;
@@ -12,10 +12,17 @@ export const History: React.FC<HistoryProps> = ({ user }) => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
+  const [shareState, setShareState] = useState<'idle' | 'copied'>('idle');
 
   useEffect(() => {
     loadData();
   }, [user.id]);
+
+  useEffect(() => {
+    if (selectedTx) {
+      setShareState('idle');
+    }
+  }, [selectedTx]);
 
   const loadData = async () => {
     setLoading(true);
@@ -27,6 +34,38 @@ export const History: React.FC<HistoryProps> = ({ user }) => {
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString('en-NG', {
       month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
+  };
+
+  const handleShare = async () => {
+    if (!selectedTx) return;
+
+    const shareUrl = `https://jadanpay.com/receipt/${selectedTx.id}`;
+    const shareText = `Payment Receipt from JadanPay\nAmount: ₦${selectedTx.amount.toLocaleString()}\nRef: ${selectedTx.reference}\nStatus: Successful`;
+    const shareData = {
+      title: 'JadanPay Receipt',
+      text: shareText,
+      url: shareUrl
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (error) {
+        // Fallback to copy if share fails or is cancelled
+        fallbackCopy(shareUrl);
+      }
+    } else {
+      fallbackCopy(shareUrl);
+    }
+  };
+
+  const fallbackCopy = (text: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setShareState('copied');
+      setTimeout(() => setShareState('idle'), 2000);
+    }).catch(err => {
+      console.error('Failed to copy', err);
     });
   };
 
@@ -107,43 +146,86 @@ export const History: React.FC<HistoryProps> = ({ user }) => {
                 {/* Jagged edge effect top */}
                 <div className="absolute top-0 left-0 w-full h-4 bg-white -mt-2" style={{ clipPath: 'polygon(0% 0%, 5% 100%, 10% 0%, 15% 100%, 20% 0%, 25% 100%, 30% 0%, 35% 100%, 40% 0%, 45% 100%, 50% 0%, 55% 100%, 60% 0%, 65% 100%, 70% 0%, 75% 100%, 80% 0%, 85% 100%, 90% 0%, 95% 100%, 100% 0%)'}}></div>
 
+                {/* Prominent Amount Display */}
+                <div className="flex flex-col items-center mb-8 border-b border-dashed border-gray-200 pb-6">
+                    <span className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-2">Total Amount</span>
+                    <span className="text-4xl font-black text-gray-900 tracking-tighter">
+                        ₦{selectedTx.amount.toLocaleString()}
+                    </span>
+                </div>
+
                 <div className="space-y-4">
-                    <div className="flex justify-between border-b border-dashed border-gray-300 pb-2">
-                        <span className="text-gray-500 text-sm">Amount</span>
-                        <span className="font-bold text-lg">₦{selectedTx.amount.toLocaleString()}</span>
-                    </div>
+                    {/* Provider with Logo */}
                     {selectedTx.provider && (
-                        <div className="flex justify-between border-b border-dashed border-gray-300 pb-2">
+                        <div className="flex justify-between items-center group">
                             <span className="text-gray-500 text-sm">Provider</span>
-                            <span className="font-medium text-gray-800">{selectedTx.provider}</span>
+                            <div className="flex items-center gap-2">
+                                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shadow-sm ${PROVIDER_COLORS[selectedTx.provider]}`}>
+                                    {PROVIDER_LOGOS[selectedTx.provider].charAt(0)}
+                                </div>
+                                <span className="font-bold text-gray-800">{PROVIDER_LOGOS[selectedTx.provider]}</span>
+                            </div>
                         </div>
                     )}
-                     <div className="flex justify-between border-b border-dashed border-gray-300 pb-2">
+
+                    {/* Bundle Name if exists */}
+                    {selectedTx.bundleName && (
+                         <div className="flex justify-between items-center">
+                            <span className="text-gray-500 text-sm">Bundle</span>
+                            <span className="font-semibold text-gray-900 text-right max-w-[150px] truncate" title={selectedTx.bundleName}>
+                                {selectedTx.bundleName}
+                            </span>
+                        </div>
+                    )}
+                    
+                    {/* Recipient */}
+                     <div className="flex justify-between items-center">
                         <span className="text-gray-500 text-sm">Recipient</span>
-                        <span className="font-medium text-gray-800">{selectedTx.destinationNumber || user.email}</span>
+                        <div className="flex items-center gap-2">
+                            <span className="font-mono text-sm font-medium text-gray-700 bg-gray-50 px-2 py-0.5 rounded border border-gray-100">
+                                {selectedTx.destinationNumber || user.email}
+                            </span>
+                        </div>
                     </div>
-                    <div className="flex justify-between border-b border-dashed border-gray-300 pb-2">
-                        <span className="text-gray-500 text-sm">Reference</span>
-                        <span className="font-mono text-xs text-gray-600">{selectedTx.reference}</span>
+
+                    {/* Type */}
+                    <div className="flex justify-between items-center">
+                         <span className="text-gray-500 text-sm">Type</span>
+                         <span className="text-sm font-medium text-gray-800 capitalize">
+                            {selectedTx.type.replace('_', ' ').toLowerCase()}
+                         </span>
+                    </div>
+
+                    {/* Reference */}
+                    <div className="flex justify-between items-center pt-3 border-t border-dashed border-gray-200 mt-2">
+                        <span className="text-gray-400 text-xs">Ref ID</span>
+                        <span className="font-mono text-[10px] text-gray-400">{selectedTx.reference}</span>
                     </div>
                 </div>
 
                 {/* QR Code Placeholder */}
-                <div className="mt-6 flex justify-center">
-                    <div className="bg-white p-2 border border-gray-200 rounded-lg">
-                       {/* Simple CSS Pattern for QR Mock */}
-                       <div className="w-24 h-24 bg-gray-900 opacity-90" style={{ backgroundImage: 'radial-gradient(white 2px, transparent 2px)', backgroundSize: '4px 4px'}}></div>
-                    </div>
+                <div className="mt-8 flex flex-col items-center gap-2">
+                     <div className="p-1 bg-white border border-gray-200 rounded-lg shadow-sm">
+                        <div className="w-20 h-20 bg-gray-900 opacity-90" style={{ backgroundImage: 'radial-gradient(white 2px, transparent 2px)', backgroundSize: '4px 4px'}}></div>
+                     </div>
+                     <p className="text-[10px] text-gray-400">Scan to verify transaction status</p>
                 </div>
-                <p className="text-center text-[10px] text-gray-400 mt-2">Scan to verify transaction</p>
 
                 {/* Actions */}
                 <div className="grid grid-cols-2 gap-3 mt-6">
-                    <button className="flex items-center justify-center gap-2 py-2.5 rounded-lg border border-green-600 text-green-700 font-medium text-sm hover:bg-green-50 transition-colors">
-                        <Share2 size={16} /> Share
+                    <button 
+                        onClick={handleShare}
+                        className={`flex items-center justify-center gap-2 py-3 rounded-xl border font-bold text-sm transition-all duration-300 ${
+                            shareState === 'copied' 
+                                ? 'bg-green-600 border-green-600 text-white shadow-lg scale-95' 
+                                : 'border-green-100 bg-green-50 text-green-700 hover:bg-green-100 hover:border-green-200'
+                        }`}
+                    >
+                        {shareState === 'copied' ? <Check size={18} /> : <Share2 size={18} />} 
+                        {shareState === 'copied' ? 'Copied!' : 'Share Receipt'}
                     </button>
-                     <button className="flex items-center justify-center gap-2 py-2.5 rounded-lg bg-green-600 text-white font-medium text-sm hover:bg-green-700 transition-colors">
-                        <Download size={16} /> Save
+                     <button className="flex items-center justify-center gap-2 py-3 rounded-xl bg-gray-900 text-white font-bold text-sm hover:bg-black transition-colors shadow-lg shadow-gray-200">
+                        <Download size={18} /> Save Image
                     </button>
                 </div>
             </div>
