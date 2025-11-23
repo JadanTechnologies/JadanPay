@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Save, Globe, Server, CreditCard, Database, Plus, Trash2, Edit2, Check, X, Upload, Mail, Phone, AlertTriangle, Key, Users, Trophy, Gift } from 'lucide-react';
+import { Save, Globe, Server, CreditCard, Database, Plus, Trash2, Edit2, Check, X, Upload, Mail, Phone, AlertTriangle, Key, Users, Trophy, Gift, MessageSquare } from 'lucide-react';
 import { Provider, Bundle, PlanType, User } from '../types';
 import { PROVIDER_LOGOS } from '../constants';
 import { SettingsService, AppSettings, ApiVendor } from '../services/settingsService';
@@ -296,6 +296,58 @@ export const AdminSettings: React.FC = () => {
                                   </div>
                               </div>
                           ))}
+                      </div>
+
+                      <h3 className="font-bold text-gray-800 mb-4 border-b pb-2 pt-4">SMS Configuration (Twilio)</h3>
+                      
+                      <div className="p-4 border rounded-xl bg-gray-50 mb-4">
+                           <div className="flex items-center gap-4 mb-4">
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <div className="relative">
+                                        <input 
+                                            type="checkbox" 
+                                            checked={settings.enableTwilio}
+                                            onChange={e => setSettings({...settings, enableTwilio: e.target.checked})}
+                                            className="sr-only peer"
+                                        />
+                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                    </div>
+                                    <span className="font-bold text-gray-700">Enable Twilio SMS</span>
+                                </label>
+                           </div>
+
+                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Account SID</label>
+                                    <input 
+                                        type="password"
+                                        value={settings.twilioAccountSid}
+                                        onChange={e => setSettings({...settings, twilioAccountSid: e.target.value})}
+                                        className="w-full p-3 border rounded-xl bg-white"
+                                        placeholder="AC..."
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Auth Token</label>
+                                    <input 
+                                        type="password"
+                                        value={settings.twilioAuthToken}
+                                        onChange={e => setSettings({...settings, twilioAuthToken: e.target.value})}
+                                        className="w-full p-3 border rounded-xl bg-white"
+                                        placeholder="Auth Token"
+                                    />
+                                </div>
+                                <div className="md:col-span-2">
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Sender ID / Phone Number</label>
+                                    <input 
+                                        value={settings.twilioSenderId}
+                                        onChange={e => setSettings({...settings, twilioSenderId: e.target.value})}
+                                        className="w-full p-3 border rounded-xl bg-white"
+                                        placeholder="+1234567890 or Brand Name"
+                                    />
+                                    <p className="text-[10px] text-gray-400 mt-1">Ensure this Sender ID is registered on your Twilio Console.</p>
+                                </div>
+                           </div>
                       </div>
 
                       <button onClick={handleSave} disabled={isSaving} className="px-6 py-3 bg-green-700 text-white rounded-xl font-bold hover:bg-green-800 mt-4">

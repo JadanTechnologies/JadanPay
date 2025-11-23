@@ -23,6 +23,12 @@ export interface AppSettings {
       ABBAPHANTAMI: string;
       SIMHOST: string;
   };
+
+  // SMS Settings (Twilio)
+  enableTwilio: boolean;
+  twilioAccountSid: string;
+  twilioAuthToken: string;
+  twilioSenderId: string;
   
   // Payments (Manual Funding)
   bankName: string;
@@ -96,6 +102,11 @@ const defaultSettings: AppSettings = {
       ABBAPHANTAMI: '',
       SIMHOST: ''
   },
+
+  enableTwilio: false,
+  twilioAccountSid: '',
+  twilioAuthToken: '',
+  twilioSenderId: '',
   
   bankName: 'GTBank',
   accountNumber: '0123456789',
@@ -145,7 +156,7 @@ try {
   const stored = localStorage.getItem(SETTINGS_STORAGE_KEY);
   if (stored) {
     const parsed = JSON.parse(stored);
-    // Merge to ensure new fields (like apiKeys object) exist if upgrading from v1
+    // Merge to ensure new fields (like apiKeys object or sms settings) exist if upgrading from v1
     _settings = { 
         ...defaultSettings, 
         ...parsed,
