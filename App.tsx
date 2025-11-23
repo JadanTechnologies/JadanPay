@@ -12,6 +12,7 @@ import { AdminStaff } from './components/AdminStaff';
 import { AdminCommunication } from './components/AdminCommunication';
 import { AdminPayments } from './components/AdminPayments';
 import { ResellerZone } from './components/ResellerZone';
+import { LandingPage } from './components/LandingPage';
 import { User, UserRole } from './types';
 import { MockDB } from './services/mockDb';
 
@@ -20,11 +21,32 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isLoadingUser, setIsLoadingUser] = useState(false);
   const [selectedTxId, setSelectedTxId] = useState<string | undefined>(undefined);
+  const [showLanding, setShowLanding] = useState(true);
+  
+  // Theme Management
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
-  // Simulate session check or persistence if we were using localStorage
+  // Initialize theme from system preference or local storage (mocked for now as just state)
   useEffect(() => {
-     // In a real app, check localStorage token here
+    // Check if user previously set dark mode or system preference
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+       setIsDarkMode(true);
+    }
   }, []);
+
+  // Update HTML class for Tailwind Dark Mode
+  useEffect(() => {
+    const root = window.document.documentElement;
+    if (isDarkMode) {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+  }, [isDarkMode]);
+
+  const toggleTheme = () => {
+    setIsDarkMode(!isDarkMode);
+  };
 
   const handleRefreshUser = async () => {
     if(!user) return;
@@ -48,21 +70,33 @@ export default function App() {
   };
 
   if (!user) {
-    return <Auth onAuthSuccess={(u) => {
-        setUser(u);
-        // Redirect Admin strictly to admin dashboard, others to user dashboard
-        if (u.role === UserRole.ADMIN) {
-            setActiveTab('admin');
-        } else {
-            setActiveTab('dashboard');
-        }
-    }} />;
+    if (showLanding) {
+        return <LandingPage 
+            onGetStarted={() => setShowLanding(false)} 
+            onLogin={() => setShowLanding(false)}
+            toggleTheme={toggleTheme}
+            isDarkMode={isDarkMode}
+        />;
+    }
+    
+    return <Auth 
+        onAuthSuccess={(u) => {
+            setUser(u);
+            // Redirect Admin strictly to admin dashboard, others to user dashboard
+            if (u.role === UserRole.ADMIN) {
+                setActiveTab('admin');
+            } else {
+                setActiveTab('dashboard');
+            }
+        }} 
+        onBack={() => setShowLanding(true)}
+    />;
   }
 
   const renderContent = () => {
     // Permission Guard
     if (activeTab.startsWith('admin') && user.role !== UserRole.ADMIN) {
-        return <div className="p-10 text-center">Unauthorized Access</div>;
+        return <div className="p-10 text-center dark:text-white">Unauthorized Access</div>;
     }
 
     switch (activeTab) {
@@ -88,7 +122,7 @@ export default function App() {
          return <AdminSettings />;
       
       case 'reseller':
-         return user.role === UserRole.RESELLER ? <ResellerZone /> : <div className="p-10 text-center">Unauthorized</div>;
+         return user.role === UserRole.RESELLER ? <ResellerZone /> : <div className="p-10 text-center dark:text-white">Unauthorized</div>;
       default:
         // Fallback based on role
         if (user.role === UserRole.ADMIN) return <AdminDashboard />;
@@ -104,6 +138,7 @@ export default function App() {
         onLogout={() => {
             setUser(null);
             setActiveTab('dashboard'); // Reset tab on logout
+            setShowLanding(true); // Return to landing page
         }}
     >
       {renderContent()}

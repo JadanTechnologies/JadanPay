@@ -5,7 +5,7 @@ import { TopUpForm } from './TopUpForm';
 import { fundWallet } from '../services/topupService';
 import { MockDB } from '../services/mockDb';
 import { playNotification } from '../utils/audio';
-import { Wallet, TrendingUp, Plus, ArrowRight, Activity, Zap, Bell, X, PieChart, AlertTriangle, Smartphone, Copy, Upload, CreditCard, Landmark, CheckCircle } from 'lucide-react';
+import { Wallet, TrendingUp, Plus, ArrowRight, Activity, Zap, Bell, X, PieChart, AlertTriangle, Smartphone, Copy, Upload, CreditCard, Landmark, CheckCircle, Gift, Share2 } from 'lucide-react';
 
 interface DashboardProps {
   user: User;
@@ -20,6 +20,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
   const [dismissedAnnouncements, setDismissedAnnouncements] = useState<string[]>([]);
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [isRedeeming, setIsRedeeming] = useState(false);
   
   // Funding State
   const [fundingMethod, setFundingMethod] = useState<'card' | 'manual'>('card');
@@ -68,6 +69,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
   const handleCopyWallet = () => {
       navigator.clipboard.writeText(user.walletNumber);
       playNotification("Wallet number copied");
+  };
+
+   const handleCopyReferral = () => {
+      navigator.clipboard.writeText(user.referralCode);
+      playNotification("Referral code copied");
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -120,6 +126,22 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
     }
   };
 
+  const handleRedeemBonus = async () => {
+      if(user.bonusBalance <= 0) return;
+      if(!window.confirm("Convert your bonus balance to main wallet balance?")) return;
+
+      setIsRedeeming(true);
+      try {
+          await MockDB.redeemBonus(user.id);
+          playNotification("Bonus redeemed successfully.");
+          refreshUser();
+      } catch (e: any) {
+          alert(e.message);
+      } finally {
+          setIsRedeeming(false);
+      }
+  };
+
   const visibleAnnouncements = announcements.filter(a => !dismissedAnnouncements.includes(a.id));
   const dataPercentage = (dataBalance.used / dataBalance.total) * 100;
   const remainingData = (dataBalance.total - dataBalance.used).toFixed(2);
@@ -147,7 +169,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
                           notifications.map(n => (
                               <div key={n.id} className={`p-3 border-b border-gray-50 hover:bg-gray-50 ${!n.isRead ? 'bg-green-50/30' : ''}`}>
                                   <p className="text-xs font-bold text-gray-800">{n.title}</p>
-                                  <p className="text-[10px] text-gray-500 mt-0.5">{n.message}</p>
+                                  <p className="text-xs text-gray-500 mt-0.5">{n.message}</p>
                                   <p className="text-[9px] text-gray-300 mt-1 text-right">{new Date(n.date).toLocaleDateString()}</p>
                               </div>
                           ))
@@ -242,6 +264,46 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
          </div>
 
          <div className="lg:col-span-5 xl:col-span-4 space-y-6">
+            
+            {/* Referral Card (New) */}
+            <div className="bg-gradient-to-br from-purple-800 to-indigo-900 rounded-3xl p-6 text-white shadow-lg relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
+                
+                <div className="flex justify-between items-start mb-4 relative z-10">
+                    <div>
+                        <h3 className="font-bold flex items-center gap-2"><Gift size={18}/> Refer & Earn Data</h3>
+                        <p className="text-xs text-purple-200 mt-1">Share code, earn bonus, buy free data.</p>
+                    </div>
+                    <div className="bg-white/20 p-2 rounded-lg">
+                        <Share2 size={18} />
+                    </div>
+                </div>
+
+                <div className="bg-black/20 p-4 rounded-xl border border-white/10 mb-4 relative z-10">
+                    <p className="text-xs text-purple-200 uppercase font-bold mb-1">Your Referral Code</p>
+                    <div className="flex justify-between items-center">
+                        <span className="font-mono text-2xl font-bold tracking-wider text-white">{user.referralCode}</span>
+                        <button onClick={handleCopyReferral} className="p-1 hover:text-purple-300"><Copy size={16}/></button>
+                    </div>
+                </div>
+
+                <div className="flex justify-between items-end relative z-10">
+                    <div>
+                        <p className="text-xs text-purple-200">Bonus Balance</p>
+                        <p className="font-mono text-xl font-bold">₦{user.bonusBalance?.toLocaleString() || '0'}</p>
+                    </div>
+                    {user.bonusBalance > 0 && (
+                        <button 
+                            onClick={handleRedeemBonus}
+                            disabled={isRedeeming}
+                            className="px-4 py-2 bg-white text-purple-900 rounded-lg text-xs font-bold hover:bg-gray-100 transition-colors"
+                        >
+                            {isRedeeming ? '...' : 'Redeem to Wallet'}
+                        </button>
+                    )}
+                </div>
+            </div>
+
             <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm relative overflow-hidden">
                 <div className="flex items-center justify-between mb-4 relative z-10">
                     <h3 className="font-bold text-gray-800 text-sm flex items-center gap-2">

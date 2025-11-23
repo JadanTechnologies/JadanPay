@@ -1,12 +1,13 @@
+
 import React, { useState, useEffect } from 'react';
-import { Save, Globe, Smartphone, Building, Mail, Phone, ShieldAlert, CreditCard, Bell, Clock, FileText, Upload, Link as LinkIcon, Server, Database, Plus, Trash2, Edit2, Check, X, HardDrive, Download, RefreshCcw } from 'lucide-react';
+import { Save, Globe, Smartphone, Building, Mail, Phone, ShieldAlert, CreditCard, Bell, Clock, FileText, Upload, Link as LinkIcon, Server, Database, Plus, Trash2, Edit2, Check, X, HardDrive, Download, RefreshCcw, Gift, LayoutTemplate } from 'lucide-react';
 import { Provider, Bundle, PlanType } from '../types';
 import { PROVIDER_LOGOS, PROVIDER_COLORS } from '../constants';
 import { SettingsService, AppSettings } from '../services/settingsService';
 import { MockDB } from '../services/mockDb';
 
 export const AdminSettings: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'general' | 'services' | 'payment' | 'communication' | 'automation' | 'integrations' | 'backup'>('general');
+  const [activeTab, setActiveTab] = useState<'general' | 'landing' | 'services' | 'payment' | 'communication' | 'automation' | 'integrations' | 'backup'>('general');
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [bundles, setBundles] = useState<Bundle[]>([]);
   const [isSaving, setIsSaving] = useState(false);
@@ -14,6 +15,9 @@ export const AdminSettings: React.FC = () => {
   // Bundle Modal State
   const [showBundleModal, setShowBundleModal] = useState(false);
   const [editingBundle, setEditingBundle] = useState<Partial<Bundle>>({ isAvailable: true, isBestValue: false, type: PlanType.SME });
+  
+  // Mobile App File State (Mock)
+  const [appFile, setAppFile] = useState<File | null>(null);
 
   useEffect(() => {
     loadSettings();
@@ -41,6 +45,20 @@ export const AdminSettings: React.FC = () => {
     } finally {
         setIsSaving(false);
     }
+  };
+
+  const handleAppUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+      if(e.target.files && e.target.files[0]) {
+          setAppFile(e.target.files[0]);
+          // Simulate upload by setting a fake URL
+          if(settings) {
+              setSettings({
+                  ...settings, 
+                  mobileAppUrl: `https://cdn.jadanpay.com/downloads/${e.target.files[0].name}`,
+                  mobileAppReleaseDate: new Date().toISOString()
+              });
+          }
+      }
   };
 
   const toggleProvider = (key: string) => {
@@ -177,6 +195,7 @@ export const AdminSettings: React.FC = () => {
 
       <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
           <TabButton id="general" icon={Building} label="Brand & General" />
+          <TabButton id="landing" icon={LayoutTemplate} label="Landing & App" />
           <TabButton id="services" icon={Database} label="Services & Pricing" />
           <TabButton id="integrations" icon={Server} label="Service APIs" />
           <TabButton id="payment" icon={CreditCard} label="Payments" />
@@ -212,7 +231,115 @@ export const AdminSettings: React.FC = () => {
                      </div>
                 </div>
             </div>
+
+            {/* Referral Settings */}
+            <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-6">
+                 <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                        <Gift className="text-purple-500" size={20} /> Referral System
+                    </h3>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                        <input 
+                            type="checkbox" 
+                            className="sr-only peer"
+                            checked={settings.enableReferral}
+                            onChange={(e) => setSettings({...settings, enableReferral: e.target.checked})}
+                        />
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                    </label>
+                 </div>
+                 
+                 <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Referral Bonus (₦)</label>
+                    <input 
+                        type="number" 
+                        value={settings.referralReward}
+                        onChange={(e) => setSettings({...settings, referralReward: Number(e.target.value)})}
+                        className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none"
+                        placeholder="100"
+                    />
+                    <p className="text-xs text-gray-400 mt-2">
+                        Amount credited to a user's bonus wallet when a friend they referred signs up.
+                    </p>
+                 </div>
+            </div>
         </div>
+      )}
+
+      {activeTab === 'landing' && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-fade-in">
+              <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-6">
+                  <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                      <LayoutTemplate className="text-blue-500" size={20} /> Landing Page Content
+                  </h3>
+                  <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Hero Title</label>
+                      <input 
+                          type="text" 
+                          value={settings.landingHeroTitle}
+                          onChange={(e) => setSettings({...settings, landingHeroTitle: e.target.value})}
+                          className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                          placeholder="Stop Overpaying For Data."
+                      />
+                  </div>
+                  <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Hero Subtitle</label>
+                      <textarea 
+                          value={settings.landingHeroSubtitle}
+                          onChange={(e) => setSettings({...settings, landingHeroSubtitle: e.target.value})}
+                          className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none h-24"
+                          placeholder="Experience the future of VTU..."
+                      />
+                  </div>
+              </div>
+
+              <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-6">
+                  <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                      <Smartphone className="text-purple-500" size={20} /> Mobile Application
+                  </h3>
+                  
+                  <div className="p-6 bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl text-center relative hover:bg-gray-100 transition-colors">
+                      <input 
+                        type="file" 
+                        accept=".apk,.ipa"
+                        onChange={handleAppUpload}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      />
+                      <Upload size={32} className="mx-auto text-gray-400 mb-2"/>
+                      {appFile ? (
+                          <div className="text-green-600">
+                              <p className="font-bold">{appFile.name}</p>
+                              <p className="text-xs">Ready to update</p>
+                          </div>
+                      ) : (
+                          <div className="text-gray-500">
+                              <p className="font-bold text-sm">Upload Android APK / iOS IPA</p>
+                              <p className="text-xs opacity-70">Drag & Drop or Click to browse</p>
+                          </div>
+                      )}
+                  </div>
+
+                  <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">App Version</label>
+                      <input 
+                          type="text" 
+                          value={settings.mobileAppVersion}
+                          onChange={(e) => setSettings({...settings, mobileAppVersion: e.target.value})}
+                          className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none"
+                          placeholder="1.0.0"
+                      />
+                  </div>
+                  
+                  {settings.mobileAppUrl && (
+                      <div className="p-3 bg-green-50 text-green-700 text-xs rounded-lg break-all">
+                          <strong>Current Download URL:</strong><br/>
+                          {settings.mobileAppUrl}
+                          <br/>
+                          <span className="text-gray-400 text-[10px] mt-1 block">Updated: {new Date(settings.mobileAppReleaseDate).toLocaleDateString()}</span>
+                      </div>
+                  )}
+              </div>
+          </div>
       )}
 
       {activeTab === 'services' && (

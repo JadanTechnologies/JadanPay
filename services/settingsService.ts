@@ -1,3 +1,4 @@
+
 import { Provider } from '../types';
 
 export interface AppSettings {
@@ -10,6 +11,16 @@ export interface AppSettings {
   // Integrations
   bilalApiKey: string;
   useBilalService: boolean;
+  // Referral
+  enableReferral: boolean;
+  referralReward: number; // Amount in Naira
+  
+  // Landing Page & App Configuration
+  landingHeroTitle: string;
+  landingHeroSubtitle: string;
+  mobileAppUrl: string;
+  mobileAppVersion: string;
+  mobileAppReleaseDate: string;
 }
 
 // Initial default settings
@@ -31,7 +42,16 @@ const defaultSettings: AppSettings = {
     [Provider.NMOBILE]: 90,
   },
   bilalApiKey: '',
-  useBilalService: false
+  useBilalService: false,
+  enableReferral: true,
+  referralReward: 100, // 100 Naira per referral default
+  
+  // Landing Defaults
+  landingHeroTitle: "Stop Overpaying For Data.",
+  landingHeroSubtitle: "Experience the future of VTU. Seamless top-ups, instant delivery, and reseller friendly rates.",
+  mobileAppUrl: "",
+  mobileAppVersion: "1.0.0",
+  mobileAppReleaseDate: new Date().toISOString()
 };
 
 // In-memory store (persists until refresh)

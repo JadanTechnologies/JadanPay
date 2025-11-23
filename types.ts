@@ -38,6 +38,7 @@ export enum TransactionType {
   WALLET_FUND = 'WALLET_FUND',
   ADMIN_CREDIT = 'ADMIN_CREDIT',
   ADMIN_DEBIT = 'ADMIN_DEBIT',
+  REFERRAL_BONUS = 'REFERRAL_BONUS'
 }
 
 export interface User {
@@ -48,7 +49,11 @@ export interface User {
   role: UserRole;
   balance: number;
   savings: number;
+  bonusBalance: number; // For referrals
   walletNumber: string; // New generated wallet number
+  referralCode: string;
+  referredBy?: string;
+  referralCount: number;
   isVerified: boolean;
   avatarUrl?: string;
   status: UserStatus;

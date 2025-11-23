@@ -1,12 +1,16 @@
+
 import { User, Transaction, TransactionType, TransactionStatus, UserRole, Provider, Ticket, UserStatus, Staff, Role, Announcement, CommunicationTemplate, Bundle, AppNotification } from '../types';
 import { MOCK_USERS_DATA, SAMPLE_BUNDLES } from '../constants';
 import { SettingsService } from './settingsService';
 
 // Initial Mock State
-// Ensure mock users have wallet numbers
+// Ensure mock users have wallet numbers and referral codes
 let users: User[] = MOCK_USERS_DATA.map(u => ({
     ...u,
-    walletNumber: u.id === 'u1' ? '2039485712' : u.id === 'u2' ? '2058392011' : '0000000000'
+    walletNumber: u.id === 'u1' ? '2039485712' : u.id === 'u2' ? '2058392011' : '0000000000',
+    referralCode: u.name.substring(0,3).toUpperCase() + Math.floor(Math.random() * 1000),
+    referralCount: 0,
+    bonusBalance: 0
 })) as User[];
 
 let bundles: Bundle[] = SAMPLE_BUNDLES.map(b => ({...b, planId: b.id}));
@@ -43,6 +47,10 @@ export const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, 
 // Helper: Generate Unique Wallet Number
 const generateWalletNumber = () => {
     return '2' + Math.random().toString().slice(2, 11);
+};
+
+const generateReferralCode = (name: string) => {
+    return name.substring(0,3).toUpperCase() + Math.floor(1000 + Math.random() * 9000);
 };
 
 export const MockDB = {
@@ -96,8 +104,9 @@ export const MockDB = {
   },
 
   // REGISTRATION WITH VALIDATION
-  registerUser: async (name: string, email: string, phone: string): Promise<User> => {
+  registerUser: async (name: string, email: string, phone: string, referrerCode?: string): Promise<User> => {
       await delay(800);
+      const settings = await SettingsService.getSettings();
       
       // Check duplicates
       const emailExists = users.some(u => u.email.toLowerCase() === email.toLowerCase());
@@ -105,6 +114,40 @@ export const MockDB = {
 
       if (emailExists) throw new Error("This email address is already registered.");
       if (phoneExists) throw new Error("This phone number is already registered.");
+
+      // Resolve Referrer
+      let referrerId: string | undefined = undefined;
+      if (referrerCode && settings.enableReferral) {
+          const referrer = users.find(u => u.referralCode === referrerCode);
+          if (referrer) {
+              referrerId = referrer.id;
+              // Reward Referrer (Simplified: Instant Reward on Sign Up)
+              // In real apps, this usually happens after first funding
+              referrer.referralCount += 1;
+              referrer.bonusBalance += settings.referralReward;
+              
+              // Create Reward Transaction Record
+              transactions.unshift({
+                  id: Math.random().toString(36),
+                  userId: referrer.id,
+                  type: TransactionType.REFERRAL_BONUS,
+                  amount: settings.referralReward,
+                  status: TransactionStatus.SUCCESS,
+                  date: new Date().toISOString(),
+                  reference: `REF-BONUS-${Math.floor(Math.random() * 100000)}`,
+                  previousBalance: referrer.balance, // Note: Bonus balance is separate usually, but for tracking
+                  newBalance: referrer.balance // We don't touch main balance here
+              });
+
+              // Notify Referrer
+              MockDB.addNotification({
+                  userId: referrer.id,
+                  title: 'Referral Bonus Earned!',
+                  message: `You earned ₦${settings.referralReward} because a friend used your code!`,
+                  type: 'success'
+              });
+          }
+      }
 
       const newUser: User = {
           id: Math.random().toString(36).substr(2, 9),
@@ -114,7 +157,11 @@ export const MockDB = {
           role: UserRole.USER,
           balance: 0,
           savings: 0,
+          bonusBalance: 0, // Users start with 0, earn by referring
           walletNumber: generateWalletNumber(),
+          referralCode: generateReferralCode(name),
+          referredBy: referrerId,
+          referralCount: 0,
           isVerified: true, // Auto verify for demo
           status: UserStatus.ACTIVE,
           ipAddress: '127.0.0.1',
@@ -148,6 +195,39 @@ export const MockDB = {
     user.balance += amount;
     users[userIndex] = user;
     return user;
+  },
+
+  redeemBonus: async (userId: string) => {
+      await delay(500);
+      const userIndex = users.findIndex(u => u.id === userId);
+      if (userIndex === -1) throw new Error("User not found");
+      
+      const user = users[userIndex];
+      if (user.bonusBalance <= 0) throw new Error("No bonus balance to redeem.");
+
+      const amount = user.bonusBalance;
+      
+      // Move bonus to main balance
+      user.balance += amount;
+      user.bonusBalance = 0;
+      
+      users[userIndex] = user;
+
+      // Log transaction
+      transactions.unshift({
+          id: Math.random().toString(36),
+          userId: userId,
+          type: TransactionType.WALLET_FUND,
+          amount: amount,
+          status: TransactionStatus.SUCCESS,
+          date: new Date().toISOString(),
+          reference: `REDEEM-${Math.floor(Math.random() * 100000)}`,
+          paymentMethod: 'Referral Redeem',
+          previousBalance: user.balance - amount,
+          newBalance: user.balance
+      });
+
+      return user;
   },
   
   updateUserSavings: async (userId: string, amount: number) => {
