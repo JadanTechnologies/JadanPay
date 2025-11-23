@@ -7,9 +7,10 @@ import { Wallet, TrendingUp, Plus, ArrowRight } from 'lucide-react';
 interface DashboardProps {
   user: User;
   refreshUser: () => void;
+  onViewReceipt: (txId: string) => void;
 }
 
-export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewReceipt }) => {
   const [showFundModal, setShowFundModal] = useState(false);
   const [isFunding, setIsFunding] = useState(false);
 
@@ -87,7 +88,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser }) => {
       </div>
 
       {/* Top Up Form */}
-      <TopUpForm user={user} onSuccess={refreshUser} />
+      <TopUpForm user={user} onSuccess={refreshUser} onViewReceipt={onViewReceipt} />
 
        {/* Fund Modal */}
        {showFundModal && (

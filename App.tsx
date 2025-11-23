@@ -12,6 +12,7 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isLoadingUser, setIsLoadingUser] = useState(false);
+  const [selectedTxId, setSelectedTxId] = useState<string | undefined>(undefined);
 
   // Simulate session check or persistence if we were using localStorage
   useEffect(() => {
@@ -28,6 +29,17 @@ export default function App() {
     setIsLoadingUser(false);
   };
 
+  const handleViewReceipt = (txId: string) => {
+    setSelectedTxId(txId);
+    setActiveTab('history');
+  };
+
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    // If switching tabs manually, clear the selected transaction to avoid auto-opening old receipts
+    setSelectedTxId(undefined);
+  };
+
   if (!user) {
     return <Auth onAuthSuccess={setUser} />;
   }
@@ -35,15 +47,15 @@ export default function App() {
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard':
-        return <Dashboard user={user} refreshUser={handleRefreshUser} />;
+        return <Dashboard user={user} refreshUser={handleRefreshUser} onViewReceipt={handleViewReceipt} />;
       case 'history':
-        return <History user={user} />;
+        return <History user={user} highlightId={selectedTxId} />;
       case 'admin':
          return user.role === UserRole.ADMIN ? <AdminDashboard /> : <div className="p-10 text-center">Unauthorized</div>;
       case 'reseller':
          return user.role === UserRole.RESELLER ? <ResellerZone /> : <div className="p-10 text-center">Unauthorized</div>;
       default:
-        return <Dashboard user={user} refreshUser={handleRefreshUser} />;
+        return <Dashboard user={user} refreshUser={handleRefreshUser} onViewReceipt={handleViewReceipt} />;
     }
   };
 
@@ -51,7 +63,7 @@ export default function App() {
     <Layout 
         user={user} 
         activeTab={activeTab} 
-        onTabChange={setActiveTab}
+        onTabChange={handleTabChange}
         onLogout={() => setUser(null)}
     >
       {renderContent()}

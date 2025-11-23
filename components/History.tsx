@@ -6,9 +6,10 @@ import { PROVIDER_LOGOS, PROVIDER_COLORS } from '../constants';
 
 interface HistoryProps {
   user: User;
+  highlightId?: string;
 }
 
-export const History: React.FC<HistoryProps> = ({ user }) => {
+export const History: React.FC<HistoryProps> = ({ user, highlightId }) => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
@@ -23,6 +24,16 @@ export const History: React.FC<HistoryProps> = ({ user }) => {
       setShareState('idle');
     }
   }, [selectedTx]);
+
+  // Auto-open highlighted transaction
+  useEffect(() => {
+    if (highlightId && transactions.length > 0) {
+        const tx = transactions.find(t => t.id === highlightId);
+        if (tx) {
+            setSelectedTx(tx);
+        }
+    }
+  }, [highlightId, transactions]);
 
   const loadData = async () => {
     setLoading(true);

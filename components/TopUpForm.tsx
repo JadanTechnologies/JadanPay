@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Provider, Bundle, User, TransactionType } from '../types';
+import { Provider, Bundle, User, TransactionType, Transaction } from '../types';
 import { PROVIDER_COLORS, PROVIDER_LOGOS, SAMPLE_BUNDLES } from '../constants';
 import { processAirtimePurchase, processDataPurchase } from '../services/topupService';
-import { Smartphone, Wifi, PiggyBank, Loader2, Sparkles, Star, Check, AlertTriangle, Info } from 'lucide-react';
+import { Smartphone, Wifi, PiggyBank, Loader2, Sparkles, Star, Check, AlertTriangle, Info, Share2 } from 'lucide-react';
 
 interface TopUpFormProps {
   user: User;
   onSuccess: () => void;
+  onViewReceipt: (txId: string) => void;
 }
 
 // Define specific limits per provider to mimic real-world restrictions
@@ -17,7 +18,7 @@ const PROVIDER_LIMITS: Record<Provider, { min: number; max: number }> = {
   [Provider.NMOBILE]: { min: 50, max: 50000 },
 };
 
-export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess }) => {
+export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewReceipt }) => {
   const [type, setType] = useState<TransactionType>(TransactionType.AIRTIME);
   const [provider, setProvider] = useState<Provider>(Provider.MTN);
   const [phone, setPhone] = useState<string>('');
@@ -28,6 +29,7 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess }) => {
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [lastTx, setLastTx] = useState<Transaction | null>(null);
 
   // Smart Suggest Logic
   useEffect(() => {
@@ -50,6 +52,7 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess }) => {
     e.preventDefault();
     setError(null);
     setSuccessMsg(null);
+    setLastTx(null);
 
     // 1. Phone Validation
     if (!phone || phone.length < 11) {
@@ -101,15 +104,18 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess }) => {
     setLoading(true);
     
     try {
+      let tx: Transaction;
       if (type === TransactionType.AIRTIME) {
-        await processAirtimePurchase(user, provider, Number(amount), phone, roundUp);
+        tx = await processAirtimePurchase(user, provider, Number(amount), phone, roundUp);
       } else {
-        if (selectedBundle) {
-            await processDataPurchase(user, selectedBundle, phone, roundUp);
-        }
+        // We validated selectedBundle exists in handleFormSubmit
+        tx = await processDataPurchase(user, selectedBundle!, phone, roundUp);
       }
+      
+      setLastTx(tx);
       setSuccessMsg(`Transaction Successful! "E don land!"`);
       onSuccess();
+      
       // Reset form slightly
       setAmount('');
       setSelectedBundle(null);
@@ -330,10 +336,22 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess }) => {
         )}
 
         {successMsg && (
-          <div className="p-3 bg-green-50 text-green-700 text-sm rounded-lg border border-green-100 font-medium flex items-center gap-2">
-            <Check size={16} />
-            {successMsg}
-          </div>
+            <div className="flex flex-col gap-3 animate-fade-in">
+              <div className="p-3 bg-green-50 text-green-700 text-sm rounded-lg border border-green-100 font-medium flex items-center gap-2">
+                <Check size={16} />
+                {successMsg}
+              </div>
+              
+              {lastTx && (
+                <button
+                    type="button"
+                    onClick={() => onViewReceipt(lastTx.id)}
+                    className="w-full py-3 bg-green-100 text-green-800 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-green-200 transition-colors"
+                >
+                    <Share2 size={16} /> Share Receipt
+                </button>
+              )}
+            </div>
         )}
 
         <button
