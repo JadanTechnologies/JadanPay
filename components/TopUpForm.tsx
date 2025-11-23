@@ -1,10 +1,12 @@
+
 import React, { useState, useEffect } from 'react';
 import { Provider, Bundle, User, TransactionType, Transaction, PlanType } from '../types';
 import { PROVIDER_COLORS, PROVIDER_LOGOS } from '../constants';
 import { processAirtimePurchase, processDataPurchase } from '../services/topupService';
 import { SettingsService } from '../services/settingsService';
 import { MockDB } from '../services/mockDb';
-import { Smartphone, Wifi, PiggyBank, Loader2, Sparkles, Star, Check, AlertTriangle, Info, Share2, Ban, Signal, SignalHigh, SignalMedium, SignalLow, Filter } from 'lucide-react';
+import { playNotification } from '../utils/audio';
+import { Smartphone, Wifi, PiggyBank, Loader2, Sparkles, Star, Check, AlertTriangle, Info, Share2, Ban, Signal, SignalHigh, SignalMedium, SignalLow, ChevronDown } from 'lucide-react';
 
 interface TopUpFormProps {
   user: User;
@@ -107,7 +109,9 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
   const handleProviderClick = (newProvider: Provider) => {
     // Check if provider is enabled in settings
     if (!providerStatus[newProvider]) {
-        setError(`Sorry, ${PROVIDER_LOGOS[newProvider]} services are currently unavailable.`);
+        const msg = `Sorry, ${PROVIDER_LOGOS[newProvider]} services are currently unavailable.`;
+        setError(msg);
+        playNotification(msg, 'error');
         return;
     }
 
@@ -180,7 +184,9 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
         
         // Validation: Check if bundle is marked as available
         if (selectedBundle.isAvailable === false) {
-             setError("Selected bundle is currently unavailable.");
+             const msg = "Selected bundle is currently unavailable.";
+             setError(msg);
+             playNotification(msg, 'error');
              return;
         }
 
@@ -211,14 +217,25 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
       }
       
       setLastTx(tx);
-      setSuccessMsg(`Transaction Successful! "E don land!"`);
+      const successText = "Transaction Successful! E don land!";
+      setSuccessMsg(successText);
+      
+      // Play Success Sound
+      if (type === TransactionType.DATA) {
+          playNotification("Data has been sent to customer successfully.");
+      } else {
+          playNotification("Airtime has been sent to customer successfully.");
+      }
+
       onSuccess();
       
       // Reset form slightly
       setAmount('');
       setSelectedBundle(null);
     } catch (err: any) {
-      setError(err.message || "Transaction failed");
+      const errorText = err.message || "Transaction failed";
+      setError(errorText);
+      playNotification("Transaction failed. Please try again.", 'error');
     } finally {
       setLoading(false);
     }
@@ -257,7 +274,9 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
 
   const handleBundleSelect = (b: Bundle) => {
     if (b.isAvailable === false) {
-        setError(`The ${b.dataAmount} bundle is currently out of stock or unavailable.`);
+        const msg = `The ${b.dataAmount} bundle is currently out of stock or unavailable.`;
+        setError(msg);
+        playNotification("This bundle is currently unavailable.", 'error');
         return;
     }
     setError(null);
@@ -405,27 +424,30 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
           </div>
         ) : (
           <div className="animate-fade-in">
-             {/* Plan Type Selector */}
-             {availablePlanTypes.length > 0 ? (
-                <div className="flex gap-2 mb-4 overflow-x-auto pb-1 scrollbar-hide">
-                    {availablePlanTypes.map(pt => (
-                        <button
-                            key={pt}
-                            type="button"
-                            onClick={() => { setSelectedPlanType(pt); setSelectedBundle(null); }}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all ${
-                                selectedPlanType === pt 
-                                ? 'bg-green-700 text-white shadow-md' 
-                                : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-                            }`}
+             {/* Plan Type Selector - DROPDOWN */}
+             <div className="mb-4">
+                 <label className="block text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wider">Plan Type</label>
+                 {availablePlanTypes.length > 0 ? (
+                    <div className="relative">
+                        <select
+                            value={selectedPlanType}
+                            onChange={(e) => { setSelectedPlanType(e.target.value as PlanType); setSelectedBundle(null); }}
+                            className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none appearance-none font-medium text-gray-700"
                         >
-                            {pt === PlanType.CORPORATE ? 'CORP. GIFTING' : pt}
-                        </button>
-                    ))}
-                </div>
-             ) : (
-                 <div className="text-xs text-center text-gray-400 mb-2">Fetching plans...</div>
-             )}
+                            {availablePlanTypes.map(pt => (
+                                <option key={pt} value={pt}>
+                                    {pt === PlanType.CORPORATE ? 'Corporate Gifting' : pt}
+                                </option>
+                            ))}
+                        </select>
+                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
+                    </div>
+                 ) : (
+                     <div className="text-xs text-center text-gray-400 p-2 bg-gray-50 rounded-lg border border-dashed border-gray-200">
+                         Fetching available plans...
+                     </div>
+                 )}
+             </div>
 
              <div className="grid grid-cols-2 gap-3 pb-2">
                 {filteredBundles.map((b) => {

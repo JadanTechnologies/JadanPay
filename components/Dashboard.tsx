@@ -1,8 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { User, Announcement } from '../types';
 import { TopUpForm } from './TopUpForm';
 import { fundWallet } from '../services/topupService';
 import { MockDB } from '../services/mockDb';
+import { playNotification } from '../utils/audio';
 import { Wallet, TrendingUp, Plus, ArrowRight, Activity, Zap, Bell, X } from 'lucide-react';
 
 interface DashboardProps {
@@ -37,9 +39,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
         await fundWallet(user, 10000); // Mock funding fixed amount
         refreshUser();
         setShowFundModal(false);
+        playNotification("Payment Received. Your wallet has been funded.");
         alert("Wallet funded with ₦10,000 successfully!");
     } catch(e) {
         alert("Funding failed");
+        playNotification("Funding failed. Please try again.", 'error');
     } finally {
         setIsFunding(false);
     }
