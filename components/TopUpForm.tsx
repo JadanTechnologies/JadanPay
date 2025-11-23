@@ -2,12 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { Provider, Bundle, User, TransactionType } from '../types';
 import { PROVIDER_COLORS, PROVIDER_LOGOS, SAMPLE_BUNDLES } from '../constants';
 import { processAirtimePurchase, processDataPurchase } from '../services/topupService';
-import { Smartphone, Wifi, PiggyBank, Loader2, Sparkles, Star, Check, AlertTriangle } from 'lucide-react';
+import { Smartphone, Wifi, PiggyBank, Loader2, Sparkles, Star, Check, AlertTriangle, Info } from 'lucide-react';
 
 interface TopUpFormProps {
   user: User;
   onSuccess: () => void;
 }
+
+// Define specific limits per provider to mimic real-world restrictions
+const PROVIDER_LIMITS: Record<Provider, { min: number; max: number }> = {
+  [Provider.MTN]: { min: 50, max: 200000 },
+  [Provider.GLO]: { min: 100, max: 50000 },
+  [Provider.AIRTEL]: { min: 50, max: 100000 },
+  [Provider.NMOBILE]: { min: 50, max: 50000 },
+};
 
 export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess }) => {
   const [type, setType] = useState<TransactionType>(TransactionType.AIRTIME);
@@ -32,23 +40,57 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess }) => {
     }
   }, [phone]);
 
+  // Reset selection when provider changes to prevent invalid states
+  useEffect(() => {
+    setSelectedBundle(null);
+    setError(null);
+  }, [provider, type]);
+
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setSuccessMsg(null);
 
-    // Initial Validation
+    // 1. Phone Validation
     if (!phone || phone.length < 11) {
-        setError("Please enter a valid phone number");
+        setError("Please enter a valid 11-digit phone number");
         return;
     }
-    if (type === TransactionType.AIRTIME && (!amount || Number(amount) <= 0)) {
-        setError("Please enter a valid amount");
-        return;
+
+    // 2. Airtime Amount Validation
+    if (type === TransactionType.AIRTIME) {
+        const val = Number(amount);
+        const limits = PROVIDER_LIMITS[provider];
+        
+        if (!amount || val <= 0) {
+            setError("Please enter a valid amount");
+            return;
+        }
+        if (val < limits.min) {
+            setError(`Minimum top-up for ${PROVIDER_LOGOS[provider]} is ₦${limits.min}`);
+            return;
+        }
+        if (val > limits.max) {
+            setError(`Maximum top-up for ${PROVIDER_LOGOS[provider]} is ₦${limits.max.toLocaleString()}`);
+            return;
+        }
     }
-    if (type === TransactionType.DATA && !selectedBundle) {
-        setError("Please select a data bundle");
-        return;
+
+    // 3. Data Bundle Validation
+    if (type === TransactionType.DATA) {
+        if (!selectedBundle) {
+            setError("Please select a data bundle");
+            return;
+        }
+        // Ensure bundle belongs to selected provider (Availability check)
+        const isBundleValid = SAMPLE_BUNDLES.some(
+            b => b.id === selectedBundle.id && b.provider === provider
+        );
+        
+        if (!isBundleValid) {
+            setError(`The selected bundle is not available on ${PROVIDER_LOGOS[provider]}. Please select a valid bundle.`);
+            return;
+        }
     }
 
     setShowConfirm(true);
@@ -62,7 +104,6 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess }) => {
       if (type === TransactionType.AIRTIME) {
         await processAirtimePurchase(user, provider, Number(amount), phone, roundUp);
       } else {
-        // We know selectedBundle is not null due to validation above, but typescript needs help
         if (selectedBundle) {
             await processDataPurchase(user, selectedBundle, phone, roundUp);
         }
@@ -80,6 +121,7 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess }) => {
   };
 
   const filteredBundles = SAMPLE_BUNDLES.filter(b => b.provider === provider);
+  const currentLimits = PROVIDER_LIMITS[provider];
 
   // Helper to calculate total for confirmation modal
   const getTransactionDetails = () => {
@@ -177,11 +219,18 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess }) => {
              <input
               type="number"
               value={amount}
-              onChange={(e) => setAmount(Number(e.target.value))}
+              onChange={(e) => setAmount(e.target.value === '' ? '' : Number(e.target.value))}
               placeholder="0.00"
               className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none font-mono text-lg"
               required
             />
+            
+            {/* Limit Helper Text */}
+            <div className="flex items-center gap-1 mt-2 text-xs text-gray-500 bg-gray-50 p-2 rounded-lg border border-gray-100">
+                <Info size={12} className="text-blue-400" />
+                <span>Range: ₦{currentLimits.min} - ₦{currentLimits.max.toLocaleString()}</span>
+            </div>
+
             <div className="flex gap-2 mt-2 overflow-x-auto pb-2 scrollbar-hide">
               {[100, 200, 500, 1000, 2000, 5000].map(val => (
                 <button
@@ -274,9 +323,9 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess }) => {
         </div>
 
         {error && (
-          <div className="p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100 flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>
-            {error}
+          <div className="p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100 flex items-center gap-2 animate-pulse">
+            <AlertTriangle size={16} className="shrink-0" />
+            <span>{error}</span>
           </div>
         )}
 
