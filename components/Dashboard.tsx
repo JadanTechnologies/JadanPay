@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { User } from '../types';
 import { TopUpForm } from './TopUpForm';
 import { fundWallet } from '../services/topupService';
-import { Wallet, TrendingUp, Plus, ArrowRight } from 'lucide-react';
+import { Wallet, TrendingUp, Plus, ArrowRight, Activity, Zap } from 'lucide-react';
 
 interface DashboardProps {
   user: User;
@@ -29,84 +29,139 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
   };
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 md:space-y-8 animate-fade-in">
       
-      {/* Wallet Card */}
-      <div className="bg-gradient-to-br from-green-700 to-green-900 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden">
+      {/* Wallet Banner Section */}
+      <div className="bg-gradient-to-r from-green-800 to-green-900 rounded-3xl p-6 md:p-8 text-white shadow-xl relative overflow-hidden group">
         {/* Abstract Shapes */}
-        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-10 -mt-10 blur-xl"></div>
-        <div className="absolute bottom-0 left-0 w-24 h-24 bg-green-400/20 rounded-full -ml-8 -mb-8 blur-lg"></div>
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-20 -mt-20 blur-3xl group-hover:bg-white/10 transition-colors duration-1000"></div>
+        <div className="absolute bottom-0 left-0 w-32 h-32 bg-green-400/10 rounded-full -ml-8 -mb-8 blur-xl"></div>
 
-        <div className="relative z-10">
-          <div className="flex justify-between items-start mb-4">
-            <div>
-               <p className="text-green-100 text-sm font-medium">Available Balance</p>
-               <h1 className="text-3xl font-bold font-mono tracking-tight mt-1">₦{user.balance.toLocaleString()}</h1>
-            </div>
-            <div className="p-2 bg-white/20 backdrop-blur-md rounded-lg">
-                <Wallet size={20} className="text-green-50" />
-            </div>
-          </div>
-          
-          <div className="flex gap-3">
-             <button 
-                onClick={() => setShowFundModal(true)}
-                className="flex-1 bg-white text-green-800 py-2.5 px-4 rounded-xl font-bold text-sm shadow-sm active:scale-95 transition-transform flex items-center justify-center gap-2"
-             >
-                <Plus size={16} /> Fund Wallet
-             </button>
-             <div className="bg-green-800/50 backdrop-blur-sm rounded-xl px-4 py-2 flex items-center gap-2 border border-green-600/30">
-                <TrendingUp size={16} className="text-green-300" />
-                <div>
-                   <p className="text-[10px] text-green-300">Savings Stash</p>
-                   <p className="font-mono text-sm font-bold">₦{user.savings.toLocaleString()}</p>
+        <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+            <div className="space-y-1">
+                <div className="flex items-center gap-2 text-green-200 mb-2">
+                    <Wallet size={18} />
+                    <span className="text-sm font-medium uppercase tracking-wider">Total Balance</span>
                 </div>
-             </div>
-          </div>
+                <h1 className="text-4xl md:text-5xl font-bold font-mono tracking-tight">₦{user.balance.toLocaleString()}</h1>
+                <p className="text-green-300 text-xs md:text-sm mt-2">Safe & Secure Payments handled by JadanPay.</p>
+            </div>
+
+            <div className="flex flex-col md:flex-row gap-4 md:justify-end">
+                <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-green-500/30 flex items-center gap-4 min-w-[200px]">
+                    <div className="p-3 bg-green-500/20 rounded-xl text-green-300">
+                        <TrendingUp size={24} />
+                    </div>
+                    <div>
+                        <p className="text-[10px] text-green-200 uppercase tracking-wide">Savings Stash</p>
+                        <p className="font-mono text-xl font-bold">₦{user.savings.toLocaleString()}</p>
+                    </div>
+                </div>
+
+                <button 
+                    onClick={() => setShowFundModal(true)}
+                    className="py-4 px-8 bg-white text-green-900 rounded-2xl font-bold text-sm shadow-lg hover:shadow-xl hover:bg-gray-50 active:scale-95 transition-all flex items-center justify-center gap-2 whitespace-nowrap"
+                >
+                    <Plus size={20} /> Fund Wallet
+                </button>
+            </div>
         </div>
       </div>
 
-      {/* Quick Repay Carousel (Mock Data) */}
-      <div>
-         <div className="flex justify-between items-center mb-3">
-            <h3 className="font-bold text-gray-800 text-sm">Quick Repay</h3>
-            <span className="text-green-600 text-xs font-medium cursor-pointer flex items-center gap-1">View All <ArrowRight size={12}/></span>
+      {/* Main Grid Content */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+         
+         {/* Left Column: Top Up Form */}
+         <div className="lg:col-span-7 xl:col-span-8 space-y-6">
+             <div className="flex items-center justify-between mb-2">
+                <h3 className="font-bold text-gray-800 flex items-center gap-2">
+                    <Zap className="text-yellow-500 fill-current" size={20}/> Quick Action
+                </h3>
+             </div>
+             
+             {/* The Form Component */}
+             <TopUpForm user={user} onSuccess={refreshUser} onViewReceipt={onViewReceipt} />
          </div>
-         <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
-            {[1,2,3].map(i => (
-                <div key={i} className="flex flex-col items-center gap-2 min-w-[70px] cursor-pointer group">
-                    <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center border-2 border-transparent group-hover:border-green-500 transition-colors relative">
-                        <img src={`https://ui-avatars.com/api/?name=User+${i}&background=random`} className="w-12 h-12 rounded-full" alt="" />
-                        <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-white rounded-full flex items-center justify-center shadow-sm">
-                            <span className="text-[10px] text-yellow-500">★</span>
-                        </div>
-                    </div>
-                    <span className="text-xs text-gray-600 truncate w-full text-center">Mum</span>
+
+         {/* Right Column: Quick Repay & Stats */}
+         <div className="lg:col-span-5 xl:col-span-4 space-y-6">
+            
+            {/* Quick Repay Card */}
+            <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
+                <div className="flex justify-between items-center mb-6">
+                    <h3 className="font-bold text-gray-800 text-sm">Quick Repay</h3>
+                    <button className="text-green-600 text-xs font-bold hover:underline flex items-center gap-1">
+                        Edit <ArrowRight size={12}/>
+                    </button>
                 </div>
-            ))}
+                <div className="grid grid-cols-4 gap-2">
+                    {[1,2,3,4].map(i => (
+                        <div key={i} className="flex flex-col items-center gap-2 cursor-pointer group">
+                            <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center border-2 border-transparent group-hover:border-green-500 group-hover:bg-green-50 transition-all relative overflow-hidden">
+                                <img src={`https://ui-avatars.com/api/?name=User+${i}&background=random`} className="w-full h-full object-cover" alt="" />
+                            </div>
+                            <span className="text-[10px] font-medium text-gray-500 group-hover:text-green-700">Fam {i}</span>
+                        </div>
+                    ))}
+                    <div className="flex flex-col items-center gap-2 cursor-pointer group">
+                         <div className="w-14 h-14 rounded-2xl border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400 group-hover:border-green-400 group-hover:text-green-500 transition-colors">
+                            <Plus size={20} />
+                         </div>
+                         <span className="text-[10px] font-medium text-gray-400">Add</span>
+                    </div>
+                </div>
+            </div>
+
+            {/* Promo / Info Card */}
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-3xl border border-blue-100 relative overflow-hidden">
+                <div className="relative z-10">
+                    <div className="flex items-center gap-2 mb-2 text-blue-700 font-bold">
+                        <Activity size={18} />
+                        <h3>Usage Insight</h3>
+                    </div>
+                    <p className="text-sm text-blue-800/80 leading-relaxed mb-4">
+                        You've spent <span className="font-bold text-blue-900">₦4,500</span> on Data this month. That's 12% less than last month!
+                    </p>
+                    <div className="h-1.5 w-full bg-blue-200 rounded-full overflow-hidden">
+                        <div className="h-full bg-blue-500 w-[70%] rounded-full"></div>
+                    </div>
+                </div>
+                <div className="absolute -bottom-4 -right-4 text-blue-100 opacity-50">
+                    <TrendingUp size={100} />
+                </div>
+            </div>
+
          </div>
       </div>
-
-      {/* Top Up Form */}
-      <TopUpForm user={user} onSuccess={refreshUser} onViewReceipt={onViewReceipt} />
 
        {/* Fund Modal */}
        {showFundModal && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-             <div className="bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl animate-fade-in-up">
-                <h3 className="text-lg font-bold mb-4">Fund Wallet</h3>
-                <p className="text-gray-500 text-sm mb-6">Simulation: This will add ₦10,000 to your wallet.</p>
+             <div className="bg-white w-full max-w-sm rounded-3xl p-8 shadow-2xl animate-fade-in-up">
+                <div className="text-center mb-6">
+                    <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Wallet size={32} />
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900">Fund Wallet</h3>
+                    <p className="text-gray-500 text-sm mt-1">Add funds securely via bank transfer or card.</p>
+                </div>
+                
+                <div className="bg-gray-50 p-4 rounded-xl mb-6 border border-gray-100 text-center">
+                    <p className="text-xs text-gray-400 uppercase font-bold mb-1">Amount to add</p>
+                    <p className="text-3xl font-mono font-bold text-gray-800">₦10,000.00</p>
+                </div>
+
                 <div className="flex gap-3">
                     <button 
                         onClick={() => setShowFundModal(false)}
-                        className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-xl font-medium"
+                        className="flex-1 py-3.5 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-200 transition-colors"
                     >
                         Cancel
                     </button>
                     <button 
                         onClick={handleFundWallet}
                         disabled={isFunding}
-                        className="flex-1 py-3 bg-green-700 text-white rounded-xl font-bold"
+                        className="flex-1 py-3.5 bg-green-700 text-white rounded-xl font-bold hover:bg-green-800 transition-colors shadow-lg shadow-green-200"
                     >
                         {isFunding ? 'Processing...' : 'Confirm'}
                     </button>
