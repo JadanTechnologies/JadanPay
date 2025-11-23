@@ -1,9 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import { Layout } from './components/Layout';
 import { Dashboard } from './components/Dashboard';
 import { History } from './components/History';
 import { Auth } from './components/Auth';
 import { AdminDashboard } from './components/AdminDashboard';
+import { AdminSettings } from './components/AdminSettings';
 import { ResellerZone } from './components/ResellerZone';
 import { User, UserRole } from './types';
 import { MockDB } from './services/mockDb';
@@ -60,6 +62,8 @@ export default function App() {
         return <History user={user} highlightId={selectedTxId} />;
       case 'admin':
          return user.role === UserRole.ADMIN ? <AdminDashboard /> : <div className="p-10 text-center">Unauthorized</div>;
+      case 'admin-settings':
+         return user.role === UserRole.ADMIN ? <AdminSettings /> : <div className="p-10 text-center">Unauthorized</div>;
       case 'reseller':
          return user.role === UserRole.RESELLER ? <ResellerZone /> : <div className="p-10 text-center">Unauthorized</div>;
       default:

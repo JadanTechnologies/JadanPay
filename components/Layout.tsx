@@ -1,6 +1,7 @@
+
 import React, { useState } from 'react';
 import { User, UserRole } from '../types';
-import { Home, History, LogOut, ShieldCheck, Briefcase, User as UserIcon, Menu, LayoutDashboard } from 'lucide-react';
+import { Home, History, LogOut, ShieldCheck, Briefcase, User as UserIcon, Menu, LayoutDashboard, Settings } from 'lucide-react';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -58,6 +59,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, activeTab, onTab
                         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Administration</p>
                     </div>
                     <NavItem id="admin" icon={LayoutDashboard} label="Admin Overview" />
+                    <NavItem id="admin-settings" icon={Settings} label="Settings" />
                 </>
             ) : (
                 // USER / RESELLER NAVIGATION
@@ -117,13 +119,17 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, activeTab, onTab
                     ? `Welcome back, ${user.name.split(' ')[0]} 👋` 
                     : activeTab === 'admin' 
                         ? 'Administrator Portal' 
-                        : activeTab.replace(/([A-Z])/g, ' $1').trim()}
+                        : activeTab === 'admin-settings'
+                            ? 'Platform Settings'
+                            : activeTab.replace(/([A-Z])/g, ' $1').trim()}
               </h2>
               <p className="text-xs text-gray-500 mt-1">
                  {activeTab === 'dashboard' 
                     ? 'Here is what is happening with your wallet today.' 
                     : activeTab === 'admin' 
-                        ? 'Manage platform activities and users.' 
+                        ? 'Manage platform activities and users.'
+                        : activeTab === 'admin-settings'
+                            ? 'Configure brand settings and service providers.'
                         : 'Manage your activities.'}
               </p>
            </div>
@@ -152,7 +158,10 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, activeTab, onTab
             <div className="flex justify-around items-center h-16">
               {user.role === UserRole.ADMIN ? (
                  // ADMIN MOBILE NAV
-                 <NavItem id="admin" icon={LayoutDashboard} label="Admin" mobile />
+                 <>
+                    <NavItem id="admin" icon={LayoutDashboard} label="Admin" mobile />
+                    <NavItem id="admin-settings" icon={Settings} label="Settings" mobile />
+                 </>
               ) : (
                  // USER MOBILE NAV
                  <>
