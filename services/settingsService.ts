@@ -46,6 +46,7 @@ export interface AppSettings {
   // Referral
   enableReferral: boolean;
   referralReward: number; // Amount in Naira
+  referralMinWithdrawal: number; // New field for withdrawal limit
   
   // Landing Page & App Configuration
   landingHeroTitle: string;
@@ -115,6 +116,7 @@ const defaultSettings: AppSettings = {
   
   enableReferral: true,
   referralReward: 100,
+  referralMinWithdrawal: 500,
   
   landingHeroTitle: "Stop Overpaying For Data.",
   landingHeroSubtitle: "Experience the future of VTU. Seamless top-ups, instant delivery, and reseller friendly rates.",

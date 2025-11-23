@@ -1,15 +1,16 @@
 
 import React, { useState, useEffect } from 'react';
-import { Save, Globe, Server, CreditCard, Database, Plus, Trash2, Edit2, Check, X, Upload, Mail, Phone, AlertTriangle, Key } from 'lucide-react';
-import { Provider, Bundle, PlanType } from '../types';
+import { Save, Globe, Server, CreditCard, Database, Plus, Trash2, Edit2, Check, X, Upload, Mail, Phone, AlertTriangle, Key, Users, Trophy, Gift } from 'lucide-react';
+import { Provider, Bundle, PlanType, User } from '../types';
 import { PROVIDER_LOGOS } from '../constants';
 import { SettingsService, AppSettings, ApiVendor } from '../services/settingsService';
 import { MockDB } from '../services/mockDb';
 
 export const AdminSettings: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'general' | 'services' | 'payment' | 'backup' | 'api'>('general');
+  const [activeTab, setActiveTab] = useState<'general' | 'services' | 'payment' | 'backup' | 'api' | 'referrals'>('general');
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [bundles, setBundles] = useState<Bundle[]>([]);
+  const [topReferrers, setTopReferrers] = useState<User[]>([]);
   const [isSaving, setIsSaving] = useState(false);
 
   // Bundle Modal State
@@ -22,6 +23,12 @@ export const AdminSettings: React.FC = () => {
     loadBundles();
   }, []);
 
+  useEffect(() => {
+      if (activeTab === 'referrals') {
+          loadTopReferrers();
+      }
+  }, [activeTab]);
+
   const loadSettings = async () => {
     const data = await SettingsService.getSettings();
     setSettings(data);
@@ -30,6 +37,11 @@ export const AdminSettings: React.FC = () => {
   const loadBundles = async () => {
       const data = await MockDB.getBundles();
       setBundles(data);
+  };
+
+  const loadTopReferrers = async () => {
+      const data = await MockDB.getTopReferrers();
+      setTopReferrers(data);
   };
 
   const handleSave = async () => {
@@ -149,6 +161,7 @@ export const AdminSettings: React.FC = () => {
                 { id: 'services', label: 'Services', icon: Server },
                 { id: 'api', label: 'Integrations', icon: Key },
                 { id: 'payment', label: 'Payments', icon: CreditCard },
+                { id: 'referrals', label: 'Referrals', icon: Users },
                 { id: 'backup', label: 'Backup', icon: Database },
             ].map(tab => (
                 <button 
@@ -362,6 +375,128 @@ export const AdminSettings: React.FC = () => {
                   </div>
               )}
 
+              {/* --- REFERRALS SETTINGS (NEW TAB) --- */}
+              {activeTab === 'referrals' && (
+                  <div className="space-y-6">
+                      {/* Configuration Card */}
+                      <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-4">
+                           <h3 className="font-bold text-gray-800 mb-4 border-b pb-2 flex items-center gap-2">
+                               <Gift className="text-purple-600" size={20} /> Referral Configuration
+                           </h3>
+                           
+                           <div className="flex items-center gap-4 mb-4 bg-purple-50 p-4 rounded-xl">
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <div className="relative">
+                                        <input 
+                                            type="checkbox" 
+                                            checked={settings.enableReferral}
+                                            onChange={e => setSettings({...settings, enableReferral: e.target.checked})}
+                                            className="sr-only peer"
+                                        />
+                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                                    </div>
+                                    <span className="font-bold text-gray-700">Enable Referral System</span>
+                                </label>
+                                <p className="text-xs text-gray-500">When enabled, users get a unique code and earn bonuses for inviting others.</p>
+                           </div>
+
+                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                               <div>
+                                   <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Bonus Reward (₦)</label>
+                                   <input 
+                                      type="number"
+                                      value={settings.referralReward}
+                                      onChange={e => setSettings({...settings, referralReward: Number(e.target.value)})}
+                                      className="w-full p-3 border rounded-xl"
+                                      placeholder="e.g. 100"
+                                   />
+                                   <p className="text-[10px] text-gray-400 mt-1">Amount credited to referrer's bonus wallet per new signup.</p>
+                               </div>
+                               <div>
+                                   <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Min. Withdrawal (₦)</label>
+                                   <input 
+                                      type="number"
+                                      value={settings.referralMinWithdrawal || 500}
+                                      onChange={e => setSettings({...settings, referralMinWithdrawal: Number(e.target.value)})}
+                                      className="w-full p-3 border rounded-xl"
+                                      placeholder="e.g. 500"
+                                   />
+                                    <p className="text-[10px] text-gray-400 mt-1">Minimum bonus balance required before user can move funds to main wallet.</p>
+                               </div>
+                           </div>
+                           
+                           <button onClick={handleSave} disabled={isSaving} className="mt-4 px-6 py-3 bg-green-700 text-white rounded-xl font-bold hover:bg-green-800">
+                               {isSaving ? 'Saving...' : 'Update Configuration'}
+                           </button>
+                      </div>
+                      
+                      {/* Leaderboard Section */}
+                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                          <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                                <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                    <Trophy className="text-yellow-500" size={20} /> Top Referrers
+                                </h3>
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left text-sm">
+                                        <thead className="bg-gray-50 text-gray-500 uppercase font-semibold">
+                                            <tr>
+                                                <th className="p-3">Rank</th>
+                                                <th className="p-3">User</th>
+                                                <th className="p-3 text-center">Invited</th>
+                                                <th className="p-3 text-right">Earned</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-100">
+                                            {topReferrers.map((user, index) => (
+                                                <tr key={user.id} className="hover:bg-gray-50">
+                                                    <td className="p-3">
+                                                        {index < 3 ? (
+                                                            <div className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-white text-xs ${index === 0 ? 'bg-yellow-400' : index === 1 ? 'bg-gray-400' : 'bg-orange-400'}`}>
+                                                                {index + 1}
+                                                            </div>
+                                                        ) : (
+                                                            <span className="pl-2 font-mono text-gray-500 text-xs">#{index + 1}</span>
+                                                        )}
+                                                    </td>
+                                                    <td className="p-3">
+                                                        <p className="font-bold text-gray-800">{user.name}</p>
+                                                        <p className="text-xs text-gray-400">{user.email}</p>
+                                                    </td>
+                                                    <td className="p-3 text-center font-bold text-purple-600">
+                                                        {user.referralCount}
+                                                    </td>
+                                                    <td className="p-3 text-right font-mono text-green-600">
+                                                        ₦{(user.referralCount * settings.referralReward).toLocaleString()}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                            {topReferrers.length === 0 && (
+                                                <tr>
+                                                    <td colSpan={4} className="p-6 text-center text-gray-400">No active referrers found yet.</td>
+                                                </tr>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                          </div>
+                          
+                          <div className="lg:col-span-1 space-y-6">
+                                <div className="bg-blue-50 p-6 rounded-2xl border border-blue-100 text-blue-900">
+                                    <h4 className="font-bold mb-2">Total Payouts</h4>
+                                    <p className="text-3xl font-bold">₦{topReferrers.reduce((acc, curr) => acc + (curr.referralCount * settings.referralReward), 0).toLocaleString()}</p>
+                                    <p className="text-xs mt-1 opacity-70">Calculated based on current reward rate.</p>
+                                </div>
+                                
+                                <div className="bg-purple-50 p-6 rounded-2xl border border-purple-100 text-purple-900">
+                                    <h4 className="font-bold mb-2">Total Invites</h4>
+                                    <p className="text-3xl font-bold">{topReferrers.reduce((acc, curr) => acc + curr.referralCount, 0)}</p>
+                                    <p className="text-xs mt-1 opacity-70">Successful signups via code.</p>
+                                </div>
+                          </div>
+                      </div>
+                  </div>
+              )}
+
               {/* --- PAYMENT SETTINGS --- */}
               {activeTab === 'payment' && (
                   <div className="space-y-6">
@@ -521,31 +656,6 @@ export const AdminSettings: React.FC = () => {
                                </div>
                            </div>
                       </div>
-
-                      {/* Referral Config */}
-                       <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-4">
-                           <h3 className="font-bold text-gray-800 mb-4 border-b pb-2">Referral System</h3>
-                           <div className="flex items-center gap-4 mb-4">
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                    <input 
-                                        type="checkbox" 
-                                        checked={settings.enableReferral}
-                                        onChange={e => setSettings({...settings, enableReferral: e.target.checked})}
-                                        className="w-5 h-5 accent-green-600"
-                                    />
-                                    <span className="font-medium">Enable Referral Bonus</span>
-                                </label>
-                           </div>
-                           <div>
-                               <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Bonus Amount (₦)</label>
-                               <input 
-                                  type="number"
-                                  value={settings.referralReward}
-                                  onChange={e => setSettings({...settings, referralReward: Number(e.target.value)})}
-                                  className="w-full max-w-xs p-3 border rounded-xl"
-                               />
-                           </div>
-                       </div>
 
                        <button onClick={handleSave} disabled={isSaving} className="px-6 py-3 bg-green-700 text-white rounded-xl font-bold hover:bg-green-800 w-full md:w-auto">
                           {isSaving ? 'Saving...' : 'Save Payment Configuration'}

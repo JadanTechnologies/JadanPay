@@ -97,6 +97,15 @@ export const MockDB = {
     await delay(500);
     return users;
   },
+  
+  // New method for referral management
+  getTopReferrers: async (limit: number = 10) => {
+      await delay(300);
+      return users
+        .filter(u => u.referralCount > 0)
+        .sort((a, b) => b.referralCount - a.referralCount)
+        .slice(0, limit);
+  },
 
   getUserByEmail: async (email: string) => {
     await delay(300);
@@ -203,7 +212,11 @@ export const MockDB = {
       if (userIndex === -1) throw new Error("User not found");
       
       const user = users[userIndex];
+      const settings = await SettingsService.getSettings();
+      const minWithdraw = settings.referralMinWithdrawal || 0;
+
       if (user.bonusBalance <= 0) throw new Error("No bonus balance to redeem.");
+      if (user.bonusBalance < minWithdraw) throw new Error(`Minimum redeemable amount is ₦${minWithdraw}`);
 
       const amount = user.bonusBalance;
       
