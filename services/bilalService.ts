@@ -1,3 +1,4 @@
+
 import { SettingsService } from './settingsService';
 
 // Base URL from documentation
@@ -29,14 +30,16 @@ export const BilalService = {
      */
     _simulateRequest: async (endpoint: string, payload: any): Promise<ServiceResponse> => {
         const settings = await SettingsService.getSettings();
+        const apiKey = settings.apiKeys.BILALSADA;
+        const isActive = settings.activeApiVendor === 'BILALSADA';
 
         // 1. Check Configuration
-        if (!settings.useBilalService) {
-            console.log(`[Mock Service] ${endpoint} - Service Disabled. Returning mock success.`);
+        if (!isActive) {
+            console.log(`[Mock Service] ${endpoint} - Service Disabled (Active Vendor is ${settings.activeApiVendor}). Returning mock success.`);
             return { success: true, data: { status: 'mock_success', ref: `MOCK-${Date.now()}` } };
         }
 
-        if (!settings.bilalApiKey) {
+        if (!apiKey) {
             return { 
                 success: false, 
                 error: "Service configuration error: Missing API Key.",
@@ -46,7 +49,7 @@ export const BilalService = {
 
         // 2. Simulate Network Request
         console.log(`[Bilal API] POST ${BASE_URL}${endpoint}`);
-        console.log("Headers:", { Authorization: `Bearer ${settings.bilalApiKey.substring(0, 5)}...` });
+        console.log("Headers:", { Authorization: `Bearer ${apiKey.substring(0, 5)}...` });
         console.log("Payload:", payload);
 
         try {
@@ -126,7 +129,10 @@ export const BilalService = {
      */
     getBalance: async () => {
         const settings = await SettingsService.getSettings();
-        if (!settings.useBilalService || !settings.bilalApiKey) return { balance: 0 };
+        const apiKey = settings.apiKeys.BILALSADA;
+        const isActive = settings.activeApiVendor === 'BILALSADA';
+
+        if (!isActive || !apiKey) return { balance: 0 };
 
         console.log(`[Bilal Integration] GET ${BASE_URL}/balance`);
         await new Promise(r => setTimeout(r, 800));

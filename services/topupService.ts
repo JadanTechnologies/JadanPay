@@ -1,6 +1,7 @@
+
 import { Transaction, TransactionType, TransactionStatus, Provider, Bundle, User } from '../types';
 import { MockDB } from './mockDb';
-import { BilalService } from './bilalService';
+import { ApiService } from './apiService';
 
 // Helper to generate IDs
 const generateId = () => Math.random().toString(36).substr(2, 9);
@@ -35,13 +36,10 @@ export const processAirtimePurchase = async (
   }
 
   // --- API INTEGRATION START ---
-  // Call Bilal Service with enhanced error handling
   try {
-      const apiResponse = await BilalService.buyAirtime(provider, phone, amount);
+      const apiResponse = await ApiService.buyAirtime(provider, phone, amount);
       
       if (!apiResponse.success) {
-          // If statusCode is 500 (Network), we might want to flag as PENDING instead of failing immediately in a real app
-          // For now, we throw the specific error message from the provider
           throw new Error(apiResponse.error || "Provider failed to process transaction");
       }
   } catch (error: any) {
@@ -113,7 +111,12 @@ export const processDataPurchase = async (
 
   // --- API INTEGRATION START ---
   try {
-      const apiResponse = await BilalService.buyData(bundle.provider, phone, bundle.planId);
+      // Validation: Check if API Plan ID exists
+      if (!bundle.planId) {
+          throw new Error("Configuration Error: This bundle is missing an API Plan ID. Please contact support.");
+      }
+      
+      const apiResponse = await ApiService.buyData(bundle.provider, phone, bundle.planId);
       
       if (!apiResponse.success) {
           throw new Error(apiResponse.error || "Data Provider failed to process transaction");

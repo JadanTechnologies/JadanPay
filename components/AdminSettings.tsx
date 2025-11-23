@@ -1,13 +1,13 @@
 
 import React, { useState, useEffect } from 'react';
-import { Save, Globe, Server, CreditCard, Database, Plus, Trash2, Edit2, Check, X, Upload, Smartphone, Mail, Phone, MapPin, AlertTriangle } from 'lucide-react';
+import { Save, Globe, Server, CreditCard, Database, Plus, Trash2, Edit2, Check, X, Upload, Mail, Phone, AlertTriangle, Key } from 'lucide-react';
 import { Provider, Bundle, PlanType } from '../types';
 import { PROVIDER_LOGOS } from '../constants';
-import { SettingsService, AppSettings } from '../services/settingsService';
+import { SettingsService, AppSettings, ApiVendor } from '../services/settingsService';
 import { MockDB } from '../services/mockDb';
 
 export const AdminSettings: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'general' | 'services' | 'payment' | 'backup'>('general');
+  const [activeTab, setActiveTab] = useState<'general' | 'services' | 'payment' | 'backup' | 'api'>('general');
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [bundles, setBundles] = useState<Bundle[]>([]);
   const [isSaving, setIsSaving] = useState(false);
@@ -147,6 +147,7 @@ export const AdminSettings: React.FC = () => {
             {[
                 { id: 'general', label: 'General', icon: Globe },
                 { id: 'services', label: 'Services', icon: Server },
+                { id: 'api', label: 'Integrations', icon: Key },
                 { id: 'payment', label: 'Payments', icon: CreditCard },
                 { id: 'backup', label: 'Backup', icon: Database },
             ].map(tab => (
@@ -236,6 +237,56 @@ export const AdminSettings: React.FC = () => {
                       
                       <button onClick={handleSave} disabled={isSaving} className="px-6 py-3 bg-green-700 text-white rounded-xl font-bold hover:bg-green-800">
                           {isSaving ? 'Saving...' : 'Save General Settings'}
+                      </button>
+                  </div>
+              )}
+
+              {/* --- API INTEGRATIONS --- */}
+              {activeTab === 'api' && (
+                  <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-6">
+                      <h3 className="font-bold text-gray-800 mb-4 border-b pb-2">API Gateways</h3>
+                      <p className="text-sm text-gray-500 mb-4">Configure which provider is active. Only one gateway can be active at a time for processing standard VTU requests.</p>
+
+                      <div className="mb-6">
+                          <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Active Gateway</label>
+                          <select 
+                            className="w-full p-3 border rounded-xl bg-gray-50 font-bold"
+                            value={settings.activeApiVendor}
+                            onChange={(e) => setSettings({...settings, activeApiVendor: e.target.value as ApiVendor})}
+                          >
+                              <option value="BILALSADA">BilalSadaSub (Default)</option>
+                              <option value="MASKAWA">Maskawa Sub</option>
+                              <option value="ALRAHUZ">Alrahuz Data</option>
+                              <option value="ABBAPHANTAMI">Abba Phantami Data</option>
+                              <option value="SIMHOST">SimHost NG</option>
+                          </select>
+                      </div>
+
+                      <h3 className="font-bold text-gray-800 mb-4 border-b pb-2 pt-4">API Credentials</h3>
+                      
+                      <div className="space-y-4">
+                          {Object.keys(settings.apiKeys).map((vendor) => (
+                              <div key={vendor} className="p-4 border rounded-xl bg-gray-50">
+                                  <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{vendor} API Key</label>
+                                  <div className="relative">
+                                    <Key className="absolute left-3 top-3 text-gray-400" size={18} />
+                                    <input 
+                                        type="password"
+                                        placeholder={`Enter ${vendor} Token/Key`}
+                                        value={(settings.apiKeys as any)[vendor]}
+                                        onChange={e => setSettings({
+                                            ...settings, 
+                                            apiKeys: { ...settings.apiKeys, [vendor]: e.target.value }
+                                        })}
+                                        className="w-full pl-10 p-3 border rounded-xl bg-white focus:ring-2 focus:ring-green-500 outline-none"
+                                    />
+                                  </div>
+                              </div>
+                          ))}
+                      </div>
+
+                      <button onClick={handleSave} disabled={isSaving} className="px-6 py-3 bg-green-700 text-white rounded-xl font-bold hover:bg-green-800 mt-4">
+                          {isSaving ? 'Saving...' : 'Update API Configuration'}
                       </button>
                   </div>
               )}
@@ -401,7 +452,7 @@ export const AdminSettings: React.FC = () => {
               <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 text-blue-800">
                   <h4 className="font-bold flex items-center gap-2 mb-2"><Server size={18}/> Status</h4>
                   <p className="text-sm">System is running optimally.</p>
-                  <p className="text-xs mt-2 opacity-70">Version: 1.0.0</p>
+                  <p className="text-xs mt-2 opacity-70">Version: 2.1.0 (Multi-Gateway)</p>
               </div>
           </div>
       </div>

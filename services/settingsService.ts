@@ -1,6 +1,7 @@
 
-
 import { Provider } from '../types';
+
+export type ApiVendor = 'BILALSADA' | 'MASKAWA' | 'ALRAHUZ' | 'ABBAPHANTAMI' | 'SIMHOST';
 
 export interface AppSettings {
   appName: string;
@@ -13,9 +14,15 @@ export interface AppSettings {
   providerStatus: Record<string, boolean>;
   providerStats: Record<string, number>; // Success rate percentage (0-100)
   
-  // Integrations
-  bilalApiKey: string;
-  useBilalService: boolean;
+  // API Integration Settings
+  activeApiVendor: ApiVendor;
+  apiKeys: {
+      BILALSADA: string;
+      MASKAWA: string;
+      ALRAHUZ: string;
+      ABBAPHANTAMI: string;
+      SIMHOST: string;
+  };
   
   // Payments (Manual Funding)
   bankName: string;
@@ -80,8 +87,14 @@ const defaultSettings: AppSettings = {
     [Provider.NMOBILE]: 90,
   },
   
-  bilalApiKey: '',
-  useBilalService: false,
+  activeApiVendor: 'BILALSADA',
+  apiKeys: {
+      BILALSADA: '',
+      MASKAWA: '',
+      ALRAHUZ: '',
+      ABBAPHANTAMI: '',
+      SIMHOST: ''
+  },
   
   bankName: 'GTBank',
   accountNumber: '0123456789',
@@ -122,14 +135,20 @@ const defaultSettings: AppSettings = {
 };
 
 // Key for localStorage
-const SETTINGS_STORAGE_KEY = 'jadanpay_settings_v1';
+const SETTINGS_STORAGE_KEY = 'jadanpay_settings_v2';
 
 // Initialize settings from localStorage or defaults
 let _settings: AppSettings = { ...defaultSettings };
 try {
   const stored = localStorage.getItem(SETTINGS_STORAGE_KEY);
   if (stored) {
-    _settings = { ...defaultSettings, ...JSON.parse(stored) };
+    const parsed = JSON.parse(stored);
+    // Merge to ensure new fields (like apiKeys object) exist if upgrading from v1
+    _settings = { 
+        ...defaultSettings, 
+        ...parsed,
+        apiKeys: { ...defaultSettings.apiKeys, ...parsed.apiKeys }
+    };
   }
 } catch (e) {
   console.warn("Failed to load settings from storage");
