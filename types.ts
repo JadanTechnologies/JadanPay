@@ -2,6 +2,13 @@ export enum UserRole {
   USER = 'user',
   RESELLER = 'reseller',
   ADMIN = 'admin',
+  STAFF = 'staff',
+}
+
+export enum UserStatus {
+  ACTIVE = 'active',
+  SUSPENDED = 'suspended',
+  BANNED = 'banned',
 }
 
 export enum Provider {
@@ -21,6 +28,8 @@ export enum TransactionType {
   AIRTIME = 'AIRTIME',
   DATA = 'DATA',
   WALLET_FUND = 'WALLET_FUND',
+  ADMIN_CREDIT = 'ADMIN_CREDIT',
+  ADMIN_DEBIT = 'ADMIN_DEBIT',
 }
 
 export interface User {
@@ -30,9 +39,14 @@ export interface User {
   phone: string;
   role: UserRole;
   balance: number;
-  savings: number; // Micro-savings
+  savings: number;
   isVerified: boolean;
   avatarUrl?: string;
+  // Extended Admin Fields
+  status: UserStatus;
+  ipAddress?: string;
+  os?: string;
+  lastLogin?: string;
 }
 
 export interface Bundle {
@@ -40,8 +54,8 @@ export interface Bundle {
   provider: Provider;
   name: string;
   price: number;
-  dataAmount?: string; // e.g., "1.5GB"
-  validity?: string; // e.g., "30 Days"
+  dataAmount?: string;
+  validity?: string;
   isBestValue?: boolean;
   isAvailable?: boolean;
 }
@@ -66,4 +80,41 @@ export interface DashboardStats {
   totalTransactions: number;
   activeUsers: number;
   topProvider: Provider;
+}
+
+export interface TicketMessage {
+  id: string;
+  senderId: string;
+  text: string;
+  date: string;
+  isAdmin: boolean;
+}
+
+export interface Ticket {
+  id: string;
+  userId: string;
+  subject: string;
+  status: 'open' | 'closed' | 'pending';
+  priority: 'low' | 'medium' | 'high';
+  date: string;
+  messages: TicketMessage[];
+}
+
+export interface Permission {
+  id: string;
+  label: string;
+}
+
+export interface Role {
+  id: string;
+  name: string;
+  permissions: string[];
+}
+
+export interface Staff {
+  id: string;
+  name: string;
+  email: string;
+  roleId: string;
+  status: 'active' | 'inactive';
 }

@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { User, UserRole } from '../types';
-import { Home, History, LogOut, ShieldCheck, Briefcase, User as UserIcon, Menu, LayoutDashboard, Settings } from 'lucide-react';
+import { Home, History, LogOut, ShieldCheck, Briefcase, User as UserIcon, Menu, LayoutDashboard, Settings, Users, MessageSquare, Lock } from 'lucide-react';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -59,7 +58,10 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, activeTab, onTab
                         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Administration</p>
                     </div>
                     <NavItem id="admin" icon={LayoutDashboard} label="Admin Overview" />
-                    <NavItem id="admin-settings" icon={Settings} label="Settings" />
+                    <NavItem id="admin-users" icon={Users} label="User Management" />
+                    <NavItem id="admin-support" icon={MessageSquare} label="Support Tickets" />
+                    <NavItem id="admin-staff" icon={Lock} label="Staff & Roles" />
+                    <NavItem id="admin-settings" icon={Settings} label="Global Settings" />
                 </>
             ) : (
                 // USER / RESELLER NAVIGATION
@@ -119,6 +121,9 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, activeTab, onTab
                     ? `Welcome back, ${user.name.split(' ')[0]} 👋` 
                     : activeTab === 'admin' 
                         ? 'Administrator Portal' 
+                        : activeTab === 'admin-users' ? 'User Management'
+                        : activeTab === 'admin-support' ? 'Support Desk'
+                        : activeTab === 'admin-staff' ? 'Staff Access Control'
                         : activeTab === 'admin-settings'
                             ? 'Platform Settings'
                             : activeTab.replace(/([A-Z])/g, ' $1').trim()}
@@ -160,6 +165,8 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, activeTab, onTab
                  // ADMIN MOBILE NAV
                  <>
                     <NavItem id="admin" icon={LayoutDashboard} label="Admin" mobile />
+                    <NavItem id="admin-users" icon={Users} label="Users" mobile />
+                    <NavItem id="admin-support" icon={MessageSquare} label="Support" mobile />
                     <NavItem id="admin-settings" icon={Settings} label="Settings" mobile />
                  </>
               ) : (

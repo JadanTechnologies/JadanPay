@@ -1,4 +1,4 @@
-import { User, Transaction, TransactionType, TransactionStatus, UserRole, Provider } from '../types';
+import { User, Transaction, TransactionType, TransactionStatus, UserRole, Provider, Ticket, UserStatus, Staff, Role } from '../types';
 import { MOCK_USERS_DATA } from '../constants';
 
 // Initial Mock State
@@ -30,6 +30,26 @@ let transactions: Transaction[] = [
     previousBalance: 100000,
     newBalance: 150000,
   }
+];
+
+let tickets: Ticket[] = [
+  {
+    id: 't1',
+    userId: 'u1',
+    subject: 'Transaction Failed but Debited',
+    status: 'open',
+    priority: 'high',
+    date: new Date().toISOString(),
+    messages: [
+      { id: 'm1', senderId: 'u1', text: 'I tried to buy data and was debited but no data.', date: new Date().toISOString(), isAdmin: false }
+    ]
+  }
+];
+
+let staffMembers: Staff[] = [];
+let roles: Role[] = [
+    { id: 'r1', name: 'Support Agent', permissions: ['view_users', 'reply_tickets'] },
+    { id: 'r2', name: 'Manager', permissions: ['view_users', 'manage_staff', 'view_analytics'] }
 ];
 
 // Helper to simulate network delay
@@ -65,6 +85,16 @@ export const MockDB = {
     }
   },
 
+  updateUserStatus: async (userId: string, status: UserStatus) => {
+    await delay(300);
+    const userIndex = users.findIndex(u => u.id === userId);
+    if (userIndex !== -1) {
+        users[userIndex].status = status;
+        return users[userIndex];
+    }
+    throw new Error("User not found");
+  },
+
   getTransactions: async (userId?: string) => {
     await delay(500);
     if (userId) {
@@ -82,5 +112,37 @@ export const MockDB = {
   getAllTransactionsAdmin: async () => {
     await delay(600);
     return transactions;
+  },
+
+  // Ticket Methods
+  getTickets: async () => {
+    await delay(400);
+    return tickets;
+  },
+  
+  replyTicket: async (ticketId: string, text: string, isAdmin: boolean) => {
+    await delay(300);
+    const tIndex = tickets.findIndex(t => t.id === ticketId);
+    if (tIndex !== -1) {
+        tickets[tIndex].messages.push({
+            id: Math.random().toString(36),
+            senderId: isAdmin ? 'admin' : tickets[tIndex].userId,
+            text,
+            date: new Date().toISOString(),
+            isAdmin
+        });
+    }
+  },
+
+  // Staff Methods
+  getStaff: async () => staffMembers,
+  addStaff: async (staff: Staff) => {
+      staffMembers.push(staff);
+      return staff;
+  },
+  getRoles: async () => roles,
+  addRole: async (role: Role) => {
+      roles.push(role);
+      return role;
   }
 };

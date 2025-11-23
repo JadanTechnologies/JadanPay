@@ -5,6 +5,9 @@ import { History } from './components/History';
 import { Auth } from './components/Auth';
 import { AdminDashboard } from './components/AdminDashboard';
 import { AdminSettings } from './components/AdminSettings';
+import { AdminUsers } from './components/AdminUsers';
+import { AdminSupport } from './components/AdminSupport';
+import { AdminStaff } from './components/AdminStaff';
 import { ResellerZone } from './components/ResellerZone';
 import { User, UserRole } from './types';
 import { MockDB } from './services/mockDb';
@@ -54,16 +57,29 @@ export default function App() {
   }
 
   const renderContent = () => {
+    // Permission Guard
+    if (activeTab.startsWith('admin') && user.role !== UserRole.ADMIN) {
+        return <div className="p-10 text-center">Unauthorized Access</div>;
+    }
+
     switch (activeTab) {
       case 'dashboard':
-        // Strict separation: If admin tries to access user dashboard, show admin view instead
         return user.role === UserRole.ADMIN ? <AdminDashboard /> : <Dashboard user={user} refreshUser={handleRefreshUser} onViewReceipt={handleViewReceipt} />;
       case 'history':
         return <History user={user} highlightId={selectedTxId} />;
+      
+      // Admin Routes
       case 'admin':
-         return user.role === UserRole.ADMIN ? <AdminDashboard /> : <div className="p-10 text-center">Unauthorized</div>;
+         return <AdminDashboard />;
+      case 'admin-users':
+         return <AdminUsers />;
+      case 'admin-support':
+         return <AdminSupport />;
+      case 'admin-staff':
+         return <AdminStaff />;
       case 'admin-settings':
-         return user.role === UserRole.ADMIN ? <AdminSettings /> : <div className="p-10 text-center">Unauthorized</div>;
+         return <AdminSettings />;
+      
       case 'reseller':
          return user.role === UserRole.RESELLER ? <ResellerZone /> : <div className="p-10 text-center">Unauthorized</div>;
       default:
