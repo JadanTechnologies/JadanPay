@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { User, UserStatus, Transaction, TransactionType, TransactionStatus } from '../types';
 import { MockDB } from '../services/mockDb';
-import { Search, Ban, CheckCircle, MoreVertical, DollarSign, History, Shield, Smartphone, Globe, RotateCcw, AlertTriangle, Monitor } from 'lucide-react';
+import { Search, Ban, CheckCircle, MoreVertical, DollarSign, History, Shield, Smartphone, Globe, RotateCcw, AlertTriangle, Monitor, Trash2, Edit2, Save, X } from 'lucide-react';
 
 export const AdminUsers: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -12,6 +12,10 @@ export const AdminUsers: React.FC = () => {
   const [fundAmount, setFundAmount] = useState('');
   const [fundType, setFundType] = useState<'credit' | 'debit'>('credit');
   const [isLoading, setIsLoading] = useState(false);
+
+  // Edit Mode State
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editFormData, setEditFormData] = useState<Partial<User>>({});
 
   useEffect(() => {
     loadUsers();
@@ -39,6 +43,36 @@ export const AdminUsers: React.FC = () => {
       await MockDB.updateUserStatus(userId, newStatus);
       await loadUsers();
       if(selectedUser) setSelectedUser({...selectedUser, status: newStatus});
+  };
+
+  const handleDeleteUser = async () => {
+      if(!selectedUser) return;
+      if(window.confirm(`Are you sure you want to DELETE ${selectedUser.name}? This action cannot be undone.`)) {
+          await MockDB.deleteUser(selectedUser.id);
+          await loadUsers();
+          setViewMode('list');
+          setSelectedUser(null);
+      }
+  };
+
+  const handleEditClick = () => {
+      if(!selectedUser) return;
+      setEditFormData({
+          name: selectedUser.name,
+          email: selectedUser.email,
+          phone: selectedUser.phone,
+          role: selectedUser.role
+      });
+      setShowEditModal(true);
+  };
+
+  const handleSaveEdit = async () => {
+      if(!selectedUser || !editFormData.name) return;
+      const updatedUser = { ...selectedUser, ...editFormData };
+      await MockDB.updateUser(updatedUser as User);
+      await loadUsers();
+      setSelectedUser(updatedUser as User);
+      setShowEditModal(false);
   };
 
   const handleFundUser = async () => {
@@ -192,18 +226,29 @@ export const AdminUsers: React.FC = () => {
                       <h3 className="font-bold text-gray-800 mb-4">Admin Actions</h3>
                       <div className="space-y-3">
                           <button 
-                            onClick={() => { setViewMode('fund'); setFundType('credit'); }}
-                            className="w-full py-2 bg-green-50 text-green-700 rounded-xl text-sm font-bold border border-green-100 hover:bg-green-100 flex items-center justify-center gap-2"
+                            onClick={handleEditClick}
+                            className="w-full py-2 bg-blue-50 text-blue-700 rounded-xl text-sm font-bold border border-blue-100 hover:bg-blue-100 flex items-center justify-center gap-2"
                           >
-                              <DollarSign size={16}/> Credit Wallet
+                              <Edit2 size={16}/> Edit Profile
                           </button>
-                          <button 
-                            onClick={() => { setViewMode('fund'); setFundType('debit'); }}
-                            className="w-full py-2 bg-red-50 text-red-700 rounded-xl text-sm font-bold border border-red-100 hover:bg-red-100 flex items-center justify-center gap-2"
-                          >
-                              <DollarSign size={16}/> Debit Wallet
-                          </button>
+                          
+                          <div className="grid grid-cols-2 gap-3">
+                                <button 
+                                    onClick={() => { setViewMode('fund'); setFundType('credit'); }}
+                                    className="py-2 bg-green-50 text-green-700 rounded-xl text-sm font-bold border border-green-100 hover:bg-green-100 flex items-center justify-center gap-2"
+                                >
+                                    <DollarSign size={16}/> Credit
+                                </button>
+                                <button 
+                                    onClick={() => { setViewMode('fund'); setFundType('debit'); }}
+                                    className="py-2 bg-red-50 text-red-700 rounded-xl text-sm font-bold border border-red-100 hover:bg-red-100 flex items-center justify-center gap-2"
+                                >
+                                    <DollarSign size={16}/> Debit
+                                </button>
+                          </div>
+
                           <div className="h-px bg-gray-100 my-2"></div>
+                          
                           {selectedUser.status === UserStatus.ACTIVE ? (
                             <>
                                 <button 
@@ -214,7 +259,7 @@ export const AdminUsers: React.FC = () => {
                                 </button>
                                 <button 
                                     onClick={() => handleStatusChange(selectedUser.id, UserStatus.BANNED)}
-                                    className="w-full py-2 bg-gray-900 text-white rounded-xl text-sm font-bold hover:bg-black flex items-center justify-center gap-2"
+                                    className="w-full py-2 bg-gray-800 text-white rounded-xl text-sm font-bold hover:bg-gray-900 flex items-center justify-center gap-2"
                                 >
                                     <Ban size={16}/> Ban User
                                 </button>
@@ -227,6 +272,13 @@ export const AdminUsers: React.FC = () => {
                                   <RotateCcw size={16}/> Reactivate Account
                               </button>
                           )}
+
+                           <button 
+                                onClick={handleDeleteUser}
+                                className="w-full py-2 border border-red-200 text-red-600 rounded-xl text-sm font-bold hover:bg-red-50 flex items-center justify-center gap-2 mt-4"
+                            >
+                                <Trash2 size={16}/> Delete User
+                            </button>
                       </div>
                       <button onClick={() => setViewMode('list')} className="w-full mt-4 text-gray-400 text-sm hover:text-gray-600">Back to List</button>
                   </div>
@@ -318,6 +370,75 @@ export const AdminUsers: React.FC = () => {
               </div>
           </div>
       )}
+
+       {/* Edit Modal */}
+       {showEditModal && (
+            <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+                <div className="bg-white w-full max-w-md rounded-2xl p-6 shadow-2xl">
+                    <div className="flex justify-between items-center mb-6">
+                        <h3 className="text-lg font-bold">Edit User Details</h3>
+                        <button onClick={() => setShowEditModal(false)}><X size={20} className="text-gray-400"/></button>
+                    </div>
+                    
+                    <div className="space-y-4">
+                        <div>
+                            <label className="block text-xs font-bold text-gray-500 mb-1">Full Name</label>
+                            <input 
+                                type="text" 
+                                value={editFormData.name || ''}
+                                onChange={e => setEditFormData({...editFormData, name: e.target.value})}
+                                className="w-full p-3 border rounded-xl"
+                            />
+                        </div>
+                         <div>
+                            <label className="block text-xs font-bold text-gray-500 mb-1">Email Address</label>
+                            <input 
+                                type="email" 
+                                value={editFormData.email || ''}
+                                onChange={e => setEditFormData({...editFormData, email: e.target.value})}
+                                className="w-full p-3 border rounded-xl"
+                            />
+                        </div>
+                         <div>
+                            <label className="block text-xs font-bold text-gray-500 mb-1">Phone Number</label>
+                            <input 
+                                type="text" 
+                                value={editFormData.phone || ''}
+                                onChange={e => setEditFormData({...editFormData, phone: e.target.value})}
+                                className="w-full p-3 border rounded-xl"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-bold text-gray-500 mb-1">Role</label>
+                            <select 
+                                value={editFormData.role}
+                                onChange={e => setEditFormData({...editFormData, role: e.target.value as any})}
+                                className="w-full p-3 border rounded-xl bg-white"
+                            >
+                                <option value="user">User</option>
+                                <option value="reseller">Reseller</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div className="flex gap-3 mt-6">
+                        <button 
+                            onClick={() => setShowEditModal(false)}
+                            className="flex-1 py-3 bg-gray-100 rounded-xl font-bold text-gray-600"
+                        >
+                            Cancel
+                        </button>
+                        <button 
+                            onClick={handleSaveEdit}
+                            className="flex-1 py-3 bg-blue-600 text-white rounded-xl font-bold flex items-center justify-center gap-2"
+                        >
+                            <Save size={18}/> Save Changes
+                        </button>
+                    </div>
+                </div>
+            </div>
+       )}
     </div>
   );
 };

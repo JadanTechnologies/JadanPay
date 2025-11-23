@@ -46,7 +46,10 @@ let tickets: Ticket[] = [
   }
 ];
 
-let staffMembers: Staff[] = [];
+let staffMembers: Staff[] = [
+    { id: 's1', name: 'Sarah Connor', email: 'sarah@jadanpay.com', roleId: 'r1', status: 'active' }
+];
+
 let roles: Role[] = [
     { id: 'r1', name: 'Support Agent', permissions: ['view_users', 'reply_tickets'] },
     { id: 'r2', name: 'Manager', permissions: ['view_users', 'manage_staff', 'view_analytics'] }
@@ -125,6 +128,21 @@ export const MockDB = {
     throw new Error("User not found");
   },
 
+  updateUser: async (user: User) => {
+      await delay(300);
+      const idx = users.findIndex(u => u.id === user.id);
+      if (idx !== -1) {
+          users[idx] = user;
+          return user;
+      }
+      throw new Error("User not found");
+  },
+
+  deleteUser: async (userId: string) => {
+      await delay(400);
+      users = users.filter(u => u.id !== userId);
+  },
+
   getTransactions: async (userId?: string) => {
     await delay(500);
     if (userId) {
@@ -165,13 +183,24 @@ export const MockDB = {
   },
 
   // Staff Methods
-  getStaff: async () => staffMembers,
+  getStaff: async () => {
+      await delay(200);
+      return staffMembers;
+  },
   addStaff: async (staff: Staff) => {
+      await delay(300);
       staffMembers.push(staff);
       return staff;
   },
-  getRoles: async () => roles,
+  deleteStaff: async (id: string) => {
+      staffMembers = staffMembers.filter(s => s.id !== id);
+  },
+  getRoles: async () => {
+      await delay(200);
+      return roles;
+  },
   addRole: async (role: Role) => {
+      await delay(300);
       roles.push(role);
       return role;
   },
