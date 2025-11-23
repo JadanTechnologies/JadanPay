@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { User, UserStatus, Transaction, TransactionType, TransactionStatus } from '../types';
 import { MockDB } from '../services/mockDb';
@@ -92,7 +93,8 @@ export const AdminUsers: React.FC = () => {
           date: new Date().toISOString(),
           reference: `ADMIN-${Date.now()}`,
           previousBalance: selectedUser.balance,
-          newBalance: selectedUser.balance + actualAmount
+          newBalance: selectedUser.balance + actualAmount,
+          paymentMethod: 'Admin Adjustment'
       });
 
       await loadUsers();
@@ -296,6 +298,7 @@ export const AdminUsers: React.FC = () => {
                                     <th className="p-3">Ref</th>
                                     <th className="p-3">Type</th>
                                     <th className="p-3">Details</th>
+                                    <th className="p-3">Method</th>
                                     <th className="p-3">Amount</th>
                                     <th className="p-3">Date</th>
                                     <th className="p-3">Status</th>
@@ -308,6 +311,9 @@ export const AdminUsers: React.FC = () => {
                                         <td className="p-3">{tx.type}</td>
                                         <td className="p-3 text-gray-500">
                                             {tx.destinationNumber || tx.bundleName || '-'}
+                                        </td>
+                                        <td className="p-3 text-gray-500">
+                                            {tx.paymentMethod || (tx.type === 'WALLET_FUND' ? 'Online' : '-')}
                                         </td>
                                         <td className={`p-3 font-bold ${tx.type.includes('DEBIT') || (!tx.type.includes('CREDIT') && !tx.type.includes('FUND')) ? 'text-red-600' : 'text-green-600'}`}>
                                             {tx.type.includes('DEBIT') || (!tx.type.includes('CREDIT') && !tx.type.includes('FUND')) ? '-' : '+'}₦{tx.amount.toLocaleString()}
@@ -322,7 +328,7 @@ export const AdminUsers: React.FC = () => {
                                 ))}
                                 {userHistory.length === 0 && (
                                     <tr>
-                                        <td colSpan={6} className="p-8 text-center text-gray-400">No transactions found.</td>
+                                        <td colSpan={7} className="p-8 text-center text-gray-400">No transactions found.</td>
                                     </tr>
                                 )}
                             </tbody>

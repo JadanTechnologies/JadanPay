@@ -1,3 +1,4 @@
+
 import { User, Transaction, TransactionType, TransactionStatus, UserRole, Provider, Ticket, UserStatus, Staff, Role, Announcement, CommunicationTemplate, Bundle } from '../types';
 import { MOCK_USERS_DATA, SAMPLE_BUNDLES } from '../constants';
 
@@ -33,6 +34,7 @@ let transactions: Transaction[] = [
     reference: 'REF-987654321',
     previousBalance: 100000,
     newBalance: 150000,
+    paymentMethod: 'Paystack Card', // Added mock payment method
   }
 ];
 

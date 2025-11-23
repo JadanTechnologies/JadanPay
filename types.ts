@@ -81,6 +81,7 @@ export interface Transaction {
   reference: string;
   previousBalance?: number;
   newBalance?: number;
+  paymentMethod?: string; // Added payment method field
 }
 
 export interface DashboardStats {

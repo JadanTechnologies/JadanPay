@@ -1,3 +1,4 @@
+
 import { Transaction, TransactionType, TransactionStatus, Provider, Bundle, User } from '../types';
 import { MockDB } from './mockDb';
 import { BilalService } from './bilalService';
@@ -155,7 +156,8 @@ export const fundWallet = async (user: User, amount: number): Promise<Transactio
     date: new Date().toISOString(),
     reference: generateRef(),
     previousBalance: user.balance,
-    newBalance: updatedUser.balance
+    newBalance: updatedUser.balance,
+    paymentMethod: 'Bank Transfer' // Added default payment method for manual funding
   };
 
   await MockDB.addTransaction(tx);

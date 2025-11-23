@@ -65,6 +65,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
   const visibleAnnouncements = announcements.filter(a => !dismissedAnnouncements.includes(a.id));
   const dataPercentage = (dataBalance.used / dataBalance.total) * 100;
 
+  // Calculate remaining data and ensure it doesn't wrap
+  const remainingData = (dataBalance.total - dataBalance.used).toFixed(2);
+
   return (
     <div className="space-y-6 md:space-y-8 animate-fade-in">
       
@@ -191,9 +194,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
                                 transform="rotate(-90 50 50)"
                             ></circle>
                         </svg>
-                        <div className="absolute inset-0 flex flex-col items-center justify-center">
-                            <span className="text-2xl font-bold text-gray-800">{dataBalance.total - dataBalance.used}</span>
-                            <span className="text-[10px] text-gray-400 font-medium uppercase">{dataBalance.unit} Left</span>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center px-2">
+                            <span className="text-2xl font-bold text-gray-800 tracking-tighter">{remainingData}</span>
+                            <span className="text-[10px] text-gray-400 font-medium uppercase whitespace-nowrap">{dataBalance.unit} Left</span>
                         </div>
                     </div>
                 </div>
