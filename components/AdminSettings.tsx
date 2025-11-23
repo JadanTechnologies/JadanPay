@@ -552,45 +552,168 @@ export const AdminSettings: React.FC = () => {
       )}
 
       {activeTab === 'payment' && (
-          <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm max-w-2xl mx-auto animate-fade-in space-y-6">
-                <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-                   <CreditCard className="text-green-600" size={20} /> Payment Configuration
-               </h3>
-               
-               <div className="space-y-4">
-                   <div className="p-4 bg-green-50 border border-green-100 rounded-xl mb-4">
-                       <h4 className="font-bold text-green-800 mb-1">Manual Funding (Bank Transfer)</h4>
-                       <p className="text-xs text-green-600">These details will be shown to users when they select "Manual Transfer".</p>
-                   </div>
-                   
-                   <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Bank Name</label>
-                        <input 
-                            type="text" 
-                            value={settings.bankName}
-                            onChange={(e) => setSettings({...settings, bankName: e.target.value})}
-                            className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
-                        />
-                   </div>
-                   <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Account Number</label>
-                        <input 
-                            type="text" 
-                            value={settings.accountNumber}
-                            onChange={(e) => setSettings({...settings, accountNumber: e.target.value})}
-                            className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none font-mono"
-                        />
-                   </div>
-                   <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Account Name</label>
-                        <input 
-                            type="text" 
-                            value={settings.accountName}
-                            onChange={(e) => setSettings({...settings, accountName: e.target.value})}
-                            className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
-                        />
-                   </div>
-               </div>
+          <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm max-w-4xl mx-auto animate-fade-in space-y-8">
+                <div>
+                    <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2 mb-4">
+                        <CreditCard className="text-green-600" size={20} /> Manual Funding (Bank Transfer)
+                    </h3>
+                    
+                    <div className="p-4 bg-green-50 border border-green-100 rounded-xl mb-4">
+                        <p className="text-xs text-green-600">These details will be shown to users when they select "Manual Transfer".</p>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Bank Name</label>
+                            <input 
+                                type="text" 
+                                value={settings.bankName}
+                                onChange={(e) => setSettings({...settings, bankName: e.target.value})}
+                                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Account Number</label>
+                            <input 
+                                type="text" 
+                                value={settings.accountNumber}
+                                onChange={(e) => setSettings({...settings, accountNumber: e.target.value})}
+                                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none font-mono"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Account Name</label>
+                            <input 
+                                type="text" 
+                                value={settings.accountName}
+                                onChange={(e) => setSettings({...settings, accountName: e.target.value})}
+                                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                <div className="h-px bg-gray-100"></div>
+
+                <div>
+                    <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2 mb-6">
+                        <Server className="text-blue-600" size={20} /> Automated Payment Gateways
+                    </h3>
+                    
+                    <div className="grid grid-cols-1 gap-6">
+                        {/* Monnify */}
+                        <div className="border border-gray-200 rounded-xl p-5 bg-gray-50/50">
+                            <div className="flex justify-between items-center mb-4">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold">M</div>
+                                    <span className="font-bold text-gray-800">Monnify</span>
+                                </div>
+                                <label className="relative inline-flex items-center cursor-pointer">
+                                    <input 
+                                        type="checkbox" 
+                                        className="sr-only peer"
+                                        checked={settings.enableMonnify}
+                                        onChange={(e) => setSettings({...settings, enableMonnify: e.target.checked})}
+                                    />
+                                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                </label>
+                            </div>
+                            {settings.enableMonnify && (
+                                <div className="space-y-3 animate-fade-in">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">API Key</label>
+                                            <input type="password" value={settings.monnifyApiKey} onChange={e => setSettings({...settings, monnifyApiKey: e.target.value})} className="w-full p-2 border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Secret Key</label>
+                                            <input type="password" value={settings.monnifySecretKey} onChange={e => setSettings({...settings, monnifySecretKey: e.target.value})} className="w-full p-2 border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Contract Code</label>
+                                        <input type="text" value={settings.monnifyContractCode} onChange={e => setSettings({...settings, monnifyContractCode: e.target.value})} className="w-full p-2 border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+                                    </div>
+                                    <div className="p-2 bg-blue-50 text-blue-800 text-xs rounded border border-blue-100 break-all">
+                                        <strong>Webhook URL:</strong> https://api.jadanpay.com/webhooks/monnify
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Paystack */}
+                        <div className="border border-gray-200 rounded-xl p-5 bg-gray-50/50">
+                            <div className="flex justify-between items-center mb-4">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-8 h-8 bg-teal-500 rounded-lg flex items-center justify-center text-white font-bold">P</div>
+                                    <span className="font-bold text-gray-800">Paystack</span>
+                                </div>
+                                <label className="relative inline-flex items-center cursor-pointer">
+                                    <input 
+                                        type="checkbox" 
+                                        className="sr-only peer"
+                                        checked={settings.enablePaystack}
+                                        onChange={(e) => setSettings({...settings, enablePaystack: e.target.checked})}
+                                    />
+                                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-500"></div>
+                                </label>
+                            </div>
+                            {settings.enablePaystack && (
+                                <div className="space-y-3 animate-fade-in">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Public Key</label>
+                                            <input type="text" value={settings.paystackPublicKey} onChange={e => setSettings({...settings, paystackPublicKey: e.target.value})} className="w-full p-2 border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-teal-500"/>
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Secret Key</label>
+                                            <input type="password" value={settings.paystackSecretKey} onChange={e => setSettings({...settings, paystackSecretKey: e.target.value})} className="w-full p-2 border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-teal-500"/>
+                                        </div>
+                                    </div>
+                                    <div className="p-2 bg-teal-50 text-teal-800 text-xs rounded border border-teal-100 break-all">
+                                        <strong>Webhook URL:</strong> https://api.jadanpay.com/webhooks/paystack
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Flutterwave */}
+                        <div className="border border-gray-200 rounded-xl p-5 bg-gray-50/50">
+                            <div className="flex justify-between items-center mb-4">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center text-white font-bold">F</div>
+                                    <span className="font-bold text-gray-800">Flutterwave</span>
+                                </div>
+                                <label className="relative inline-flex items-center cursor-pointer">
+                                    <input 
+                                        type="checkbox" 
+                                        className="sr-only peer"
+                                        checked={settings.enableFlutterwave}
+                                        onChange={(e) => setSettings({...settings, enableFlutterwave: e.target.checked})}
+                                    />
+                                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
+                                </label>
+                            </div>
+                            {settings.enableFlutterwave && (
+                                <div className="space-y-3 animate-fade-in">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Public Key</label>
+                                            <input type="text" value={settings.flutterwavePublicKey} onChange={e => setSettings({...settings, flutterwavePublicKey: e.target.value})} className="w-full p-2 border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"/>
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Secret Key</label>
+                                            <input type="password" value={settings.flutterwaveSecretKey} onChange={e => setSettings({...settings, flutterwaveSecretKey: e.target.value})} className="w-full p-2 border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"/>
+                                        </div>
+                                    </div>
+                                    <div className="p-2 bg-orange-50 text-orange-800 text-xs rounded border border-orange-100 break-all">
+                                        <strong>Webhook URL:</strong> https://api.jadanpay.com/webhooks/flutterwave
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
           </div>
       )}
 

@@ -20,6 +20,20 @@ export interface AppSettings {
   bankName: string;
   accountNumber: string;
   accountName: string;
+
+  // Payment Gateways
+  monnifyApiKey: string;
+  monnifySecretKey: string;
+  monnifyContractCode: string;
+  enableMonnify: boolean;
+
+  paystackPublicKey: string;
+  paystackSecretKey: string;
+  enablePaystack: boolean;
+
+  flutterwavePublicKey: string;
+  flutterwaveSecretKey: string;
+  enableFlutterwave: boolean;
   
   // Referral
   enableReferral: boolean;
@@ -71,6 +85,19 @@ const defaultSettings: AppSettings = {
   bankName: 'GTBank',
   accountNumber: '0123456789',
   accountName: 'JadanPay Ventures',
+
+  monnifyApiKey: '',
+  monnifySecretKey: '',
+  monnifyContractCode: '',
+  enableMonnify: false,
+
+  paystackPublicKey: '',
+  paystackSecretKey: '',
+  enablePaystack: false,
+
+  flutterwavePublicKey: '',
+  flutterwaveSecretKey: '',
+  enableFlutterwave: false,
   
   enableReferral: true,
   referralReward: 100,
