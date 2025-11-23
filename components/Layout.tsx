@@ -85,6 +85,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, activeTab, onTab
                 <>
                     <NavItem id="dashboard" icon={Home} label="Dashboard" />
                     <NavItem id="history" icon={History} label="Transactions" />
+                    <NavItem id="profile" icon={UserIcon} label="My Profile" />
                     
                     {user.role === UserRole.RESELLER && (
                     <div className="pt-4 mt-4 border-t border-gray-100 dark:border-gray-800">
@@ -97,7 +98,10 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, activeTab, onTab
          </nav>
 
          <div className="p-4 border-t border-gray-100 dark:border-gray-800">
-            <div className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-900 mb-3 border border-gray-100 dark:border-gray-800">
+            <div 
+               onClick={() => onTabChange('profile')}
+               className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-900 mb-3 border border-gray-100 dark:border-gray-800 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            >
                <img src={`https://ui-avatars.com/api/?name=${user.name}&background=0D8ABC&color=fff`} className="w-10 h-10 rounded-full" alt="" />
                <div className="overflow-hidden">
                   <p className="text-sm font-bold text-gray-900 dark:text-white truncate">{user.name}</p>
@@ -124,7 +128,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, activeTab, onTab
                 )}
                 <h1 className="text-lg font-bold text-gray-900 dark:text-white">{appName}</h1>
             </div>
-            <div className="relative" onClick={handleLogoutClick}>
+            <div className="relative" onClick={() => onTabChange('profile')}>
                <img 
                   src={`https://ui-avatars.com/api/?name=${user.name}&background=0D8ABC&color=fff`} 
                   alt="Profile" 
@@ -142,6 +146,8 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, activeTab, onTab
                     ? `Welcome back, ${user.name.split(' ')[0]} 👋` 
                     : activeTab === 'admin' 
                         ? 'Administrator Portal' 
+                        : activeTab === 'profile'
+                            ? 'My Profile'
                         : activeTab === 'admin-users' ? 'User Management'
                         : activeTab === 'admin-payments' ? 'Payment Approvals'
                         : activeTab === 'admin-support' ? 'Support Desk'
@@ -156,6 +162,8 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, activeTab, onTab
                     ? 'Here is what is happening with your wallet today.' 
                     : activeTab === 'admin' 
                         ? 'Manage platform activities and users.'
+                        : activeTab === 'profile'
+                            ? 'Update your personal details.'
                         : activeTab === 'admin-communication'
                             ? 'Manage broadcasts, announcements and templates.'
                         : activeTab === 'admin-payments'
@@ -172,7 +180,10 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, activeTab, onTab
                  <p className="text-lg font-bold text-green-700 dark:text-green-500 font-mono">₦{user.balance.toLocaleString()}</p>
               </div>
               <div className="h-8 w-px bg-gray-200 dark:bg-gray-800 hidden lg:block"></div>
-              <button className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-900/30 rounded-full transition-colors">
+              <button 
+                onClick={() => onTabChange('profile')}
+                className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-900/30 rounded-full transition-colors"
+              >
                  <UserIcon size={20} />
               </button>
            </div>
@@ -202,6 +213,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, activeTab, onTab
                  <>
                     <NavItem id="dashboard" icon={Home} label="Home" mobile />
                     <NavItem id="history" icon={History} label="History" mobile />
+                    <NavItem id="profile" icon={UserIcon} label="Profile" mobile />
                     
                     {user.role === UserRole.RESELLER && (
                         <NavItem 

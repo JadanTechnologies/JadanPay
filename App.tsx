@@ -13,6 +13,7 @@ import { AdminCommunication } from './components/AdminCommunication';
 import { AdminPayments } from './components/AdminPayments';
 import { ResellerZone } from './components/ResellerZone';
 import { LandingPage } from './components/LandingPage';
+import { UserProfile } from './components/UserProfile';
 import { User, UserRole } from './types';
 import { MockDB } from './services/mockDb';
 
@@ -104,6 +105,8 @@ export default function App() {
         return user.role === UserRole.ADMIN ? <AdminDashboard /> : <Dashboard user={user} refreshUser={handleRefreshUser} onViewReceipt={handleViewReceipt} />;
       case 'history':
         return <History user={user} highlightId={selectedTxId} />;
+      case 'profile':
+        return <UserProfile user={user} onUpdate={handleRefreshUser} />;
       
       // Admin Routes
       case 'admin':

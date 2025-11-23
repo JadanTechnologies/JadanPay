@@ -1,0 +1,127 @@
+
+import React, { useState } from 'react';
+import { User } from '../types';
+import { MockDB } from '../services/mockDb';
+import { Save, User as UserIcon, Phone, Mail, Shield, CheckCircle } from 'lucide-react';
+
+interface UserProfileProps {
+  user: User;
+  onUpdate: () => void;
+}
+
+export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdate }) => {
+  const [formData, setFormData] = useState({
+    name: user.name,
+    phone: user.phone
+  });
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setSuccess(false);
+    
+    try {
+        const updatedUser = { ...user, ...formData };
+        await MockDB.updateUser(updatedUser);
+        onUpdate();
+        setSuccess(true);
+        setTimeout(() => setSuccess(false), 3000);
+    } catch (error) {
+        alert("Failed to update profile");
+    } finally {
+        setLoading(false);
+    }
+  };
+
+  return (
+    <div className="max-w-2xl mx-auto space-y-6 animate-fade-in">
+        <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-r from-green-600 to-teal-600"></div>
+            
+            <div className="relative z-10 mt-16 flex flex-col items-center">
+                <div className="w-32 h-32 rounded-full border-4 border-white shadow-xl bg-gray-100 overflow-hidden mb-4">
+                    <img src={`https://ui-avatars.com/api/?name=${user.name}&background=random&size=128`} className="w-full h-full object-cover" alt="" />
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900">{user.name}</h2>
+                <p className="text-gray-500">{user.email}</p>
+                
+                <div className="flex gap-2 mt-4">
+                    <span className="px-3 py-1 bg-gray-100 rounded-full text-xs font-bold capitalize text-gray-600 flex items-center gap-1">
+                        <Shield size={12}/> {user.role}
+                    </span>
+                    <span className="px-3 py-1 bg-green-100 rounded-full text-xs font-bold text-green-700 flex items-center gap-1">
+                        <CheckCircle size={12}/> Verified
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
+            <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
+                <UserIcon size={20} className="text-green-600"/> Edit Profile
+            </h3>
+            
+            <form onSubmit={handleSubmit} className="space-y-6">
+                <div>
+                    <label className="block text-sm font-bold text-gray-500 mb-2">Full Name</label>
+                    <div className="relative">
+                        <UserIcon className="absolute left-3 top-3.5 text-gray-400" size={18}/>
+                        <input 
+                            type="text" 
+                            value={formData.name}
+                            onChange={e => setFormData({...formData, name: e.target.value})}
+                            className="w-full pl-10 p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none transition-all"
+                            required
+                        />
+                    </div>
+                </div>
+
+                <div>
+                    <label className="block text-sm font-bold text-gray-500 mb-2">Phone Number</label>
+                    <div className="relative">
+                        <Phone className="absolute left-3 top-3.5 text-gray-400" size={18}/>
+                        <input 
+                            type="tel" 
+                            value={formData.phone}
+                            onChange={e => setFormData({...formData, phone: e.target.value})}
+                            className="w-full pl-10 p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none transition-all"
+                            required
+                        />
+                    </div>
+                </div>
+
+                <div>
+                    <label className="block text-sm font-bold text-gray-500 mb-2">Email Address (Read Only)</label>
+                    <div className="relative opacity-60">
+                        <Mail className="absolute left-3 top-3.5 text-gray-400" size={18}/>
+                        <input 
+                            type="email" 
+                            value={user.email}
+                            readOnly
+                            className="w-full pl-10 p-3 bg-gray-100 border border-gray-200 rounded-xl cursor-not-allowed"
+                        />
+                    </div>
+                </div>
+
+                {success && (
+                    <div className="p-4 bg-green-50 text-green-700 rounded-xl flex items-center gap-2">
+                        <CheckCircle size={20}/> Profile updated successfully!
+                    </div>
+                )}
+
+                <div className="pt-4">
+                    <button 
+                        type="submit" 
+                        disabled={loading}
+                        className="w-full py-4 bg-green-700 text-white rounded-xl font-bold shadow-lg shadow-green-200 hover:bg-green-800 transition-all flex items-center justify-center gap-2"
+                    >
+                        {loading ? 'Saving...' : <><Save size={18}/> Save Changes</>}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+  );
+};
