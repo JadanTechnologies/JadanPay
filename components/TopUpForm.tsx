@@ -424,6 +424,25 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
             </div>
         )}
 
+        {/* Fee Summary for Bills */}
+        {(type === TransactionType.CABLE || type === TransactionType.ELECTRICITY) && (
+            <div className="p-3 bg-orange-50 rounded-xl border border-orange-100 mb-4 animate-fade-in">
+                <div className="flex justify-between items-center text-xs text-orange-800">
+                    <span className="font-medium">Transaction Amount</span>
+                    <span className="font-bold">₦{type === TransactionType.CABLE ? (selectedBundle?.price || 0) : (Number(amount) || 0)}</span>
+                </div>
+                <div className="flex justify-between items-center text-xs text-orange-800 mt-1">
+                     <span className="font-medium">Service Fee</span>
+                     <span className="font-bold">+₦{BILL_SERVICE_FEE}</span>
+                </div>
+                <div className="border-t border-orange-200 my-2"></div>
+                <div className="flex justify-between items-center text-sm font-bold text-orange-900">
+                     <span>Total Payable</span>
+                     <span>₦{((type === TransactionType.CABLE ? (selectedBundle?.price || 0) : (Number(amount) || 0)) + BILL_SERVICE_FEE).toLocaleString()}</span>
+                </div>
+            </div>
+        )}
+
         {error && (
           <div className="p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100 flex items-center gap-2 animate-pulse">
             <AlertTriangle size={16} /> <span>{error}</span>

@@ -44,10 +44,11 @@ export default function App() {
   }, [isDarkMode]);
 
   useEffect(() => {
-      try {
-          const savedUserId = localStorage.getItem('JADANPAY_CURRENT_USER_ID');
-          if (savedUserId && !user) {
-              MockDB.getUsers().then(users => {
+      const loadUserSession = async () => {
+          try {
+              const savedUserId = localStorage.getItem('JADANPAY_CURRENT_USER_ID');
+              if (savedUserId && !user) {
+                  const users = await MockDB.getUsers();
                   const found = users.find(u => u.id === savedUserId);
                   if (found) {
                       setUser(found);
@@ -56,14 +57,15 @@ export default function App() {
                       // Session invalid
                       localStorage.removeItem('JADANPAY_CURRENT_USER_ID');
                   }
-              }).catch(err => {
-                  console.error("Failed to restore session", err);
-                  localStorage.removeItem('JADANPAY_CURRENT_USER_ID');
-              });
+              }
+          } catch (e) {
+              console.error("Critical session error", e);
+              // Fail safe: Clear storage if corrupt
+              localStorage.removeItem('JADANPAY_CURRENT_USER_ID');
           }
-      } catch (e) {
-          console.error("Critical session error", e);
-      }
+      };
+      
+      loadUserSession();
   }, []);
 
   const toggleTheme = () => {

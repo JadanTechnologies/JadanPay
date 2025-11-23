@@ -45,26 +45,29 @@ let db: DatabaseSchema = {
 
 // --- DATA SANITIZATION ---
 // This ensures that even if local storage has old data formats, the app won't crash
-const sanitizeUser = (u: any): User => ({
-    id: u.id || Math.random().toString(36),
-    name: u.name || 'Unknown User',
-    email: u.email || 'missing@email.com',
-    phone: u.phone || '',
-    role: u.role || UserRole.USER,
-    balance: typeof u.balance === 'number' ? u.balance : 0,
-    savings: typeof u.savings === 'number' ? u.savings : 0,
-    bonusBalance: typeof u.bonusBalance === 'number' ? u.bonusBalance : 0,
-    walletNumber: u.walletNumber || '0000000000',
-    referralCode: u.referralCode || 'REF000',
-    referredBy: u.referredBy,
-    referralCount: typeof u.referralCount === 'number' ? u.referralCount : 0,
-    isVerified: !!u.isVerified,
-    avatarUrl: u.avatarUrl,
-    status: u.status || UserStatus.ACTIVE,
-    ipAddress: u.ipAddress || '127.0.0.1',
-    os: u.os || 'Unknown',
-    lastLogin: u.lastLogin || new Date().toISOString()
-});
+const sanitizeUser = (u: any): User => {
+    if (!u) return DEFAULT_USERS[0];
+    return {
+        id: u.id || Math.random().toString(36),
+        name: u.name || 'Unknown User',
+        email: u.email || 'missing@email.com',
+        phone: u.phone || '',
+        role: u.role || UserRole.USER,
+        balance: typeof u.balance === 'number' ? u.balance : 0,
+        savings: typeof u.savings === 'number' ? u.savings : 0,
+        bonusBalance: typeof u.bonusBalance === 'number' ? u.bonusBalance : 0,
+        walletNumber: u.walletNumber || '0000000000',
+        referralCode: u.referralCode || 'REF000',
+        referredBy: u.referredBy,
+        referralCount: typeof u.referralCount === 'number' ? u.referralCount : 0,
+        isVerified: !!u.isVerified,
+        avatarUrl: u.avatarUrl,
+        status: u.status || UserStatus.ACTIVE,
+        ipAddress: u.ipAddress || '127.0.0.1',
+        os: u.os || 'Unknown',
+        lastLogin: u.lastLogin || new Date().toISOString()
+    };
+};
 
 const loadDatabase = () => {
     try {
@@ -74,7 +77,7 @@ const loadDatabase = () => {
             
             // Deep Merge / Sanitize
             db = {
-                users: Array.isArray(parsed.users) ? parsed.users.map(sanitizeUser) : DEFAULT_USERS,
+                users: Array.isArray(parsed.users) ? parsed.users.map(sanitizeUser).filter(Boolean) : DEFAULT_USERS,
                 transactions: Array.isArray(parsed.transactions) ? parsed.transactions : [],
                 bundles: Array.isArray(parsed.bundles) ? parsed.bundles : DEFAULT_BUNDLES,
                 tickets: Array.isArray(parsed.tickets) ? parsed.tickets : [],
