@@ -4,6 +4,7 @@ import { User, Announcement, AppNotification, TransactionType, TransactionStatus
 import { TopUpForm } from './TopUpForm';
 import { fundWallet } from '../services/topupService';
 import { MockDB } from '../services/mockDb';
+import { SettingsService } from '../services/settingsService';
 import { playNotification } from '../utils/audio';
 import { Wallet, TrendingUp, Plus, ArrowRight, Activity, Zap, Bell, X, PieChart, AlertTriangle, Smartphone, Copy, Upload, CreditCard, Landmark, CheckCircle, Gift, Share2 } from 'lucide-react';
 
@@ -26,6 +27,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
   const [fundingMethod, setFundingMethod] = useState<'card' | 'manual'>('card');
   const [manualProofFile, setManualProofFile] = useState<File | null>(null);
   const [fundAmount, setFundAmount] = useState<string>('');
+  const [bankDetails, setBankDetails] = useState({ bankName: '', accountNumber: '', accountName: '' });
   
   // Mock Data Usage State
   const [dataBalance, setDataBalance] = useState({ total: 10, used: 8.2, unit: 'GB' });
@@ -34,7 +36,17 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
       loadAnnouncements();
       loadNotifications();
       checkLowData();
+      loadSettings();
   }, []);
+
+  const loadSettings = async () => {
+      const s = await SettingsService.getSettings();
+      setBankDetails({
+          bankName: s.bankName,
+          accountNumber: s.accountNumber,
+          accountName: s.accountName
+      });
+  };
 
   const loadAnnouncements = async () => {
       const data = await MockDB.getAnnouncements();
@@ -429,9 +441,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
                 {fundingMethod === 'manual' && (
                     <div className="mb-6 space-y-4 animate-fade-in">
                         <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg text-xs text-blue-800">
-                            <p className="font-bold">Bank: GTBank</p>
-                            <p>Account: 0123456789</p>
-                            <p>Name: JadanPay LTD</p>
+                            <p className="font-bold">Bank: {bankDetails.bankName}</p>
+                            <p>Account: {bankDetails.accountNumber}</p>
+                            <p>Name: {bankDetails.accountName}</p>
                         </div>
                         
                         <div className="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center cursor-pointer hover:bg-gray-50 relative">

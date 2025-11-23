@@ -156,7 +156,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
       }
 
       return (
-        <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in" style={{zIndex: 9999}}>
+        <div className="fixed inset-0 z-[99999] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in pointer-events-auto" style={{zIndex: 99999}}>
            <div className="bg-white dark:bg-gray-900 w-full max-w-lg rounded-3xl p-8 relative shadow-2xl border border-gray-100 dark:border-gray-800 max-h-[85vh] overflow-y-auto">
               <button 
                 onClick={() => setActiveInfoModal(null)}

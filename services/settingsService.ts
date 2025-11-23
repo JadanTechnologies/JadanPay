@@ -3,15 +3,24 @@ import { Provider } from '../types';
 
 export interface AppSettings {
   appName: string;
-  logoUrl: string; // New field for Brand Icon
+  logoUrl: string;
   supportEmail: string;
   supportPhone: string;
   maintenanceMode: boolean;
+  
+  // Service Status
   providerStatus: Record<string, boolean>;
   providerStats: Record<string, number>; // Success rate percentage (0-100)
+  
   // Integrations
   bilalApiKey: string;
   useBilalService: boolean;
+  
+  // Payments (Manual Funding)
+  bankName: string;
+  accountNumber: string;
+  accountName: string;
+  
   // Referral
   enableReferral: boolean;
   referralReward: number; // Amount in Naira
@@ -38,10 +47,11 @@ export interface AppSettings {
 // Initial default settings
 const defaultSettings: AppSettings = {
   appName: 'JadanPay',
-  logoUrl: 'https://cdn-icons-png.flaticon.com/512/8992/8992203.png', // Permanent Brand Icon
+  logoUrl: 'https://cdn-icons-png.flaticon.com/512/8992/8992203.png',
   supportEmail: 'help@jadanpay.com',
   supportPhone: '0800-JADANPAY',
   maintenanceMode: false,
+  
   providerStatus: {
     [Provider.MTN]: true,
     [Provider.GLO]: true,
@@ -54,12 +64,17 @@ const defaultSettings: AppSettings = {
     [Provider.AIRTEL]: 92,
     [Provider.NMOBILE]: 90,
   },
+  
   bilalApiKey: '',
   useBilalService: false,
-  enableReferral: true,
-  referralReward: 100, // 100 Naira per referral default
   
-  // Landing Defaults
+  bankName: 'GTBank',
+  accountNumber: '0123456789',
+  accountName: 'JadanPay Ventures',
+  
+  enableReferral: true,
+  referralReward: 100,
+  
   landingHeroTitle: "Stop Overpaying For Data.",
   landingHeroSubtitle: "Experience the future of VTU. Seamless top-ups, instant delivery, and reseller friendly rates.",
   landingStats: {
