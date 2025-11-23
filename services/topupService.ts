@@ -1,4 +1,3 @@
-
 import { Transaction, TransactionType, TransactionStatus, Provider, Bundle, User } from '../types';
 import { MockDB } from './mockDb';
 import { BilalService } from './bilalService';
@@ -36,17 +35,18 @@ export const processAirtimePurchase = async (
   }
 
   // --- API INTEGRATION START ---
-  // Call Bilal Service
+  // Call Bilal Service with enhanced error handling
   try {
       const apiResponse = await BilalService.buyAirtime(provider, phone, amount);
-      if (!apiResponse.ok) {
-          throw new Error("Provider failed to process transaction");
+      
+      if (!apiResponse.success) {
+          // If statusCode is 500 (Network), we might want to flag as PENDING instead of failing immediately in a real app
+          // For now, we throw the specific error message from the provider
+          throw new Error(apiResponse.error || "Provider failed to process transaction");
       }
-  } catch (error) {
-      console.error("API Error", error);
-      // Decide if you want to throw error or fallback. For now, we throw.
-      // throw new Error("Service temporarily unavailable");
-      // For Demo purposes, we proceed even if API "mock" fails, or we assume success above.
+  } catch (error: any) {
+      console.error("Service Integration Error:", error);
+      throw new Error(error.message || "Service temporarily unavailable. Please try again later.");
   }
   // --- API INTEGRATION END ---
 
@@ -112,15 +112,15 @@ export const processDataPurchase = async (
   }
 
   // --- API INTEGRATION START ---
-  // Call Bilal Service
   try {
-      // We use bundle.id as the plan_id
-      const apiResponse = await BilalService.buyData(bundle.provider, phone, bundle.id);
-      if (!apiResponse.ok) {
-          throw new Error("Provider failed to process transaction");
+      const apiResponse = await BilalService.buyData(bundle.provider, phone, bundle.planId);
+      
+      if (!apiResponse.success) {
+          throw new Error(apiResponse.error || "Data Provider failed to process transaction");
       }
-  } catch (error) {
-      console.error("API Error", error);
+  } catch (error: any) {
+      console.error("Service Integration Error:", error);
+      throw new Error(error.message || "Service temporarily unavailable. Please try again later.");
   }
   // --- API INTEGRATION END ---
 

@@ -1,6 +1,6 @@
-
 import { User, Transaction, TransactionType, TransactionStatus, UserRole, Provider, Ticket, UserStatus, Staff, Role, Announcement, CommunicationTemplate, Bundle, AppNotification } from '../types';
 import { MOCK_USERS_DATA, SAMPLE_BUNDLES } from '../constants';
+import { SettingsService } from './settingsService';
 
 // Initial Mock State
 // Ensure mock users have wallet numbers
@@ -46,6 +46,45 @@ const generateWalletNumber = () => {
 };
 
 export const MockDB = {
+  // --- BACKUP & RESTORE ---
+  getDatabaseDump: async () => {
+      await delay(500);
+      const settings = await SettingsService.getSettings();
+      return {
+          version: '1.0',
+          timestamp: new Date().toISOString(),
+          data: {
+              users,
+              transactions,
+              bundles,
+              tickets,
+              staffMembers,
+              roles,
+              announcements,
+              templates,
+              settings
+          }
+      };
+  },
+
+  restoreDatabase: async (dump: any) => {
+      await delay(1000);
+      if (!dump || !dump.data) throw new Error("Invalid Backup File");
+      
+      const { data } = dump;
+      if (data.users) users = data.users;
+      if (data.transactions) transactions = data.transactions;
+      if (data.bundles) bundles = data.bundles;
+      if (data.tickets) tickets = data.tickets;
+      if (data.staffMembers) staffMembers = data.staffMembers;
+      if (data.roles) roles = data.roles;
+      if (data.announcements) announcements = data.announcements;
+      if (data.templates) templates = data.templates;
+      if (data.settings) await SettingsService.updateSettings(data.settings);
+      
+      return true;
+  },
+
   getUsers: async () => {
     await delay(500);
     return users;

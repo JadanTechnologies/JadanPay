@@ -1,13 +1,12 @@
-
 import React, { useState, useEffect } from 'react';
-import { Save, Globe, Smartphone, Building, Mail, Phone, ShieldAlert, CreditCard, Bell, Clock, FileText, Upload, Link as LinkIcon, Server, Database, Plus, Trash2, Edit2, Check, X } from 'lucide-react';
+import { Save, Globe, Smartphone, Building, Mail, Phone, ShieldAlert, CreditCard, Bell, Clock, FileText, Upload, Link as LinkIcon, Server, Database, Plus, Trash2, Edit2, Check, X, HardDrive, Download, RefreshCcw } from 'lucide-react';
 import { Provider, Bundle, PlanType } from '../types';
 import { PROVIDER_LOGOS, PROVIDER_COLORS } from '../constants';
 import { SettingsService, AppSettings } from '../services/settingsService';
 import { MockDB } from '../services/mockDb';
 
 export const AdminSettings: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'general' | 'services' | 'payment' | 'communication' | 'automation' | 'integrations'>('general');
+  const [activeTab, setActiveTab] = useState<'general' | 'services' | 'payment' | 'communication' | 'automation' | 'integrations' | 'backup'>('general');
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [bundles, setBundles] = useState<Bundle[]>([]);
   const [isSaving, setIsSaving] = useState(false);
@@ -100,6 +99,50 @@ export const AdminSettings: React.FC = () => {
       }
   };
 
+  // --- Backup & Restore Handlers ---
+  const handleDownloadBackup = async () => {
+      setIsSaving(true);
+      try {
+          const dump = await MockDB.getDatabaseDump();
+          const jsonString = JSON.stringify(dump, null, 2);
+          const blob = new Blob([jsonString], { type: "application/json" });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = `jadanpay_backup_${new Date().toISOString().slice(0,10)}.json`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+      } catch (e) {
+          alert("Failed to generate backup");
+      } finally {
+          setIsSaving(false);
+      }
+  };
+
+  const handleRestoreBackup = (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+          const content = e.target?.result;
+          try {
+              if (typeof content === 'string') {
+                  const dump = JSON.parse(content);
+                  if (window.confirm("WARNING: This will overwrite all current data (Users, Transactions, Settings). Are you sure?")) {
+                      await MockDB.restoreDatabase(dump);
+                      alert("Database restored successfully! The page will reload.");
+                      window.location.reload();
+                  }
+              }
+          } catch (err) {
+              alert("Invalid Backup File. Please check the JSON format.");
+          }
+      };
+      reader.readAsText(file);
+  };
+
   if (!settings) return <div className="p-10 text-center text-gray-400">Loading settings...</div>;
 
   const TabButton = ({ id, icon: Icon, label }: { id: any, icon: any, label: string }) => (
@@ -139,6 +182,7 @@ export const AdminSettings: React.FC = () => {
           <TabButton id="payment" icon={CreditCard} label="Payments" />
           <TabButton id="communication" icon={Bell} label="SMS & Email" />
           <TabButton id="automation" icon={Clock} label="Automation" />
+          <TabButton id="backup" icon={HardDrive} label="Data & Backups" />
       </div>
 
       {activeTab === 'general' && (
@@ -462,6 +506,58 @@ export const AdminSettings: React.FC = () => {
                               </div>
                           </div>
                       ))}
+                  </div>
+              </div>
+          </div>
+      )}
+
+      {activeTab === 'backup' && (
+          <div className="space-y-6 animate-fade-in">
+              <div className="bg-gradient-to-r from-blue-800 to-indigo-900 rounded-2xl p-8 text-white">
+                  <h2 className="text-2xl font-bold mb-2">Data Management</h2>
+                  <p className="text-blue-200">Export your database to a secure local file or restore from a previous backup.</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {/* Export */}
+                  <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm flex flex-col items-center text-center">
+                      <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mb-4">
+                          <Download size={40} />
+                      </div>
+                      <h3 className="text-xl font-bold text-gray-800 mb-2">Backup Database</h3>
+                      <p className="text-gray-500 text-sm mb-6">
+                          Download a complete JSON dump of all users, transactions, settings, and configuration data.
+                      </p>
+                      <button 
+                          onClick={handleDownloadBackup}
+                          className="w-full py-3 bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+                      >
+                          <Download size={18} /> Download JSON
+                      </button>
+                  </div>
+
+                  {/* Import */}
+                  <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm flex flex-col items-center text-center">
+                      <div className="w-20 h-20 bg-orange-50 text-orange-600 rounded-full flex items-center justify-center mb-4">
+                          <RefreshCcw size={40} />
+                      </div>
+                      <h3 className="text-xl font-bold text-gray-800 mb-2">Restore Database</h3>
+                      <p className="text-gray-500 text-sm mb-6">
+                          Upload a previously downloaded JSON backup file to overwrite current data.
+                      </p>
+                      <div className="relative w-full">
+                          <input 
+                              type="file" 
+                              accept=".json"
+                              onChange={handleRestoreBackup}
+                              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                          />
+                          <button 
+                              className="w-full py-3 bg-white border-2 border-orange-500 text-orange-600 rounded-xl font-bold hover:bg-orange-50 transition-colors flex items-center justify-center gap-2"
+                          >
+                              <Upload size={18} /> Select Backup File
+                          </button>
+                      </div>
                   </div>
               </div>
           </div>
