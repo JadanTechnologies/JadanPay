@@ -36,6 +36,14 @@ export const AdminSettings: React.FC = () => {
 
   const handleSave = async () => {
     if (!settings) return;
+
+    // Validation: Support Email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (settings.supportEmail && !emailRegex.test(settings.supportEmail)) {
+        alert("Please enter a valid Support Email address.");
+        return;
+    }
+
     setIsSaving(true);
     try {
         await SettingsService.updateSettings(settings);
@@ -214,7 +222,7 @@ export const AdminSettings: React.FC = () => {
              {/* Brand & Assets */}
             <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-6">
                 <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-                    <Building className="text-gray-400" size={20} /> Identity
+                    <Building className="text-gray-400" size={20} /> Identity & Support
                 </h3>
                 <div>
                     <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">App Name</label>
@@ -246,6 +254,34 @@ export const AdminSettings: React.FC = () => {
                         />
                      </div>
                      <p className="text-xs text-gray-400 mt-2">Paste a URL to your transparent PNG logo.</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 pt-2 border-t border-gray-100">
+                    <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Support Email</label>
+                        <input 
+                            type="email" 
+                            value={settings.supportEmail}
+                            onChange={(e) => setSettings({...settings, supportEmail: e.target.value})}
+                            className={`w-full p-3 bg-gray-50 border rounded-xl focus:ring-2 outline-none transition-colors ${
+                                settings.supportEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(settings.supportEmail)
+                                ? 'border-red-300 focus:ring-red-200 bg-red-50'
+                                : 'border-gray-200 focus:ring-green-500'
+                            }`}
+                        />
+                         {settings.supportEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(settings.supportEmail) && (
+                            <p className="text-xs text-red-500 mt-1">Invalid email format</p>
+                        )}
+                    </div>
+                    <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Support Phone</label>
+                        <input 
+                            type="text" 
+                            value={settings.supportPhone}
+                            onChange={(e) => setSettings({...settings, supportPhone: e.target.value})}
+                            className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
+                        />
+                    </div>
                 </div>
             </div>
 

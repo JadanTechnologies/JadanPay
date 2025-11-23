@@ -1,7 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { Smartphone, Zap, Shield, Globe, ArrowRight, Star, ChevronDown, Activity, Wifi, Box, CheckCircle, Moon, Sun, Quote, X, Mail, MapPin, Phone } from 'lucide-react';
-import { PROVIDER_LOGOS, PROVIDER_COLORS } from '../constants';
+import { Smartphone, Zap, Shield, ArrowRight, Star, ChevronDown, Activity, Wifi, Box, CheckCircle, Moon, Sun, Quote, X, Mail, MapPin, Phone } from 'lucide-react';
 import { SettingsService, AppSettings } from '../services/settingsService';
 
 interface LandingPageProps {
@@ -540,8 +539,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
                       </ul>
                   </div>
               </div>
-              <div className="text-center text-gray-500 text-xs">
-                  &copy; {new Date().getFullYear()} {appName}. All rights reserved.
+              
+              <div className="text-center pt-8 border-t border-gray-200 dark:border-gray-800">
+                  <p className="text-gray-500 text-xs">
+                      &copy; {new Date().getFullYear()} {appName}. All rights reserved.
+                  </p>
+                  <p className="text-[10px] text-gray-400 mt-2">
+                      Developed by <span className="font-bold text-gray-600 dark:text-gray-300">Jadan Technologies</span>
+                  </p>
               </div>
           </div>
       </footer>

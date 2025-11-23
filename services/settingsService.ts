@@ -1,4 +1,5 @@
 
+
 import { Provider } from '../types';
 
 export interface AppSettings {
@@ -120,8 +121,19 @@ const defaultSettings: AppSettings = {
   mobileAppReleaseDate: new Date().toISOString()
 };
 
-// In-memory store (persists until refresh)
-let _settings = { ...defaultSettings };
+// Key for localStorage
+const SETTINGS_STORAGE_KEY = 'jadanpay_settings_v1';
+
+// Initialize settings from localStorage or defaults
+let _settings: AppSettings = { ...defaultSettings };
+try {
+  const stored = localStorage.getItem(SETTINGS_STORAGE_KEY);
+  if (stored) {
+    _settings = { ...defaultSettings, ...JSON.parse(stored) };
+  }
+} catch (e) {
+  console.warn("Failed to load settings from storage");
+}
 
 export const SettingsService = {
   getSettings: async (): Promise<AppSettings> => {
@@ -132,6 +144,12 @@ export const SettingsService = {
   updateSettings: async (newSettings: Partial<AppSettings>): Promise<AppSettings> => {
     return new Promise(resolve => setTimeout(() => {
       _settings = { ..._settings, ...newSettings };
+      // Persist to local storage
+      try {
+        localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(_settings));
+      } catch (e) {
+        console.warn("Failed to save settings to storage");
+      }
       resolve({ ..._settings });
     }, 500));
   }
