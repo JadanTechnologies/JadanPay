@@ -29,6 +29,7 @@ export enum TransactionStatus {
   PENDING = 'PENDING',
   SUCCESS = 'SUCCESS',
   FAILED = 'FAILED',
+  DECLINED = 'DECLINED', // For rejected manual payments
 }
 
 export enum TransactionType {
@@ -47,9 +48,9 @@ export interface User {
   role: UserRole;
   balance: number;
   savings: number;
+  walletNumber: string; // New generated wallet number
   isVerified: boolean;
   avatarUrl?: string;
-  // Extended Admin Fields
   status: UserStatus;
   ipAddress?: string;
   os?: string;
@@ -59,13 +60,13 @@ export interface User {
 export interface Bundle {
   id: string;
   provider: Provider;
-  type: PlanType; // New field for plan categorization
+  type: PlanType;
   name: string;
-  price: number; // Selling Price
-  costPrice: number; // Cost Price for profit calc
+  price: number;
+  costPrice: number;
   dataAmount: string;
   validity: string;
-  planId: string; // The ID sent to the external API (Bilal)
+  planId: string;
   isBestValue?: boolean;
   isAvailable?: boolean;
 }
@@ -75,9 +76,9 @@ export interface Transaction {
   userId: string;
   type: TransactionType;
   provider?: Provider;
-  amount: number; // Selling Amount
-  costPrice?: number; // Cost Amount
-  profit?: number; // Profit
+  amount: number;
+  costPrice?: number;
+  profit?: number;
   destinationNumber?: string;
   bundleName?: string;
   status: TransactionStatus;
@@ -85,7 +86,9 @@ export interface Transaction {
   reference: string;
   previousBalance?: number;
   newBalance?: number;
-  paymentMethod?: string; // Added payment method field
+  paymentMethod?: string;
+  proofUrl?: string; // For manual payment evidence
+  adminActionDate?: string;
 }
 
 export interface DashboardStats {
@@ -149,4 +152,14 @@ export interface CommunicationTemplate {
   subject?: string;
   body: string;
   variables: string[];
+}
+
+export interface AppNotification {
+  id: string;
+  userId: string;
+  title: string;
+  message: string;
+  date: string;
+  isRead: boolean;
+  type: 'info' | 'success' | 'error';
 }

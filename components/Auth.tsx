@@ -1,7 +1,9 @@
+
 import React, { useState } from 'react';
 import { login, register } from '../services/authService';
 import { User } from '../types';
 import { Loader2 } from 'lucide-react';
+import { playNotification } from '../utils/audio';
 
 interface AuthProps {
   onAuthSuccess: (user: User) => void;
@@ -29,10 +31,16 @@ export const Auth: React.FC<AuthProps> = ({ onAuthSuccess }) => {
         onAuthSuccess(user);
       } else {
         const user = await register(name, email, phone, otp);
+        
+        // Success Audio
+        const welcomeText = `Welcome to the Jadan Pay family, ${name}. We are glad to have you on board.`;
+        playNotification(welcomeText);
+        
         onAuthSuccess(user);
       }
     } catch (err: any) {
       setError(err.message);
+      playNotification("Authentication failed. " + err.message, 'error');
     } finally {
       setLoading(false);
     }

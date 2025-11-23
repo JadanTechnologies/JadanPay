@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Layout } from './components/Layout';
 import { Dashboard } from './components/Dashboard';
@@ -9,6 +10,7 @@ import { AdminUsers } from './components/AdminUsers';
 import { AdminSupport } from './components/AdminSupport';
 import { AdminStaff } from './components/AdminStaff';
 import { AdminCommunication } from './components/AdminCommunication';
+import { AdminPayments } from './components/AdminPayments';
 import { ResellerZone } from './components/ResellerZone';
 import { User, UserRole } from './types';
 import { MockDB } from './services/mockDb';
@@ -74,6 +76,8 @@ export default function App() {
          return <AdminDashboard />;
       case 'admin-users':
          return <AdminUsers />;
+      case 'admin-payments':
+         return <AdminPayments />;
       case 'admin-support':
          return <AdminSupport />;
       case 'admin-communication':

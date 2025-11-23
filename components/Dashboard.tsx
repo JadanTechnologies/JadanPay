@@ -1,11 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
-import { User, Announcement } from '../types';
+import { User, Announcement, AppNotification, TransactionType, TransactionStatus } from '../types';
 import { TopUpForm } from './TopUpForm';
 import { fundWallet } from '../services/topupService';
 import { MockDB } from '../services/mockDb';
 import { playNotification } from '../utils/audio';
-import { Wallet, TrendingUp, Plus, ArrowRight, Activity, Zap, Bell, X, PieChart, AlertTriangle, Smartphone } from 'lucide-react';
+import { Wallet, TrendingUp, Plus, ArrowRight, Activity, Zap, Bell, X, PieChart, AlertTriangle, Smartphone, Copy, Upload, CreditCard, Landmark, CheckCircle } from 'lucide-react';
 
 interface DashboardProps {
   user: User;
@@ -18,12 +18,20 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
   const [isFunding, setIsFunding] = useState(false);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [dismissedAnnouncements, setDismissedAnnouncements] = useState<string[]>([]);
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+  
+  // Funding State
+  const [fundingMethod, setFundingMethod] = useState<'card' | 'manual'>('card');
+  const [manualProofFile, setManualProofFile] = useState<File | null>(null);
+  const [fundAmount, setFundAmount] = useState<string>('');
   
   // Mock Data Usage State
   const [dataBalance, setDataBalance] = useState({ total: 10, used: 8.2, unit: 'GB' });
 
   useEffect(() => {
       loadAnnouncements();
+      loadNotifications();
       checkLowData();
   }, []);
 
@@ -31,6 +39,17 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
       const data = await MockDB.getAnnouncements();
       // Filter active ones
       setAnnouncements(data.filter(a => a.isActive));
+  };
+
+  const loadNotifications = async () => {
+      const notes = await MockDB.getNotifications(user.id);
+      setNotifications(notes);
+  };
+
+  const markNotificationsRead = async () => {
+      await MockDB.markNotificationsRead(user.id);
+      loadNotifications();
+      setShowNotifications(!showNotifications);
   };
 
   const checkLowData = () => {
@@ -46,16 +65,55 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
       setDismissedAnnouncements([...dismissedAnnouncements, id]);
   };
 
+  const handleCopyWallet = () => {
+      navigator.clipboard.writeText(user.walletNumber);
+      playNotification("Wallet number copied");
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (e.target.files && e.target.files[0]) {
+          setManualProofFile(e.target.files[0]);
+      }
+  };
+
   const handleFundWallet = async () => {
+    if (!fundAmount) return;
     setIsFunding(true);
+    
     try {
-        await fundWallet(user, 10000); // Mock funding fixed amount
+        if (fundingMethod === 'manual') {
+            if (!manualProofFile) {
+                alert("Please upload payment proof.");
+                setIsFunding(false);
+                return;
+            }
+            // Create pending transaction
+            await MockDB.addTransaction({
+                id: Math.random().toString(36),
+                userId: user.id,
+                type: TransactionType.WALLET_FUND,
+                amount: Number(fundAmount),
+                status: TransactionStatus.PENDING,
+                date: new Date().toISOString(),
+                reference: 'MNL-' + Math.floor(Math.random() * 1000000),
+                paymentMethod: 'Manual Transfer',
+                proofUrl: URL.createObjectURL(manualProofFile) // Mock URL
+            });
+            alert("Payment proof submitted! Pending Admin Approval.");
+            playNotification("Proof submitted successfully. Awaiting approval.");
+        } else {
+            // Mock Card Payment (Instant)
+            await fundWallet(user, Number(fundAmount)); 
+            playNotification("Payment Received. Your wallet has been funded successfully.");
+            alert("Wallet funded successfully!");
+        }
+        
         refreshUser();
         setShowFundModal(false);
-        playNotification("Payment Received. Your wallet has been funded successfully.");
-        alert("Wallet funded with ₦10,000 successfully!");
-    } catch(e) {
-        alert("Funding failed");
+        setManualProofFile(null);
+        setFundAmount('');
+    } catch(e: any) {
+        alert("Funding failed: " + e.message);
         playNotification("Funding failed. Please try again.", 'error');
     } finally {
         setIsFunding(false);
@@ -64,13 +122,41 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
 
   const visibleAnnouncements = announcements.filter(a => !dismissedAnnouncements.includes(a.id));
   const dataPercentage = (dataBalance.used / dataBalance.total) * 100;
-
-  // Calculate remaining data and ensure it doesn't wrap
   const remainingData = (dataBalance.total - dataBalance.used).toFixed(2);
+  const unreadCount = notifications.filter(n => !n.isRead).length;
 
   return (
-    <div className="space-y-6 md:space-y-8 animate-fade-in">
+    <div className="space-y-6 md:space-y-8 animate-fade-in relative">
       
+      {/* Top Bar with Notifications */}
+      <div className="flex justify-end relative">
+          <button onClick={markNotificationsRead} className="relative p-2 rounded-full hover:bg-gray-100 transition-colors">
+              <Bell size={24} className="text-gray-600"/>
+              {unreadCount > 0 && (
+                  <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-white"></span>
+              )}
+          </button>
+          
+          {showNotifications && (
+              <div className="absolute right-0 top-12 w-80 bg-white rounded-2xl shadow-xl border border-gray-100 z-50 overflow-hidden">
+                  <div className="p-3 border-b border-gray-100 font-bold text-sm text-gray-700">Notifications</div>
+                  <div className="max-h-64 overflow-y-auto">
+                      {notifications.length === 0 ? (
+                          <div className="p-4 text-center text-xs text-gray-400">No new notifications</div>
+                      ) : (
+                          notifications.map(n => (
+                              <div key={n.id} className={`p-3 border-b border-gray-50 hover:bg-gray-50 ${!n.isRead ? 'bg-green-50/30' : ''}`}>
+                                  <p className="text-xs font-bold text-gray-800">{n.title}</p>
+                                  <p className="text-[10px] text-gray-500 mt-0.5">{n.message}</p>
+                                  <p className="text-[9px] text-gray-300 mt-1 text-right">{new Date(n.date).toLocaleDateString()}</p>
+                              </div>
+                          ))
+                      )}
+                  </div>
+              </div>
+          )}
+      </div>
+
       {/* Announcements Section */}
       {visibleAnnouncements.length > 0 && (
           <div className="space-y-2">
@@ -102,18 +188,25 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
       
       {/* Wallet Banner Section */}
       <div className="bg-gradient-to-r from-green-800 to-green-900 rounded-3xl p-6 md:p-8 text-white shadow-xl relative overflow-hidden group">
-        {/* Abstract Shapes */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-20 -mt-20 blur-3xl group-hover:bg-white/10 transition-colors duration-1000"></div>
         <div className="absolute bottom-0 left-0 w-32 h-32 bg-green-400/10 rounded-full -ml-8 -mb-8 blur-xl"></div>
 
         <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-            <div className="space-y-1">
-                <div className="flex items-center gap-2 text-green-200 mb-2">
-                    <Wallet size={18} />
-                    <span className="text-sm font-medium uppercase tracking-wider">Total Balance</span>
+            <div className="space-y-4">
+                <div>
+                    <div className="flex items-center gap-2 text-green-200 mb-1">
+                        <Wallet size={18} />
+                        <span className="text-sm font-medium uppercase tracking-wider">Total Balance</span>
+                    </div>
+                    <h1 className="text-4xl md:text-5xl font-bold font-mono tracking-tight">₦{user.balance.toLocaleString()}</h1>
                 </div>
-                <h1 className="text-4xl md:text-5xl font-bold font-mono tracking-tight">₦{user.balance.toLocaleString()}</h1>
-                <p className="text-green-300 text-xs md:text-sm mt-2">Safe & Secure Payments handled by JadanPay.</p>
+                
+                {/* Wallet ID Display */}
+                <div className="inline-flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-lg border border-white/20 backdrop-blur-md">
+                    <span className="text-xs text-green-200 uppercase tracking-widest font-bold">Wallet ID:</span>
+                    <span className="font-mono text-sm font-bold tracking-wider">{user.walletNumber}</span>
+                    <button onClick={handleCopyWallet} className="ml-2 text-white hover:text-green-300"><Copy size={12}/></button>
+                </div>
             </div>
 
             <div className="flex flex-col md:flex-row gap-4 md:justify-end">
@@ -139,23 +232,16 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
 
       {/* Main Grid Content */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-         
-         {/* Left Column: Top Up Form */}
          <div className="lg:col-span-7 xl:col-span-8 space-y-6">
              <div className="flex items-center justify-between mb-2">
                 <h3 className="font-bold text-gray-800 flex items-center gap-2">
                     <Zap className="text-yellow-500 fill-current" size={20}/> Quick Action
                 </h3>
              </div>
-             
-             {/* The Form Component */}
              <TopUpForm user={user} onSuccess={refreshUser} onViewReceipt={onViewReceipt} />
          </div>
 
-         {/* Right Column: Quick Repay & Stats */}
          <div className="lg:col-span-5 xl:col-span-4 space-y-6">
-            
-            {/* Data Usage Monitor Widget */}
             <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm relative overflow-hidden">
                 <div className="flex items-center justify-between mb-4 relative z-10">
                     <h3 className="font-bold text-gray-800 text-sm flex items-center gap-2">
@@ -170,7 +256,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
                 </div>
 
                 <div className="relative flex items-center justify-center py-4">
-                    {/* Circular Progress (CSS/SVG Mock) */}
                     <div className="relative w-32 h-32">
                         <svg className="w-full h-full" viewBox="0 0 100 100">
                             <circle
@@ -211,15 +296,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
                         <p className="font-bold text-gray-800">{dataBalance.total} {dataBalance.unit}</p>
                     </div>
                 </div>
-                
-                {dataPercentage > 80 && (
-                    <p className="text-xs text-red-500 text-center mt-4 bg-red-50 p-2 rounded-lg">
-                        You have used {dataPercentage.toFixed(0)}% of your data plan. Top up now to stay connected.
-                    </p>
-                )}
             </div>
 
-            {/* Quick Repay Card */}
             <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
                 <div className="flex justify-between items-center mb-6">
                     <h3 className="font-bold text-gray-800 text-sm">Quick Repay</h3>
@@ -244,26 +322,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
                     </div>
                 </div>
             </div>
-
-            {/* Promo / Info Card */}
-            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-3xl border border-blue-100 relative overflow-hidden">
-                <div className="relative z-10">
-                    <div className="flex items-center gap-2 mb-2 text-blue-700 font-bold">
-                        <Activity size={18} />
-                        <h3>Usage Insight</h3>
-                    </div>
-                    <p className="text-sm text-blue-800/80 leading-relaxed mb-4">
-                        You've spent <span className="font-bold text-blue-900">₦4,500</span> on Data this month. That's 12% less than last month!
-                    </p>
-                    <div className="h-1.5 w-full bg-blue-200 rounded-full overflow-hidden">
-                        <div className="h-full bg-blue-500 w-[70%] rounded-full"></div>
-                    </div>
-                </div>
-                <div className="absolute -bottom-4 -right-4 text-blue-100 opacity-50">
-                    <TrendingUp size={100} />
-                </div>
-            </div>
-
          </div>
       </div>
 
@@ -276,17 +334,69 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
                         <Wallet size={32} />
                     </div>
                     <h3 className="text-xl font-bold text-gray-900">Fund Wallet</h3>
-                    <p className="text-gray-500 text-sm mt-1">Add funds securely via bank transfer or card.</p>
+                    <p className="text-gray-500 text-sm mt-1">Select payment method below.</p>
                 </div>
                 
-                <div className="bg-gray-50 p-4 rounded-xl mb-6 border border-gray-100 text-center">
-                    <p className="text-xs text-gray-400 uppercase font-bold mb-1">Amount to add</p>
-                    <p className="text-3xl font-mono font-bold text-gray-800">₦10,000.00</p>
+                {/* Method Switcher */}
+                <div className="flex bg-gray-100 p-1 rounded-xl mb-6">
+                    <button 
+                        onClick={() => setFundingMethod('card')}
+                        className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1 ${fundingMethod === 'card' ? 'bg-white shadow text-green-700' : 'text-gray-500'}`}
+                    >
+                        <CreditCard size={14}/> Card / Instant
+                    </button>
+                    <button 
+                         onClick={() => setFundingMethod('manual')}
+                         className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1 ${fundingMethod === 'manual' ? 'bg-white shadow text-green-700' : 'text-gray-500'}`}
+                    >
+                        <Landmark size={14}/> Manual Transfer
+                    </button>
                 </div>
+                
+                <div className="bg-gray-50 p-4 rounded-xl mb-4 border border-gray-100">
+                    <label className="text-xs text-gray-400 uppercase font-bold mb-1 block">Amount (₦)</label>
+                    <input 
+                        type="number" 
+                        value={fundAmount}
+                        onChange={(e) => setFundAmount(e.target.value)}
+                        placeholder="0.00"
+                        className="w-full bg-transparent text-2xl font-mono font-bold text-gray-800 outline-none placeholder:text-gray-300"
+                    />
+                </div>
+
+                {fundingMethod === 'manual' && (
+                    <div className="mb-6 space-y-4 animate-fade-in">
+                        <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg text-xs text-blue-800">
+                            <p className="font-bold">Bank: GTBank</p>
+                            <p>Account: 0123456789</p>
+                            <p>Name: JadanPay LTD</p>
+                        </div>
+                        
+                        <div className="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center cursor-pointer hover:bg-gray-50 relative">
+                            <input 
+                                type="file" 
+                                onChange={handleFileChange}
+                                accept="image/*"
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                            />
+                            {manualProofFile ? (
+                                <div className="text-green-600 flex flex-col items-center">
+                                    <CheckCircle size={24} className="mb-1"/>
+                                    <span className="text-xs font-bold">{manualProofFile.name}</span>
+                                </div>
+                            ) : (
+                                <div className="text-gray-400 flex flex-col items-center">
+                                    <Upload size={24} className="mb-1"/>
+                                    <span className="text-xs">Upload Receipt</span>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
 
                 <div className="flex gap-3">
                     <button 
-                        onClick={() => setShowFundModal(false)}
+                        onClick={() => { setShowFundModal(false); setManualProofFile(null); }}
                         className="flex-1 py-3.5 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-200 transition-colors"
                     >
                         Cancel
@@ -294,9 +404,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
                     <button 
                         onClick={handleFundWallet}
                         disabled={isFunding}
-                        className="flex-1 py-3.5 bg-green-700 text-white rounded-xl font-bold hover:bg-green-800 transition-colors shadow-lg shadow-green-200"
+                        className="flex-1 py-3.5 bg-green-700 text-white rounded-xl font-bold hover:bg-green-800 transition-colors shadow-lg shadow-green-200 flex items-center justify-center gap-2"
                     >
-                        {isFunding ? 'Processing...' : 'Confirm'}
+                         {isFunding ? 'Processing...' : (fundingMethod === 'manual' ? 'Submit Proof' : 'Pay Now')}
                     </button>
                 </div>
              </div>

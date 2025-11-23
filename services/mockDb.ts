@@ -1,12 +1,14 @@
 
-import { User, Transaction, TransactionType, TransactionStatus, UserRole, Provider, Ticket, UserStatus, Staff, Role, Announcement, CommunicationTemplate, Bundle } from '../types';
+import { User, Transaction, TransactionType, TransactionStatus, UserRole, Provider, Ticket, UserStatus, Staff, Role, Announcement, CommunicationTemplate, Bundle, AppNotification } from '../types';
 import { MOCK_USERS_DATA, SAMPLE_BUNDLES } from '../constants';
 
 // Initial Mock State
-let users: User[] = [...MOCK_USERS_DATA] as User[];
+// Ensure mock users have wallet numbers
+let users: User[] = MOCK_USERS_DATA.map(u => ({
+    ...u,
+    walletNumber: u.id === 'u1' ? '2039485712' : u.id === 'u2' ? '2058392011' : '0000000000'
+})) as User[];
 
-// Initialize bundles from constants, but allow modification
-// We map the initial ID to planId for consistency if needed, or just assume constants are correct
 let bundles: Bundle[] = SAMPLE_BUNDLES.map(b => ({...b, planId: b.id}));
 
 let transactions: Transaction[] = [
@@ -25,76 +27,23 @@ let transactions: Transaction[] = [
     reference: 'REF-123456789',
     previousBalance: 6000,
     newBalance: 5000,
-  },
-  {
-    id: 'tx_2',
-    userId: 'u2',
-    type: TransactionType.WALLET_FUND,
-    amount: 50000,
-    status: TransactionStatus.SUCCESS,
-    date: new Date(Date.now() - 172800000).toISOString(),
-    reference: 'REF-987654321',
-    previousBalance: 100000,
-    newBalance: 150000,
-    paymentMethod: 'Paystack Card', // Added mock payment method
   }
 ];
 
-let tickets: Ticket[] = [
-  {
-    id: 't1',
-    userId: 'u1',
-    subject: 'Transaction Failed but Debited',
-    status: 'open',
-    priority: 'high',
-    date: new Date().toISOString(),
-    messages: [
-      { id: 'm1', senderId: 'u1', text: 'I tried to buy data and was debited but no data.', date: new Date().toISOString(), isAdmin: false }
-    ]
-  }
-];
-
-let staffMembers: Staff[] = [
-    { id: 's1', name: 'Sarah Connor', email: 'sarah@jadanpay.com', roleId: 'r1', status: 'active' }
-];
-
-let roles: Role[] = [
-    { id: 'r1', name: 'Support Agent', permissions: ['view_users', 'reply_tickets'] },
-    { id: 'r2', name: 'Manager', permissions: ['view_users', 'manage_staff', 'view_analytics'] }
-];
-
-let announcements: Announcement[] = [
-    {
-        id: 'a1',
-        title: 'Maintenance Update',
-        message: 'MTN Data services will be experiencing downtime between 1AM - 3AM tonight.',
-        type: 'warning',
-        audience: 'all',
-        isActive: true,
-        date: new Date().toISOString()
-    }
-];
-
-let templates: CommunicationTemplate[] = [
-    {
-        id: 'tmp1',
-        name: 'Welcome Email',
-        channel: 'email',
-        subject: 'Welcome to JadanPay!',
-        body: 'Hi {name}, welcome to the platform. We are glad to have you.',
-        variables: ['name']
-    },
-    {
-        id: 'tmp2',
-        name: 'Transaction Receipt',
-        channel: 'sms',
-        body: 'Tx Successful: {amount} {type} for {number}. Ref: {ref}',
-        variables: ['amount', 'type', 'number', 'ref']
-    }
-];
+let tickets: Ticket[] = [];
+let staffMembers: Staff[] = [];
+let roles: Role[] = [];
+let announcements: Announcement[] = [];
+let templates: CommunicationTemplate[] = [];
+let notifications: AppNotification[] = [];
 
 // Helper to simulate network delay
 export const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+// Helper: Generate Unique Wallet Number
+const generateWalletNumber = () => {
+    return '2' + Math.random().toString().slice(2, 11);
+};
 
 export const MockDB = {
   getUsers: async () => {
@@ -105,6 +54,49 @@ export const MockDB = {
   getUserByEmail: async (email: string) => {
     await delay(300);
     return users.find(u => u.email === email);
+  },
+
+  // REGISTRATION WITH VALIDATION
+  registerUser: async (name: string, email: string, phone: string): Promise<User> => {
+      await delay(800);
+      
+      // Check duplicates
+      const emailExists = users.some(u => u.email.toLowerCase() === email.toLowerCase());
+      const phoneExists = users.some(u => u.phone === phone);
+
+      if (emailExists) throw new Error("This email address is already registered.");
+      if (phoneExists) throw new Error("This phone number is already registered.");
+
+      const newUser: User = {
+          id: Math.random().toString(36).substr(2, 9),
+          name,
+          email,
+          phone,
+          role: UserRole.USER,
+          balance: 0,
+          savings: 0,
+          walletNumber: generateWalletNumber(),
+          isVerified: true, // Auto verify for demo
+          status: UserStatus.ACTIVE,
+          ipAddress: '127.0.0.1',
+          os: 'Web Browser',
+          lastLogin: new Date().toISOString()
+      };
+
+      users.push(newUser);
+      
+      // Create Welcome Notification
+      notifications.push({
+          id: Math.random().toString(36),
+          userId: newUser.id,
+          title: 'Welcome to JadanPay!',
+          message: 'We are glad to have you onboard. Fund your wallet to get started.',
+          date: new Date().toISOString(),
+          isRead: false,
+          type: 'success'
+      });
+
+      return newUser;
   },
 
   updateUserBalance: async (userId: string, amount: number) => {
@@ -168,6 +160,84 @@ export const MockDB = {
   getAllTransactionsAdmin: async () => {
     await delay(600);
     return transactions;
+  },
+
+  // PENDING PAYMENTS (MANUAL FUNDING)
+  getPendingTransactions: async () => {
+      await delay(300);
+      return transactions.filter(t => t.status === TransactionStatus.PENDING && t.type === TransactionType.WALLET_FUND);
+  },
+
+  approveTransaction: async (txId: string) => {
+      await delay(600);
+      const idx = transactions.findIndex(t => t.id === txId);
+      if (idx === -1) throw new Error("Transaction not found");
+
+      const tx = transactions[idx];
+      tx.status = TransactionStatus.SUCCESS;
+      tx.adminActionDate = new Date().toISOString();
+
+      // Credit User
+      const user = await MockDB.updateUserBalance(tx.userId, tx.amount);
+      tx.previousBalance = user.balance - tx.amount;
+      tx.newBalance = user.balance;
+
+      // Notify User
+      MockDB.addNotification({
+          userId: tx.userId,
+          title: 'Payment Approved',
+          message: `Your manual funding of ₦${tx.amount.toLocaleString()} has been approved.`,
+          type: 'success'
+      });
+      
+      // Simulate Push/Email
+      console.log(`[PUSH] To ${tx.userId}: Payment Approved`);
+      console.log(`[EMAIL] To ${tx.userId}: Payment Approved`);
+
+      return tx;
+  },
+
+  declineTransaction: async (txId: string) => {
+      await delay(600);
+      const idx = transactions.findIndex(t => t.id === txId);
+      if (idx === -1) throw new Error("Transaction not found");
+
+      transactions[idx].status = TransactionStatus.DECLINED;
+      transactions[idx].adminActionDate = new Date().toISOString();
+
+      // Notify User
+      MockDB.addNotification({
+          userId: transactions[idx].userId,
+          title: 'Payment Declined',
+          message: `Your manual funding request of ₦${transactions[idx].amount.toLocaleString()} was declined. Please check proof.`,
+          type: 'error'
+      });
+
+      return transactions[idx];
+  },
+
+  // NOTIFICATIONS
+  getNotifications: async (userId: string) => {
+      return notifications.filter(n => n.userId === userId).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  },
+  
+  addNotification: (n: Partial<AppNotification>) => {
+      const notif: AppNotification = {
+          id: Math.random().toString(36),
+          userId: n.userId!,
+          title: n.title!,
+          message: n.message!,
+          date: new Date().toISOString(),
+          isRead: false,
+          type: n.type || 'info'
+      };
+      notifications.unshift(notif);
+  },
+
+  markNotificationsRead: async (userId: string) => {
+      notifications.forEach(n => {
+          if (n.userId === userId) n.isRead = true;
+      });
   },
 
   // Ticket Methods
