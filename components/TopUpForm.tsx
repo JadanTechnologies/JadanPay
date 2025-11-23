@@ -55,8 +55,18 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
     setLastTx(null);
 
     // 1. Phone Validation
-    if (!phone || phone.length < 11) {
-        setError("Please enter a valid 11-digit phone number");
+    if (!phone) {
+        setError("Please enter a phone number");
+        return;
+    }
+    
+    // Strict Phone Number Validation
+    if (phone.length !== 11) {
+        setError("Phone number must be exactly 11 digits");
+        return;
+    }
+    if (!phone.startsWith('0')) {
+        setError("Phone number must start with '0'");
         return;
     }
 
