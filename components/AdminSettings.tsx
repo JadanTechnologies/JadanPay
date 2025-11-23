@@ -350,8 +350,77 @@ export const AdminSettings: React.FC = () => {
                            </div>
                       </div>
 
+                      <h3 className="font-bold text-gray-800 mb-4 border-b pb-2 pt-4">Email Configuration (SMTP)</h3>
+                      
+                      <div className="p-4 border rounded-xl bg-gray-50 mb-4">
+                           <div className="flex items-center gap-4 mb-4">
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <div className="relative">
+                                        <input 
+                                            type="checkbox" 
+                                            checked={settings.enableEmail}
+                                            onChange={e => setSettings({...settings, enableEmail: e.target.checked})}
+                                            className="sr-only peer"
+                                        />
+                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                    </div>
+                                    <span className="font-bold text-gray-700">Enable SMTP Email</span>
+                                </label>
+                           </div>
+
+                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">SMTP Host</label>
+                                    <input 
+                                        value={settings.smtpHost}
+                                        onChange={e => setSettings({...settings, smtpHost: e.target.value})}
+                                        className="w-full p-3 border rounded-xl bg-white"
+                                        placeholder="smtp.gmail.com"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">SMTP Port</label>
+                                    <input 
+                                        type="number"
+                                        value={settings.smtpPort}
+                                        onChange={e => setSettings({...settings, smtpPort: Number(e.target.value)})}
+                                        className="w-full p-3 border rounded-xl bg-white"
+                                        placeholder="587"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">SMTP Username</label>
+                                    <input 
+                                        value={settings.smtpUser}
+                                        onChange={e => setSettings({...settings, smtpUser: e.target.value})}
+                                        className="w-full p-3 border rounded-xl bg-white"
+                                        placeholder="email@example.com"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">SMTP Password</label>
+                                    <input 
+                                        type="password"
+                                        value={settings.smtpPass}
+                                        onChange={e => setSettings({...settings, smtpPass: e.target.value})}
+                                        className="w-full p-3 border rounded-xl bg-white"
+                                        placeholder="********"
+                                    />
+                                </div>
+                                 <div className="md:col-span-2">
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">From Email Address</label>
+                                    <input 
+                                        value={settings.emailFrom}
+                                        onChange={e => setSettings({...settings, emailFrom: e.target.value})}
+                                        className="w-full p-3 border rounded-xl bg-white"
+                                        placeholder="noreply@yourdomain.com"
+                                    />
+                                </div>
+                           </div>
+                      </div>
+
                       <button onClick={handleSave} disabled={isSaving} className="px-6 py-3 bg-green-700 text-white rounded-xl font-bold hover:bg-green-800 mt-4">
-                          {isSaving ? 'Saving...' : 'Update API Configuration'}
+                          {isSaving ? 'Saving...' : 'Update API & Messaging Config'}
                       </button>
                   </div>
               )}

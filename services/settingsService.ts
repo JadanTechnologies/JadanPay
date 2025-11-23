@@ -29,6 +29,14 @@ export interface AppSettings {
   twilioAccountSid: string;
   twilioAuthToken: string;
   twilioSenderId: string;
+
+  // Email Settings (SMTP)
+  enableEmail: boolean;
+  smtpHost: string;
+  smtpPort: number;
+  smtpUser: string;
+  smtpPass: string;
+  emailFrom: string;
   
   // Payments (Manual Funding)
   bankName: string;
@@ -107,6 +115,13 @@ const defaultSettings: AppSettings = {
   twilioAccountSid: '',
   twilioAuthToken: '',
   twilioSenderId: '',
+
+  enableEmail: false,
+  smtpHost: '',
+  smtpPort: 587,
+  smtpUser: '',
+  smtpPass: '',
+  emailFrom: 'noreply@jadanpay.com',
   
   bankName: 'GTBank',
   accountNumber: '0123456789',
