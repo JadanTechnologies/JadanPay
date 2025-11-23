@@ -5,7 +5,7 @@ import { TopUpForm } from './TopUpForm';
 import { fundWallet } from '../services/topupService';
 import { MockDB } from '../services/mockDb';
 import { playNotification } from '../utils/audio';
-import { Wallet, TrendingUp, Plus, ArrowRight, Activity, Zap, Bell, X } from 'lucide-react';
+import { Wallet, TrendingUp, Plus, ArrowRight, Activity, Zap, Bell, X, PieChart, AlertTriangle, Smartphone } from 'lucide-react';
 
 interface DashboardProps {
   user: User;
@@ -18,15 +18,28 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
   const [isFunding, setIsFunding] = useState(false);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [dismissedAnnouncements, setDismissedAnnouncements] = useState<string[]>([]);
+  
+  // Mock Data Usage State
+  const [dataBalance, setDataBalance] = useState({ total: 10, used: 8.2, unit: 'GB' });
 
   useEffect(() => {
       loadAnnouncements();
+      checkLowData();
   }, []);
 
   const loadAnnouncements = async () => {
       const data = await MockDB.getAnnouncements();
       // Filter active ones
       setAnnouncements(data.filter(a => a.isActive));
+  };
+
+  const checkLowData = () => {
+      // Simulate a check. If used > 80%, warn user.
+      const percentageUsed = (dataBalance.used / dataBalance.total) * 100;
+      if (percentageUsed >= 80) {
+          // Only play if not recently dismissed (logic simplified for demo)
+          // setTimeout(() => playNotification("Warning. Your data bundle is about to finish."), 3000);
+      }
   };
 
   const handleDismiss = (id: string) => {
@@ -39,7 +52,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
         await fundWallet(user, 10000); // Mock funding fixed amount
         refreshUser();
         setShowFundModal(false);
-        playNotification("Payment Received. Your wallet has been funded.");
+        playNotification("Payment Received. Your wallet has been funded successfully.");
         alert("Wallet funded with ₦10,000 successfully!");
     } catch(e) {
         alert("Funding failed");
@@ -50,6 +63,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
   };
 
   const visibleAnnouncements = announcements.filter(a => !dismissedAnnouncements.includes(a.id));
+  const dataPercentage = (dataBalance.used / dataBalance.total) * 100;
 
   return (
     <div className="space-y-6 md:space-y-8 animate-fade-in">
@@ -138,6 +152,70 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
          {/* Right Column: Quick Repay & Stats */}
          <div className="lg:col-span-5 xl:col-span-4 space-y-6">
             
+            {/* Data Usage Monitor Widget */}
+            <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm relative overflow-hidden">
+                <div className="flex items-center justify-between mb-4 relative z-10">
+                    <h3 className="font-bold text-gray-800 text-sm flex items-center gap-2">
+                        <Smartphone size={16} className="text-gray-400"/>
+                        Data Monitor
+                    </h3>
+                    {dataPercentage > 80 && (
+                         <span className="bg-red-100 text-red-600 text-[10px] font-bold px-2 py-1 rounded-full animate-pulse flex items-center gap-1">
+                             <AlertTriangle size={10} /> Low Data
+                         </span>
+                    )}
+                </div>
+
+                <div className="relative flex items-center justify-center py-4">
+                    {/* Circular Progress (CSS/SVG Mock) */}
+                    <div className="relative w-32 h-32">
+                        <svg className="w-full h-full" viewBox="0 0 100 100">
+                            <circle
+                                className="text-gray-100 stroke-current"
+                                strokeWidth="10"
+                                cx="50"
+                                cy="50"
+                                r="40"
+                                fill="transparent"
+                            ></circle>
+                            <circle
+                                className={`${dataPercentage > 90 ? 'text-red-500' : 'text-green-500'} progress-ring__circle stroke-current transition-all duration-1000 ease-out`}
+                                strokeWidth="10"
+                                strokeLinecap="round"
+                                cx="50"
+                                cy="50"
+                                r="40"
+                                fill="transparent"
+                                strokeDasharray="251.2"
+                                strokeDashoffset={251.2 - (251.2 * dataPercentage) / 100}
+                                transform="rotate(-90 50 50)"
+                            ></circle>
+                        </svg>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                            <span className="text-2xl font-bold text-gray-800">{dataBalance.total - dataBalance.used}</span>
+                            <span className="text-[10px] text-gray-400 font-medium uppercase">{dataBalance.unit} Left</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="flex justify-between text-xs text-gray-500 mt-2 px-2">
+                    <div className="text-center">
+                        <p className="mb-1">Used</p>
+                        <p className="font-bold text-gray-800">{dataBalance.used} {dataBalance.unit}</p>
+                    </div>
+                    <div className="text-center">
+                        <p className="mb-1">Total</p>
+                        <p className="font-bold text-gray-800">{dataBalance.total} {dataBalance.unit}</p>
+                    </div>
+                </div>
+                
+                {dataPercentage > 80 && (
+                    <p className="text-xs text-red-500 text-center mt-4 bg-red-50 p-2 rounded-lg">
+                        You have used {dataPercentage.toFixed(0)}% of your data plan. Top up now to stay connected.
+                    </p>
+                )}
+            </div>
+
             {/* Quick Repay Card */}
             <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
                 <div className="flex justify-between items-center mb-6">
