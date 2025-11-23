@@ -360,11 +360,37 @@ export const MockDB = {
   },
 
   // Ticket Methods
-  getTickets: async () => {
+  getTickets: async (userId?: string) => {
     await delay(400);
-    return tickets;
+    if (userId) {
+        return tickets.filter(t => t.userId === userId).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    }
+    return tickets.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   },
   
+  createTicket: async (userId: string, subject: string, message: string, priority: 'low' | 'medium' | 'high') => {
+    await delay(500);
+    const newTicket: Ticket = {
+        id: Math.random().toString(36).substr(2, 9),
+        userId,
+        subject,
+        status: 'open',
+        priority,
+        date: new Date().toISOString(),
+        messages: [
+            {
+                id: Math.random().toString(36),
+                senderId: userId,
+                text: message,
+                date: new Date().toISOString(),
+                isAdmin: false
+            }
+        ]
+    };
+    tickets.unshift(newTicket);
+    return newTicket;
+  },
+
   replyTicket: async (ticketId: string, text: string, isAdmin: boolean) => {
     await delay(300);
     const tIndex = tickets.findIndex(t => t.id === ticketId);

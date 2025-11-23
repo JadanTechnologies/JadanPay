@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { User, UserRole } from '../types';
-import { Home, History, LogOut, ShieldCheck, Briefcase, User as UserIcon, Menu, LayoutDashboard, Settings, Users, MessageSquare, Lock, Megaphone, CreditCard } from 'lucide-react';
+import { Home, History, LogOut, ShieldCheck, Briefcase, User as UserIcon, Menu, LayoutDashboard, Settings, Users, MessageSquare, Lock, Megaphone, CreditCard, LifeBuoy } from 'lucide-react';
 import { SettingsService } from '../services/settingsService';
 
 interface LayoutProps {
@@ -85,6 +85,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, activeTab, onTab
                 <>
                     <NavItem id="dashboard" icon={Home} label="Dashboard" />
                     <NavItem id="history" icon={History} label="Transactions" />
+                    <NavItem id="support" icon={LifeBuoy} label="Support" />
                     <NavItem id="profile" icon={UserIcon} label="My Profile" />
                     
                     {user.role === UserRole.RESELLER && (
@@ -148,6 +149,8 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, activeTab, onTab
                         ? 'Administrator Portal' 
                         : activeTab === 'profile'
                             ? 'My Profile'
+                        : activeTab === 'support'
+                            ? 'Customer Support'
                         : activeTab === 'admin-users' ? 'User Management'
                         : activeTab === 'admin-payments' ? 'Payment Approvals'
                         : activeTab === 'admin-support' ? 'Support Desk'
@@ -164,6 +167,8 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, activeTab, onTab
                         ? 'Manage platform activities and users.'
                         : activeTab === 'profile'
                             ? 'Update your personal details.'
+                        : activeTab === 'support'
+                            ? 'Get help with your transactions and account.'
                         : activeTab === 'admin-communication'
                             ? 'Manage broadcasts, announcements and templates.'
                         : activeTab === 'admin-payments'
@@ -213,16 +218,8 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, activeTab, onTab
                  <>
                     <NavItem id="dashboard" icon={Home} label="Home" mobile />
                     <NavItem id="history" icon={History} label="History" mobile />
+                    <NavItem id="support" icon={LifeBuoy} label="Support" mobile />
                     <NavItem id="profile" icon={UserIcon} label="Profile" mobile />
-                    
-                    {user.role === UserRole.RESELLER && (
-                        <NavItem 
-                            id="reseller" 
-                            icon={Briefcase} 
-                            label="Reseller" 
-                            mobile 
-                        />
-                    )}
                  </>
               )}
                

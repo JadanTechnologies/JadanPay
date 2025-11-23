@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Layout } from './components/Layout';
 import { Dashboard } from './components/Dashboard';
 import { History } from './components/History';
+import { Support } from './components/Support';
 import { Auth } from './components/Auth';
 import { AdminDashboard } from './components/AdminDashboard';
 import { AdminSettings } from './components/AdminSettings';
@@ -107,6 +108,8 @@ export default function App() {
         return <History user={user} highlightId={selectedTxId} />;
       case 'profile':
         return <UserProfile user={user} onUpdate={handleRefreshUser} />;
+      case 'support':
+        return <Support user={user} />;
       
       // Admin Routes
       case 'admin':
