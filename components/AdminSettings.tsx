@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Save, Globe, Smartphone, Building, Mail, Phone, ShieldAlert, CreditCard, Bell, Clock, FileText, Upload, Link as LinkIcon, Server, Database, Plus, Trash2, Edit2, Check, X, HardDrive, Download, RefreshCcw, Gift, LayoutTemplate } from 'lucide-react';
+import { Save, Globe, Smartphone, Building, Mail, Phone, ShieldAlert, CreditCard, Bell, Clock, FileText, Upload, Link as LinkIcon, Server, Database, Plus, Trash2, Edit2, Check, X, HardDrive, Download, RefreshCcw, Gift, LayoutTemplate, Activity, Share2 } from 'lucide-react';
 import { Provider, Bundle, PlanType } from '../types';
 import { PROVIDER_LOGOS, PROVIDER_COLORS } from '../constants';
 import { SettingsService, AppSettings } from '../services/settingsService';
@@ -268,6 +268,7 @@ export const AdminSettings: React.FC = () => {
 
       {activeTab === 'landing' && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-fade-in">
+              {/* Content Configuration */}
               <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-6">
                   <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
                       <LayoutTemplate className="text-blue-500" size={20} /> Landing Page Content
@@ -291,8 +292,69 @@ export const AdminSettings: React.FC = () => {
                           placeholder="Experience the future of VTU..."
                       />
                   </div>
+                  
+                  {/* Stats Editing */}
+                  <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-2">
+                        <Activity size={12}/> Display Statistics
+                      </label>
+                      <div className="grid grid-cols-2 gap-3">
+                          <input 
+                            placeholder="Active Users (e.g. 10K+)"
+                            value={settings.landingStats.activeUsers}
+                            onChange={(e) => setSettings({...settings, landingStats: {...settings.landingStats, activeUsers: e.target.value}})}
+                            className="p-3 border rounded-xl bg-gray-50"
+                          />
+                           <input 
+                            placeholder="Daily Tx (e.g. 5000+)"
+                            value={settings.landingStats.dailyTransactions}
+                            onChange={(e) => setSettings({...settings, landingStats: {...settings.landingStats, dailyTransactions: e.target.value}})}
+                            className="p-3 border rounded-xl bg-gray-50"
+                          />
+                           <input 
+                            placeholder="Uptime (e.g. 99.9%)"
+                            value={settings.landingStats.uptime}
+                            onChange={(e) => setSettings({...settings, landingStats: {...settings.landingStats, uptime: e.target.value}})}
+                            className="p-3 border rounded-xl bg-gray-50"
+                          />
+                           <input 
+                            placeholder="Support (e.g. 24/7)"
+                            value={settings.landingStats.support}
+                            onChange={(e) => setSettings({...settings, landingStats: {...settings.landingStats, support: e.target.value}})}
+                            className="p-3 border rounded-xl bg-gray-50"
+                          />
+                      </div>
+                  </div>
+
+                  {/* Social Links */}
+                   <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-2">
+                        <Share2 size={12}/> Social Media Links
+                      </label>
+                      <div className="space-y-3">
+                           <input 
+                            placeholder="Twitter URL"
+                            value={settings.socialLinks.twitter}
+                            onChange={(e) => setSettings({...settings, socialLinks: {...settings.socialLinks, twitter: e.target.value}})}
+                            className="w-full p-3 border rounded-xl bg-gray-50"
+                          />
+                           <input 
+                            placeholder="Instagram URL"
+                            value={settings.socialLinks.instagram}
+                            onChange={(e) => setSettings({...settings, socialLinks: {...settings.socialLinks, instagram: e.target.value}})}
+                            className="w-full p-3 border rounded-xl bg-gray-50"
+                          />
+                           <input 
+                            placeholder="Facebook URL"
+                            value={settings.socialLinks.facebook}
+                            onChange={(e) => setSettings({...settings, socialLinks: {...settings.socialLinks, facebook: e.target.value}})}
+                            className="w-full p-3 border rounded-xl bg-gray-50"
+                          />
+                      </div>
+                  </div>
               </div>
 
+              {/* Mobile App Configuration */}
               <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-6">
                   <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
                       <Smartphone className="text-purple-500" size={20} /> Mobile Application
@@ -342,6 +404,7 @@ export const AdminSettings: React.FC = () => {
           </div>
       )}
 
+      {/* Other Tabs (Services, Integrations, etc.) are rendered here (code omitted for brevity but preserved in full output logic) */}
       {activeTab === 'services' && (
           <div className="space-y-6 animate-fade-in">
               {/* Network Availability Control */}

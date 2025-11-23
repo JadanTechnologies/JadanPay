@@ -49,15 +49,16 @@ export const Auth: React.FC<AuthProps> = ({ onAuthSuccess, onBack }) => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-black p-4 transition-colors duration-300">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-black p-4 transition-colors duration-300 overflow-hidden relative">
       
       {/* Background decoration for levitation effect context */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-green-500/10 rounded-full blur-3xl animate-float"></div>
-          <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl animate-float-delayed"></div>
+      <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-green-500/10 dark:bg-green-600/10 rounded-full blur-[100px] animate-pulse"></div>
+          <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-blue-500/10 dark:bg-blue-600/10 rounded-full blur-[100px] animate-pulse delay-700"></div>
       </div>
 
-      <div className="bg-white dark:bg-gray-900 w-full max-w-md rounded-2xl p-8 shadow-2xl border border-gray-100 dark:border-gray-800 relative levitate transition-all duration-300">
+      {/* Main Card with Levitation Animation */}
+      <div className="bg-white dark:bg-gray-900 w-full max-w-md rounded-2xl p-8 shadow-2xl border border-gray-100 dark:border-gray-800 relative z-10 levitate transition-all duration-300">
         <button 
             onClick={onBack}
             className="absolute top-6 left-6 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"

@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { Smartphone, Zap, Shield, Globe, ArrowRight, Star, ChevronDown, Activity, Wifi, Box, CheckCircle, Moon, Sun } from 'lucide-react';
+import { Smartphone, Zap, Shield, Globe, ArrowRight, Star, ChevronDown, Activity, Wifi, Box, CheckCircle, Moon, Sun, Quote } from 'lucide-react';
 import { PROVIDER_LOGOS, PROVIDER_COLORS } from '../constants';
 import { SettingsService, AppSettings } from '../services/settingsService';
 
@@ -59,8 +59,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
           </div>
           <div className="hidden md:flex gap-8 text-sm font-medium text-gray-600 dark:text-gray-400">
             <a href="#features" className="hover:text-green-600 dark:hover:text-white transition-colors">Features</a>
-            <a href="#pricing" className="hover:text-green-600 dark:hover:text-white transition-colors">Pricing</a>
-            <a href="#testimonials" className="hover:text-green-600 dark:hover:text-white transition-colors">Reviews</a>
+            <a href="#reviews" className="hover:text-green-600 dark:hover:text-white transition-colors">Reviews</a>
           </div>
           <div className="flex gap-4 items-center">
             <button 
@@ -121,7 +120,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
                         <div className="flex gap-1 text-yellow-400">
                             {[1,2,3,4,5].map(i => <Star key={i} size={12} fill="currentColor"/>)}
                         </div>
-                        <p className="text-xs text-gray-500 font-medium">Trusted by 10,000+ Nigerians</p>
+                        <p className="text-xs text-gray-500 font-medium">Trusted by {settings?.landingStats?.activeUsers || "10,000+"} Nigerians</p>
                     </div>
                 </div>
             </div>
@@ -219,10 +218,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
       <section className="py-20 border-y border-gray-100 dark:border-white/5 bg-gray-50 dark:bg-gray-900/50 backdrop-blur-sm">
           <div className="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
               {[
-                  { label: "Active Users", val: "10K+" },
-                  { label: "Daily Transactions", val: "5000+" },
-                  { label: "Uptime", val: "99.9%" },
-                  { label: "Support", val: "24/7" }
+                  { label: "Active Users", val: settings?.landingStats?.activeUsers || "10K+" },
+                  { label: "Daily Transactions", val: settings?.landingStats?.dailyTransactions || "5000+" },
+                  { label: "Uptime", val: settings?.landingStats?.uptime || "99.9%" },
+                  { label: "Support", val: settings?.landingStats?.support || "24/7" }
               ].map((stat, i) => (
                   <div key={i}>
                       <h3 className="text-4xl font-black text-gray-900 dark:text-white mb-2">{stat.val}</h3>
@@ -264,6 +263,38 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
                   </div>
               </div>
           </div>
+      </section>
+
+      {/* Testimonials (Reviews) Section */}
+      <section id="reviews" className="py-20 bg-gray-50 dark:bg-black relative border-y border-gray-100 dark:border-white/5">
+         <div className="max-w-7xl mx-auto px-6">
+            <div className="text-center mb-16">
+                 <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">What Our Users Say</h2>
+                 <p className="text-gray-500 dark:text-gray-400">Trusted by resellers and individuals across Nigeria.</p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {[
+                    { name: "Ahmed Musa", role: "Reseller", text: "JadanPay changed my business. The API is super fast and my customers are always happy." },
+                    { name: "Grace Eze", role: "Student", text: "Best data rates I've seen. I save almost ₦5,000 monthly on data subscriptions here." },
+                    { name: "Tola B", role: "Developer", text: "Integration was smooth. Documentation is clear and support is responsive. Highly recommended." }
+                ].map((review, i) => (
+                    <div key={i} className="bg-white dark:bg-gray-900 p-8 rounded-3xl border border-gray-100 dark:border-white/5 shadow-sm">
+                        <Quote className="text-green-500 mb-4 opacity-50" size={32}/>
+                        <p className="text-gray-600 dark:text-gray-300 mb-6 italic leading-relaxed">"{review.text}"</p>
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-gray-200 dark:bg-gray-800 rounded-full flex items-center justify-center font-bold text-gray-500 dark:text-gray-400">
+                                {review.name.charAt(0)}
+                            </div>
+                            <div>
+                                <h4 className="font-bold text-gray-900 dark:text-white">{review.name}</h4>
+                                <p className="text-xs text-green-600 dark:text-green-400">{review.role}</p>
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+         </div>
       </section>
 
       {/* Referral Section */}
@@ -352,9 +383,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
                   <div>
                       <h4 className="font-bold mb-4 text-gray-900 dark:text-white">Connect</h4>
                       <ul className="space-y-2 text-sm text-gray-500">
-                          <li><a href="#" className="hover:text-green-600 dark:hover:text-green-400">Twitter</a></li>
-                          <li><a href="#" className="hover:text-green-600 dark:hover:text-green-400">Instagram</a></li>
-                          <li><a href="#" className="hover:text-green-600 dark:hover:text-green-400">Facebook</a></li>
+                          <li><a href={settings?.socialLinks?.twitter || "#"} className="hover:text-green-600 dark:hover:text-green-400">Twitter</a></li>
+                          <li><a href={settings?.socialLinks?.instagram || "#"} className="hover:text-green-600 dark:hover:text-green-400">Instagram</a></li>
+                          <li><a href={settings?.socialLinks?.facebook || "#"} className="hover:text-green-600 dark:hover:text-green-400">Facebook</a></li>
                       </ul>
                   </div>
               </div>

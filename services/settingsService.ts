@@ -18,6 +18,17 @@ export interface AppSettings {
   // Landing Page & App Configuration
   landingHeroTitle: string;
   landingHeroSubtitle: string;
+  landingStats: {
+    activeUsers: string;
+    dailyTransactions: string;
+    uptime: string;
+    support: string;
+  };
+  socialLinks: {
+    twitter: string;
+    instagram: string;
+    facebook: string;
+  };
   mobileAppUrl: string;
   mobileAppVersion: string;
   mobileAppReleaseDate: string;
@@ -49,6 +60,17 @@ const defaultSettings: AppSettings = {
   // Landing Defaults
   landingHeroTitle: "Stop Overpaying For Data.",
   landingHeroSubtitle: "Experience the future of VTU. Seamless top-ups, instant delivery, and reseller friendly rates.",
+  landingStats: {
+    activeUsers: "10K+",
+    dailyTransactions: "5000+",
+    uptime: "99.9%",
+    support: "24/7"
+  },
+  socialLinks: {
+    twitter: "#",
+    instagram: "#",
+    facebook: "#"
+  },
   mobileAppUrl: "",
   mobileAppVersion: "1.0.0",
   mobileAppReleaseDate: new Date().toISOString()
