@@ -43,6 +43,7 @@ export interface Bundle {
   dataAmount?: string; // e.g., "1.5GB"
   validity?: string; // e.g., "30 Days"
   isBestValue?: boolean;
+  isAvailable?: boolean;
 }
 
 export interface Transaction {

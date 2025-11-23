@@ -16,17 +16,17 @@ export const PROVIDER_LOGOS = {
 
 export const SAMPLE_BUNDLES: Bundle[] = [
   // MTN
-  { id: 'm1', provider: Provider.MTN, name: '1.5GB Monthly', price: 1000, dataAmount: '1.5GB', validity: '30 Days', isBestValue: true },
-  { id: 'm2', provider: Provider.MTN, name: '2GB Weekly', price: 500, dataAmount: '2GB', validity: '7 Days' },
-  { id: 'm3', provider: Provider.MTN, name: '10GB Monthly', price: 3000, dataAmount: '10GB', validity: '30 Days' },
+  { id: 'm1', provider: Provider.MTN, name: '1.5GB Monthly', price: 1000, dataAmount: '1.5GB', validity: '30 Days', isBestValue: true, isAvailable: true },
+  { id: 'm2', provider: Provider.MTN, name: '2GB Weekly', price: 500, dataAmount: '2GB', validity: '7 Days', isAvailable: false }, // Marked as unavailable
+  { id: 'm3', provider: Provider.MTN, name: '10GB Monthly', price: 3000, dataAmount: '10GB', validity: '30 Days', isAvailable: true },
   // GLO
-  { id: 'g1', provider: Provider.GLO, name: '1.8GB Monthly', price: 1000, dataAmount: '1.8GB', validity: '30 Days' },
-  { id: 'g2', provider: Provider.GLO, name: '7GB Monthly', price: 2500, dataAmount: '7GB', validity: '30 Days', isBestValue: true },
+  { id: 'g1', provider: Provider.GLO, name: '1.8GB Monthly', price: 1000, dataAmount: '1.8GB', validity: '30 Days', isAvailable: true },
+  { id: 'g2', provider: Provider.GLO, name: '7GB Monthly', price: 2500, dataAmount: '7GB', validity: '30 Days', isBestValue: true, isAvailable: true },
   // AIRTEL
-  { id: 'a1', provider: Provider.AIRTEL, name: '1.5GB Monthly', price: 1000, dataAmount: '1.5GB', validity: '30 Days' },
-  { id: 'a2', provider: Provider.AIRTEL, name: '4.5GB Monthly', price: 2000, dataAmount: '4.5GB', validity: '30 Days' },
+  { id: 'a1', provider: Provider.AIRTEL, name: '1.5GB Monthly', price: 1000, dataAmount: '1.5GB', validity: '30 Days', isAvailable: true },
+  { id: 'a2', provider: Provider.AIRTEL, name: '4.5GB Monthly', price: 2000, dataAmount: '4.5GB', validity: '30 Days', isAvailable: true },
   // 9MOBILE
-  { id: 'n1', provider: Provider.NMOBILE, name: '1.5GB Monthly', price: 1000, dataAmount: '1.5GB', validity: '30 Days' },
+  { id: 'n1', provider: Provider.NMOBILE, name: '1.5GB Monthly', price: 1000, dataAmount: '1.5GB', validity: '30 Days', isAvailable: true },
 ];
 
 export const MOCK_USERS_DATA = [

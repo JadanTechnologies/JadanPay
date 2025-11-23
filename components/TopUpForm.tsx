@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Provider, Bundle, User, TransactionType, Transaction } from '../types';
 import { PROVIDER_COLORS, PROVIDER_LOGOS, SAMPLE_BUNDLES } from '../constants';
 import { processAirtimePurchase, processDataPurchase } from '../services/topupService';
-import { Smartphone, Wifi, PiggyBank, Loader2, Sparkles, Star, Check, AlertTriangle, Info, Share2 } from 'lucide-react';
+import { Smartphone, Wifi, PiggyBank, Loader2, Sparkles, Star, Check, AlertTriangle, Info, Share2, Ban } from 'lucide-react';
 
 interface TopUpFormProps {
   user: User;
@@ -95,6 +95,12 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
             setError("Please select a data bundle");
             return;
         }
+        
+        if (selectedBundle.isAvailable === false) {
+             setError("Selected bundle is currently unavailable.");
+             return;
+        }
+
         // Ensure bundle belongs to selected provider (Availability check)
         const isBundleValid = SAMPLE_BUNDLES.some(
             b => b.id === selectedBundle.id && b.provider === provider
@@ -164,6 +170,15 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
   };
 
   const details = getTransactionDetails();
+
+  const handleBundleSelect = (b: Bundle) => {
+    if (b.isAvailable === false) {
+        setError(`The ${b.dataAmount} bundle is currently out of stock or unavailable.`);
+        return;
+    }
+    setError(null);
+    setSelectedBundle(b);
+  };
 
   return (
     <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 relative overflow-hidden">
@@ -262,27 +277,40 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-3 animate-fade-in pb-2">
-            {filteredBundles.map((b) => (
+            {filteredBundles.map((b) => {
+              const isAvailable = b.isAvailable !== false; // Default true if undefined
+              return (
               <div
                 key={b.id}
-                onClick={() => setSelectedBundle(b)}
-                className={`group relative p-3 rounded-2xl border-2 cursor-pointer transition-all duration-300 ease-out overflow-hidden flex flex-col justify-between min-h-[140px] ${
-                  selectedBundle?.id === b.id 
-                    ? 'border-green-600 bg-green-50 shadow-lg scale-[1.02] ring-2 ring-green-400 ring-offset-2 z-10' 
-                    : 'border-gray-100 bg-white hover:border-green-200 hover:shadow-xl hover:-translate-y-1 hover:bg-green-50/20'
+                onClick={() => handleBundleSelect(b)}
+                className={`group relative p-3 rounded-2xl border-2 transition-all duration-300 ease-out overflow-hidden flex flex-col justify-between min-h-[140px] ${
+                  !isAvailable 
+                    ? 'border-gray-100 bg-gray-50 opacity-60 cursor-not-allowed grayscale'
+                    : selectedBundle?.id === b.id 
+                        ? 'cursor-pointer border-green-600 bg-green-50 shadow-lg scale-[1.02] ring-2 ring-green-400 ring-offset-2 z-10' 
+                        : 'cursor-pointer border-gray-100 bg-white hover:border-green-200 hover:shadow-xl hover:-translate-y-1 hover:bg-green-50/20'
                 }`}
               >
                 {/* Best Value Badge */}
-                {b.isBestValue && (
+                {b.isBestValue && isAvailable && (
                   <div className="absolute top-0 right-0 z-20">
                     <div className="bg-gradient-to-br from-yellow-400 to-orange-500 text-white text-[9px] font-black px-2 py-1 rounded-bl-xl shadow-sm flex items-center gap-1">
                        <Star size={8} className="fill-white" /> BEST VALUE
                     </div>
                   </div>
                 )}
+
+                {/* Unavailable Badge */}
+                {!isAvailable && (
+                     <div className="absolute top-0 right-0 z-20">
+                        <div className="bg-gray-400 text-white text-[9px] font-black px-2 py-1 rounded-bl-xl shadow-sm flex items-center gap-1">
+                           <Ban size={8} /> SOLD OUT
+                        </div>
+                     </div>
+                )}
                 
                 {/* Checkmark Indicator */}
-                {selectedBundle?.id === b.id && (
+                {selectedBundle?.id === b.id && isAvailable && (
                     <div className="absolute top-3 left-3 bg-green-600 text-white rounded-full p-0.5 shadow-sm animate-in zoom-in duration-200">
                         <Check size={12} strokeWidth={4} />
                     </div>
@@ -317,7 +345,7 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
                     <Wifi size={64} />
                  </div>
               </div>
-            ))}
+            )})}
           </div>
         )}
 
