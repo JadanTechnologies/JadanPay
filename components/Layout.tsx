@@ -1,7 +1,8 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User, UserRole } from '../types';
 import { Home, History, LogOut, ShieldCheck, Briefcase, User as UserIcon, Menu, LayoutDashboard, Settings, Users, MessageSquare, Lock, Megaphone, CreditCard } from 'lucide-react';
+import { SettingsService } from '../services/settingsService';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -13,6 +14,15 @@ interface LayoutProps {
 
 export const Layout: React.FC<LayoutProps> = ({ children, user, activeTab, onTabChange, onLogout }) => {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [logoUrl, setLogoUrl] = useState('');
+  const [appName, setAppName] = useState('JadanPay');
+
+  useEffect(() => {
+      SettingsService.getSettings().then(s => {
+          setLogoUrl(s.logoUrl);
+          setAppName(s.appName);
+      });
+  }, []);
   
   const handleLogoutClick = () => {
     setShowLogoutConfirm(true);
@@ -46,8 +56,12 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, activeTab, onTab
       <aside className="hidden md:flex flex-col w-64 bg-white dark:bg-black border-r border-gray-200 dark:border-gray-800 fixed inset-y-0 left-0 z-30 transition-colors duration-300">
          <div className="p-6 border-b border-gray-100 dark:border-gray-800">
             <h1 className="text-2xl font-bold text-green-700 dark:text-green-500 tracking-tight flex items-center gap-2">
-              <div className="w-8 h-8 bg-green-700 rounded-lg flex items-center justify-center text-white text-lg font-black">J</div>
-              JadanPay
+              {logoUrl ? (
+                  <img src={logoUrl} alt="Logo" className="w-8 h-8 object-contain" />
+              ) : (
+                  <div className="w-8 h-8 bg-green-700 rounded-lg flex items-center justify-center text-white text-lg font-black">{appName.charAt(0)}</div>
+              )}
+              {appName}
             </h1>
          </div>
          
@@ -103,8 +117,12 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, activeTab, onTab
         {/* Mobile Header */}
         <header className="md:hidden bg-white dark:bg-black px-4 py-3 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center sticky top-0 z-20 shadow-sm transition-colors duration-300">
             <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-green-700 rounded-lg flex items-center justify-center text-white font-bold">J</div>
-                <h1 className="text-lg font-bold text-gray-900 dark:text-white">JadanPay</h1>
+                {logoUrl ? (
+                  <img src={logoUrl} alt="Logo" className="w-8 h-8 object-contain" />
+                ) : (
+                  <div className="w-8 h-8 bg-green-700 rounded-lg flex items-center justify-center text-white font-bold">{appName.charAt(0)}</div>
+                )}
+                <h1 className="text-lg font-bold text-gray-900 dark:text-white">{appName}</h1>
             </div>
             <div className="relative" onClick={handleLogoutClick}>
                <img 

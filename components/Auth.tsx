@@ -1,9 +1,10 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { login, register } from '../services/authService';
 import { User } from '../types';
 import { Loader2, ArrowLeft } from 'lucide-react';
 import { playNotification } from '../utils/audio';
+import { SettingsService } from '../services/settingsService';
 
 interface AuthProps {
   onAuthSuccess: (user: User) => void;
@@ -14,6 +15,10 @@ export const Auth: React.FC<AuthProps> = ({ onAuthSuccess, onBack }) => {
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Branding
+  const [appName, setAppName] = useState('JadanPay');
+  const [logoUrl, setLogoUrl] = useState('');
 
   // Form State
   const [email, setEmail] = useState('tunde@example.com');
@@ -21,6 +26,13 @@ export const Auth: React.FC<AuthProps> = ({ onAuthSuccess, onBack }) => {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [referralCode, setReferralCode] = useState('');
+
+  useEffect(() => {
+      SettingsService.getSettings().then(s => {
+          setAppName(s.appName);
+          setLogoUrl(s.logoUrl);
+      });
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,7 +47,7 @@ export const Auth: React.FC<AuthProps> = ({ onAuthSuccess, onBack }) => {
         const user = await register(name, email, phone, otp, referralCode);
         
         // Success Audio
-        const welcomeText = `Welcome to the Jadan Pay family, ${name}. We are glad to have you on board.`;
+        const welcomeText = `Welcome to the ${appName} family, ${name}. We are glad to have you on board.`;
         playNotification(welcomeText);
         
         onAuthSuccess(user);
@@ -67,8 +79,16 @@ export const Auth: React.FC<AuthProps> = ({ onAuthSuccess, onBack }) => {
         </button>
 
         <div className="text-center mb-8 mt-2">
-            <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center text-black font-black text-xl shadow-[0_0_20px_rgba(34,197,94,0.5)] mx-auto mb-4">J</div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight mb-2">JadanPay</h1>
+            <div className="mx-auto mb-4 w-20 h-20 flex items-center justify-center">
+                {logoUrl ? (
+                    <img src={logoUrl} alt="Logo" className="w-full h-full object-contain drop-shadow-lg" />
+                ) : (
+                    <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center text-black font-black text-xl shadow-[0_0_20px_rgba(34,197,94,0.5)]">
+                        {appName.charAt(0)}
+                    </div>
+                )}
+            </div>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight mb-2">{appName}</h1>
             <p className="text-gray-500 dark:text-gray-400">Your #1 Plug for Data & Airtime.</p>
         </div>
 

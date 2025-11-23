@@ -53,13 +53,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
       
       let title = "";
       let content = null;
+      const appName = settings?.appName || 'JadanPay';
 
       switch(activeInfoModal) {
         case 'about':
           title = "About Us";
           content = (
-            <div className="space-y-4 text-gray-600 dark:text-gray-300 leading-relaxed">
-              <p>Welcome to <strong className="text-gray-900 dark:text-white">{settings?.appName || 'JadanPay'}</strong>, Nigeria's most reliable digital top-up platform.</p>
+            <div className="space-y-4 text-gray-700 dark:text-gray-200 leading-relaxed text-base">
+              <p>Welcome to <strong className="text-gray-900 dark:text-white">{appName}</strong>, Nigeria's most reliable digital top-up platform.</p>
               <p>Our mission is to bridge the digital divide by providing affordable, reliable, and instant telecommunication services to every Nigerian. We understand that in today's world, staying connected is not a luxury—it's a necessity.</p>
               <p>Founded with a vision to simplify payments, we have grown from a small reseller into a robust platform serving thousands of users daily. We pride ourselves on our automated delivery systems, bank-grade security, and exceptional customer support.</p>
               <p>Whether you are an individual looking for cheap data or a business looking to resell VTU services, we have the infrastructure to support your needs.</p>
@@ -69,37 +70,37 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
         case 'contact':
           title = "Contact Us";
           content = (
-            <div className="space-y-6 text-gray-600 dark:text-gray-300">
+            <div className="space-y-6 text-gray-700 dark:text-gray-200 text-base">
                <p>We are here to help 24/7. Reach out to us through any of the channels below.</p>
                
                <div className="space-y-4">
-                   <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl flex items-center gap-4">
-                      <div className="bg-green-100 dark:bg-green-900/30 p-3 rounded-full text-green-600">
+                   <div className="bg-gray-100 dark:bg-gray-800 p-5 rounded-2xl flex items-center gap-4 border border-gray-200 dark:border-gray-700">
+                      <div className="bg-green-100 dark:bg-green-900/50 p-3 rounded-full text-green-700 dark:text-green-400">
                           <Mail size={24} />
                       </div>
                       <div>
                           <p className="font-bold text-gray-900 dark:text-white">Email Support</p>
-                          <p className="text-sm">{settings?.supportEmail || 'help@jadanpay.com'}</p>
+                          <p className="text-sm font-medium">{settings?.supportEmail || 'help@jadanpay.com'}</p>
                       </div>
                    </div>
 
-                   <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl flex items-center gap-4">
-                      <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-full text-blue-600">
+                   <div className="bg-gray-100 dark:bg-gray-800 p-5 rounded-2xl flex items-center gap-4 border border-gray-200 dark:border-gray-700">
+                      <div className="bg-blue-100 dark:bg-blue-900/50 p-3 rounded-full text-blue-700 dark:text-blue-400">
                           <Phone size={24} />
                       </div>
                       <div>
                           <p className="font-bold text-gray-900 dark:text-white">Phone / Whatsapp</p>
-                          <p className="text-sm">{settings?.supportPhone || '0800-JADANPAY'}</p>
+                          <p className="text-sm font-medium">{settings?.supportPhone || '0800-JADANPAY'}</p>
                       </div>
                    </div>
 
-                   <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl flex items-center gap-4">
-                      <div className="bg-purple-100 dark:bg-purple-900/30 p-3 rounded-full text-purple-600">
+                   <div className="bg-gray-100 dark:bg-gray-800 p-5 rounded-2xl flex items-center gap-4 border border-gray-200 dark:border-gray-700">
+                      <div className="bg-purple-100 dark:bg-purple-900/50 p-3 rounded-full text-purple-700 dark:text-purple-400">
                           <MapPin size={24} />
                       </div>
                       <div>
                           <p className="font-bold text-gray-900 dark:text-white">Head Office</p>
-                          <p className="text-sm">12 Innovation Drive, Yaba, Lagos State, Nigeria.</p>
+                          <p className="text-sm font-medium">12 Innovation Drive, Yaba, Lagos State, Nigeria.</p>
                       </div>
                    </div>
                </div>
@@ -109,29 +110,53 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
         case 'privacy':
           title = "Privacy Policy";
           content = (
-            <div className="space-y-4 text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
-               <p><strong>1. Information Collection</strong><br/>We collect information you provide directly to us, such as when you create an account, update your profile, or communicate with us. This includes your name, email, phone number, and payment information.</p>
-               <p><strong>2. Use of Information</strong><br/>We use the information we collect to provide, maintain, and improve our services, process transactions, send you technical notices, and communicate with you about products, services, offers, and events.</p>
-               <p><strong>3. Data Security</strong><br/>We implement appropriate technical and organizational measures to protect your personal data against unauthorized access, alteration, disclosure, or destruction.</p>
-               <p><strong>4. Third-Party Sharing</strong><br/>We do not sell your personal data. We may share data with service providers who need access to such information to carry out work on our behalf (e.g., payment processors).</p>
+            <div className="space-y-5 text-gray-700 dark:text-gray-200 text-sm leading-relaxed">
+               <div>
+                   <strong className="block text-gray-900 dark:text-white text-base mb-1">1. Information Collection</strong>
+                   <p>We collect information you provide directly to us, such as when you create an account, update your profile, or communicate with us. This includes your name, email, phone number, and payment information.</p>
+               </div>
+               <div>
+                   <strong className="block text-gray-900 dark:text-white text-base mb-1">2. Use of Information</strong>
+                   <p>We use the information we collect to provide, maintain, and improve our services, process transactions, send you technical notices, and communicate with you about products, services, offers, and events.</p>
+               </div>
+               <div>
+                   <strong className="block text-gray-900 dark:text-white text-base mb-1">3. Data Security</strong>
+                   <p>We implement appropriate technical and organizational measures to protect your personal data against unauthorized access, alteration, disclosure, or destruction.</p>
+               </div>
+               <div>
+                   <strong className="block text-gray-900 dark:text-white text-base mb-1">4. Third-Party Sharing</strong>
+                   <p>We do not sell your personal data. We may share data with service providers who need access to such information to carry out work on our behalf (e.g., payment processors).</p>
+               </div>
             </div>
           );
           break;
          case 'terms':
           title = "Terms of Service";
           content = (
-            <div className="space-y-4 text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
-               <p><strong>1. Acceptance of Terms</strong><br/>By accessing or using our Services, you agree to be bound by these Terms. If you do not agree to these Terms, do not use our Services.</p>
-               <p><strong>2. Account Security</strong><br/>You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account. You must immediately notify us of any unauthorized use.</p>
-               <p><strong>3. Transactions</strong><br/>All transactions performed on our platform are final once successful. Please ensure you enter the correct beneficiary details (Phone Number, Meter Number, IUC) before confirming any purchase.</p>
-               <p><strong>4. Service Availability</strong><br/>While we strive for 100% uptime, network providers may experience occasional downtime. We are not liable for delays caused by third-party network providers.</p>
+            <div className="space-y-5 text-gray-700 dark:text-gray-200 text-sm leading-relaxed">
+               <div>
+                   <strong className="block text-gray-900 dark:text-white text-base mb-1">1. Acceptance of Terms</strong>
+                   <p>By accessing or using our Services, you agree to be bound by these Terms. If you do not agree to these Terms, do not use our Services.</p>
+               </div>
+               <div>
+                   <strong className="block text-gray-900 dark:text-white text-base mb-1">2. Account Security</strong>
+                   <p>You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account. You must immediately notify us of any unauthorized use.</p>
+               </div>
+               <div>
+                   <strong className="block text-gray-900 dark:text-white text-base mb-1">3. Transactions</strong>
+                   <p>All transactions performed on our platform are final once successful. Please ensure you enter the correct beneficiary details (Phone Number, Meter Number, IUC) before confirming any purchase.</p>
+               </div>
+               <div>
+                   <strong className="block text-gray-900 dark:text-white text-base mb-1">4. Service Availability</strong>
+                   <p>While we strive for 100% uptime, network providers may experience occasional downtime. We are not liable for delays caused by third-party network providers.</p>
+               </div>
             </div>
           );
           break;
       }
 
       return (
-        <div className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+        <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in" style={{zIndex: 9999}}>
            <div className="bg-white dark:bg-gray-900 w-full max-w-lg rounded-3xl p-8 relative shadow-2xl border border-gray-100 dark:border-gray-800 max-h-[85vh] overflow-y-auto">
               <button 
                 onClick={() => setActiveInfoModal(null)}
@@ -139,12 +164,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
               >
                 <X size={20} />
               </button>
-              <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white pr-10">{title}</h2>
-              {content}
+              <h2 className="text-2xl font-black mb-6 text-gray-900 dark:text-white pr-10 border-b border-gray-100 dark:border-gray-800 pb-4">{title}</h2>
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                {content}
+              </div>
               <div className="mt-8 pt-6 border-t border-gray-100 dark:border-gray-800">
                   <button 
                     onClick={() => setActiveInfoModal(null)}
-                    className="w-full py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 transition-colors"
+                    className="w-full py-4 bg-green-700 text-white rounded-2xl font-bold text-lg hover:bg-green-800 transition-colors shadow-lg shadow-green-900/20"
                   >
                       Close
                   </button>
@@ -154,17 +181,24 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
       );
   };
 
+  const appName = settings?.appName || 'JadanPay';
+  const logoUrl = settings?.logoUrl;
+
   return (
     <div className="min-h-screen bg-white text-gray-900 dark:bg-black dark:text-white overflow-x-hidden font-sans selection:bg-green-500 selection:text-black transition-colors duration-300">
       
       {/* Navigation */}
-      <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrollY > 50 ? 'bg-white/80 dark:bg-black/80 backdrop-blur-md border-b border-gray-200 dark:border-white/10' : 'bg-transparent'}`}>
+      <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrollY > 50 ? 'bg-white/90 dark:bg-black/90 backdrop-blur-lg border-b border-gray-200 dark:border-white/10' : 'bg-transparent'}`}>
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
           <div className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-green-500 rounded-xl flex items-center justify-center text-black font-black text-xl shadow-[0_0_20px_rgba(34,197,94,0.5)]">
-                {settings?.appName.charAt(0) || 'J'}
-            </div>
-            <span className="text-xl font-bold tracking-tight">{settings?.appName || 'JadanPay'}</span>
+            {logoUrl ? (
+                <img src={logoUrl} alt="Logo" className="w-10 h-10 object-contain drop-shadow-sm" />
+            ) : (
+                <div className="w-10 h-10 bg-green-500 rounded-xl flex items-center justify-center text-black font-black text-xl shadow-[0_0_20px_rgba(34,197,94,0.5)]">
+                    {appName.charAt(0)}
+                </div>
+            )}
+            <span className="text-xl font-bold tracking-tight hidden sm:inline-block">{appName}</span>
           </div>
           <div className="hidden md:flex gap-8 text-sm font-medium text-gray-600 dark:text-gray-400">
             <a href="#features" className="hover:text-green-600 dark:hover:text-white transition-colors">Features</a>
@@ -180,7 +214,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
                 {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
             </button>
             <button onClick={onLogin} className="text-sm font-bold text-gray-800 dark:text-white hover:text-green-600 dark:hover:text-green-400 transition-colors">Log In</button>
-            <button onClick={onGetStarted} className="px-6 py-2 bg-black dark:bg-white text-white dark:text-black rounded-full font-bold text-sm hover:bg-green-600 dark:hover:bg-green-400 hover:scale-105 transition-all duration-300">Get Started</button>
+            <button onClick={onGetStarted} className="px-6 py-2 bg-black dark:bg-white text-white dark:text-black rounded-full font-bold text-sm hover:bg-green-600 dark:hover:bg-green-400 hover:scale-105 transition-all duration-300 shadow-md">Get Started</button>
           </div>
         </div>
       </nav>
@@ -188,7 +222,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
       {/* Hero Section with 3D Parallax */}
       <section className="relative min-h-screen flex items-center pt-20 overflow-hidden">
         {/* Abstract Background Gradients - Adjusted for Light/Dark */}
-        <div className="absolute top-0 left-0 w-full h-full">
+        <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
             <div className="absolute top-[-20%] right-[-10%] w-[800px] h-[800px] bg-green-500/10 dark:bg-green-600/20 rounded-full blur-[120px] animate-pulse"></div>
             <div className="absolute bottom-[-10%] left-[-10%] w-[600px] h-[600px] bg-blue-500/10 dark:bg-blue-600/10 rounded-full blur-[100px]"></div>
         </div>
@@ -209,7 +243,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
                 <div className="flex flex-col sm:flex-row gap-4">
                     <button 
                         onClick={onGetStarted}
-                        className="px-8 py-4 bg-green-500 text-black rounded-2xl font-bold text-lg hover:bg-green-400 hover:shadow-[0_0_30px_rgba(74,222,128,0.4)] hover:-translate-y-1 transition-all duration-300 flex items-center justify-center gap-2 shadow-lg shadow-green-200 dark:shadow-none"
+                        className="px-8 py-4 bg-green-600 text-white rounded-2xl font-bold text-lg hover:bg-green-500 hover:shadow-[0_0_30px_rgba(22,163,74,0.4)] hover:-translate-y-1 transition-all duration-300 flex items-center justify-center gap-2 shadow-xl shadow-green-200 dark:shadow-green-900/30"
                     >
                         Create Free Account <ArrowRight size={20}/>
                     </button>
@@ -224,7 +258,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
                 <div className="flex items-center gap-4 pt-4">
                     <div className="flex -space-x-3">
                         {[1,2,3,4].map(i => (
-                            <img key={i} src={`https://ui-avatars.com/api/?name=User+${i}&background=random`} className="w-10 h-10 rounded-full border-2 border-white dark:border-black" alt="" />
+                            <img key={i} src={`https://ui-avatars.com/api/?name=User+${i}&background=random`} className="w-10 h-10 rounded-full border-2 border-white dark:border-black shadow-sm" alt="" />
                         ))}
                     </div>
                     <div>
@@ -237,7 +271,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
             </div>
 
             {/* 3D Visual Element */}
-            <div className="relative h-[600px] flex items-center justify-center perspective-1000">
+            <div className="relative h-[600px] flex items-center justify-center perspective-1000 hidden lg:flex">
                 <div 
                     className="relative w-[300px] h-[600px] bg-gray-900 rounded-[40px] border-8 border-gray-800 shadow-2xl transition-transform duration-100 ease-out"
                     style={{
@@ -346,7 +380,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
       <section id="features" className="py-32 relative">
           <div className="max-w-7xl mx-auto px-6">
               <div className="text-center mb-20">
-                  <h2 className="text-3xl md:text-5xl font-bold mb-6 text-gray-900 dark:text-white">Why {settings?.appName || 'JadanPay'}?</h2>
+                  <h2 className="text-3xl md:text-5xl font-bold mb-6 text-gray-900 dark:text-white">Why {appName}?</h2>
                   <p className="text-gray-500 dark:text-gray-400 max-w-2xl mx-auto">We've built a platform that puts speed and reliability first. No more "Transaction Pending" nightmares.</p>
               </div>
 
@@ -418,11 +452,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
                   </div>
                   <h2 className="text-4xl md:text-5xl font-bold mb-6 text-gray-900 dark:text-white">Free Data for You and Your Friends.</h2>
                   <p className="text-gray-600 dark:text-gray-400 text-lg mb-8 leading-relaxed">
-                      Share your unique referral code with friends. When they join JadanPay, you earn instant bonus credits which you can swap for data bundles.
+                      Share your unique referral code with friends. When they join {appName}, you earn instant bonus credits which you can swap for data bundles.
                   </p>
                   <ul className="space-y-4 mb-8">
                       <li className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
-                          <CheckCircle className="text-green-500" size={20} /> Earn ₦100 per referral instant bonus
+                          <CheckCircle className="text-green-500" size={20} /> Earn ₦{settings?.referralReward || 100} per referral instant bonus
                       </li>
                       <li className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
                           <CheckCircle className="text-green-500" size={20} /> Use bonus to buy any data plan
@@ -468,8 +502,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
               <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
                   <div>
                       <div className="flex items-center gap-2 mb-4">
-                        <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center text-black font-bold">J</div>
-                        <span className="font-bold text-lg text-gray-900 dark:text-white">{settings?.appName || 'JadanPay'}</span>
+                        {logoUrl ? (
+                            <img src={logoUrl} alt="Logo" className="w-8 h-8 object-contain" />
+                        ) : (
+                            <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center text-black font-bold">
+                                {appName.charAt(0)}
+                            </div>
+                        )}
+                        <span className="font-bold text-lg text-gray-900 dark:text-white">{appName}</span>
                       </div>
                       <p className="text-gray-500 text-sm">Simplifying payments for the modern Nigerian.</p>
                   </div>
@@ -501,7 +541,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
                   </div>
               </div>
               <div className="text-center text-gray-500 text-xs">
-                  &copy; {new Date().getFullYear()} {settings?.appName || 'JadanPay'}. All rights reserved.
+                  &copy; {new Date().getFullYear()} {appName}. All rights reserved.
               </div>
           </div>
       </footer>

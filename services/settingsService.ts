@@ -3,6 +3,7 @@ import { Provider } from '../types';
 
 export interface AppSettings {
   appName: string;
+  logoUrl: string; // New field for Brand Icon
   supportEmail: string;
   supportPhone: string;
   maintenanceMode: boolean;
@@ -37,6 +38,7 @@ export interface AppSettings {
 // Initial default settings
 const defaultSettings: AppSettings = {
   appName: 'JadanPay',
+  logoUrl: 'https://cdn-icons-png.flaticon.com/512/8992/8992203.png', // Permanent Brand Icon
   supportEmail: 'help@jadanpay.com',
   supportPhone: '0800-JADANPAY',
   maintenanceMode: false,
