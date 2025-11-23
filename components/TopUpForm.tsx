@@ -28,6 +28,9 @@ const PROVIDER_LIMITS: Record<string, { min: number; max: number }> = {
   [BillProvider.KEDCO]: { min: 1000, max: 200000 },
 };
 
+// Constant Service Fee for Bills
+const BILL_SERVICE_FEE = 100;
+
 export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewReceipt }) => {
   const [type, setType] = useState<TransactionType>(TransactionType.AIRTIME);
   
@@ -190,8 +193,12 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
         tx = await processDataPurchase(user, selectedBundle!, phone, roundUp);
       } else {
         // Bills
-        const amt = type === TransactionType.CABLE ? selectedBundle!.price : Number(amount);
-        tx = await processBillPayment(user, type, provider as BillProvider, phone, amt, selectedBundle || undefined);
+        // For bills, the processBillPayment usually expects the full amount to deduct
+        // In this implementation, we assume the fee is part of the deduction shown to the user
+        const baseAmt = type === TransactionType.CABLE ? selectedBundle!.price : Number(amount);
+        const totalDeduct = baseAmt + BILL_SERVICE_FEE;
+        
+        tx = await processBillPayment(user, type, provider as BillProvider, phone, totalDeduct, selectedBundle || undefined);
       }
       
       setLastTx(tx);
@@ -217,12 +224,16 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
   const getTransactionDetails = () => {
      let cost = 0;
      let desc = "";
+     let serviceFee = 0;
+
      if (type === TransactionType.AIRTIME || type === TransactionType.ELECTRICITY) {
          cost = Number(amount);
          desc = type === TransactionType.ELECTRICITY ? "Electricity Token" : "Airtime Top-up";
+         if (type === TransactionType.ELECTRICITY) serviceFee = BILL_SERVICE_FEE;
      } else {
          cost = selectedBundle ? selectedBundle.price : 0;
          desc = selectedBundle ? selectedBundle.name : '';
+         if (type === TransactionType.CABLE) serviceFee = BILL_SERVICE_FEE;
      }
      
      // Roundup Calculation for display
@@ -234,7 +245,7 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
         }
      }
 
-     return { cost, desc, total: cost + roundupAmt, roundupAmt };
+     return { cost, desc, total: cost + roundupAmt + serviceFee, roundupAmt, serviceFee };
   };
   const details = getTransactionDetails();
 
@@ -449,6 +460,13 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
                      <div className="flex justify-between text-blue-600 text-xs font-medium">
                          <span>Round-up Savings</span>
                          <span>+₦{details.roundupAmt}</span>
+                     </div>
+                )}
+                
+                {details.serviceFee > 0 && (
+                     <div className="flex justify-between text-orange-600 text-xs font-medium">
+                         <span>Service Charge</span>
+                         <span>+₦{details.serviceFee}</span>
                      </div>
                 )}
 

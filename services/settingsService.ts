@@ -2,6 +2,8 @@
 import { Provider } from '../types';
 
 export type ApiVendor = 'BILALSADA' | 'MASKAWA' | 'ALRAHUZ' | 'ABBAPHANTAMI' | 'SIMHOST';
+export type EmailProvider = 'SMTP' | 'RESEND';
+export type PushProvider = 'NONE' | 'FIREBASE' | 'ONESIGNAL';
 
 export interface AppSettings {
   appName: string;
@@ -30,13 +32,25 @@ export interface AppSettings {
   twilioAuthToken: string;
   twilioSenderId: string;
 
-  // Email Settings (SMTP)
-  enableEmail: boolean;
+  // Email Settings
+  emailProvider: EmailProvider;
+  // SMTP
   smtpHost: string;
   smtpPort: number;
   smtpUser: string;
   smtpPass: string;
   emailFrom: string;
+  // Resend
+  resendApiKey: string;
+
+  // Push Notifications
+  pushProvider: PushProvider;
+  // Firebase
+  firebaseServerKey: string;
+  firebaseProjectId: string;
+  // OneSignal
+  oneSignalAppId: string;
+  oneSignalRestApiKey: string;
   
   // Payments (Manual Funding)
   bankName: string;
@@ -116,12 +130,19 @@ const defaultSettings: AppSettings = {
   twilioAuthToken: '',
   twilioSenderId: '',
 
-  enableEmail: false,
+  emailProvider: 'SMTP',
   smtpHost: '',
   smtpPort: 587,
   smtpUser: '',
   smtpPass: '',
   emailFrom: 'noreply@jadanpay.com',
+  resendApiKey: '',
+
+  pushProvider: 'NONE',
+  firebaseServerKey: '',
+  firebaseProjectId: '',
+  oneSignalAppId: '',
+  oneSignalRestApiKey: '',
   
   bankName: 'GTBank',
   accountNumber: '0123456789',
@@ -171,11 +192,10 @@ try {
   const stored = localStorage.getItem(SETTINGS_STORAGE_KEY);
   if (stored) {
     const parsed = JSON.parse(stored);
-    // Merge to ensure new fields (like apiKeys object or sms settings) exist if upgrading from v1
     _settings = { 
         ...defaultSettings, 
         ...parsed,
-        apiKeys: { ...defaultSettings.apiKeys, ...parsed.apiKeys }
+        apiKeys: { ...defaultSettings.apiKeys, ...(parsed.apiKeys || {}) }
     };
   }
 } catch (e) {

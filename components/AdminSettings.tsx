@@ -1,9 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
-import { Save, Globe, Server, CreditCard, Database, Plus, Trash2, Edit2, Check, X, Upload, Mail, Phone, AlertTriangle, Key, Users, Trophy, Gift, MessageSquare } from 'lucide-react';
+import { Save, Globe, Server, CreditCard, Database, Plus, Trash2, Edit2, Check, X, Upload, Mail, Phone, AlertTriangle, Key, Users, Trophy, Gift, MessageSquare, Bell, Send } from 'lucide-react';
 import { Provider, Bundle, PlanType, User } from '../types';
 import { PROVIDER_LOGOS } from '../constants';
-import { SettingsService, AppSettings, ApiVendor } from '../services/settingsService';
+import { SettingsService, AppSettings, ApiVendor, EmailProvider, PushProvider } from '../services/settingsService';
 import { MockDB } from '../services/mockDb';
 
 export const AdminSettings: React.FC = () => {
@@ -257,174 +257,274 @@ export const AdminSettings: React.FC = () => {
               {/* --- API INTEGRATIONS --- */}
               {activeTab === 'api' && (
                   <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-6">
-                      <h3 className="font-bold text-gray-800 mb-4 border-b pb-2">API Gateways</h3>
-                      <p className="text-sm text-gray-500 mb-4">Configure which provider is active. Only one gateway can be active at a time for processing standard VTU requests.</p>
-
-                      <div className="mb-6">
-                          <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Active Gateway</label>
-                          <select 
-                            className="w-full p-3 border rounded-xl bg-gray-50 font-bold"
-                            value={settings.activeApiVendor}
-                            onChange={(e) => setSettings({...settings, activeApiVendor: e.target.value as ApiVendor})}
-                          >
-                              <option value="BILALSADA">BilalSadaSub (Default)</option>
-                              <option value="MASKAWA">Maskawa Sub</option>
-                              <option value="ALRAHUZ">Alrahuz Data</option>
-                              <option value="ABBAPHANTAMI">Abba Phantami Data</option>
-                              <option value="SIMHOST">SimHost NG</option>
-                          </select>
-                      </div>
-
-                      <h3 className="font-bold text-gray-800 mb-4 border-b pb-2 pt-4">API Credentials</h3>
                       
-                      <div className="space-y-4">
-                          {Object.keys(settings.apiKeys).map((vendor) => (
-                              <div key={vendor} className="p-4 border rounded-xl bg-gray-50">
-                                  <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{vendor} API Key</label>
-                                  <div className="relative">
-                                    <Key className="absolute left-3 top-3 text-gray-400" size={18} />
-                                    <input 
-                                        type="password"
-                                        placeholder={`Enter ${vendor} Token/Key`}
-                                        value={(settings.apiKeys as any)[vendor]}
-                                        onChange={e => setSettings({
-                                            ...settings, 
-                                            apiKeys: { ...settings.apiKeys, [vendor]: e.target.value }
-                                        })}
-                                        className="w-full pl-10 p-3 border rounded-xl bg-white focus:ring-2 focus:ring-green-500 outline-none"
-                                    />
+                      {/* Gateway Selection */}
+                      <section>
+                          <h3 className="font-bold text-gray-800 mb-4 border-b pb-2">VTU API Gateways</h3>
+                          <p className="text-sm text-gray-500 mb-4">Configure which provider is active for airtime/data transactions.</p>
+
+                          <div className="mb-6">
+                              <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Active Gateway</label>
+                              <select 
+                                className="w-full p-3 border rounded-xl bg-gray-50 font-bold"
+                                value={settings.activeApiVendor}
+                                onChange={(e) => setSettings({...settings, activeApiVendor: e.target.value as ApiVendor})}
+                              >
+                                  <option value="BILALSADA">BilalSadaSub (Default)</option>
+                                  <option value="MASKAWA">Maskawa Sub</option>
+                                  <option value="ALRAHUZ">Alrahuz Data</option>
+                                  <option value="ABBAPHANTAMI">Abba Phantami Data</option>
+                                  <option value="SIMHOST">SimHost NG</option>
+                              </select>
+                          </div>
+
+                          <div className="space-y-4">
+                              {Object.keys(settings.apiKeys).map((vendor) => (
+                                  <div key={vendor} className="p-4 border rounded-xl bg-gray-50">
+                                      <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{vendor} API Key</label>
+                                      <div className="relative">
+                                        <Key className="absolute left-3 top-3 text-gray-400" size={18} />
+                                        <input 
+                                            type="password"
+                                            placeholder={`Enter ${vendor} Token/Key`}
+                                            value={(settings.apiKeys as any)[vendor]}
+                                            onChange={e => setSettings({
+                                                ...settings, 
+                                                apiKeys: { ...settings.apiKeys, [vendor]: e.target.value }
+                                            })}
+                                            className="w-full pl-10 p-3 border rounded-xl bg-white focus:ring-2 focus:ring-green-500 outline-none"
+                                        />
+                                      </div>
                                   </div>
-                              </div>
-                          ))}
-                      </div>
+                              ))}
+                          </div>
+                      </section>
 
-                      <h3 className="font-bold text-gray-800 mb-4 border-b pb-2 pt-4">SMS Configuration (Twilio)</h3>
-                      
-                      <div className="p-4 border rounded-xl bg-gray-50 mb-4">
-                           <div className="flex items-center gap-4 mb-4">
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                    <div className="relative">
-                                        <input 
-                                            type="checkbox" 
-                                            checked={settings.enableTwilio}
-                                            onChange={e => setSettings({...settings, enableTwilio: e.target.checked})}
-                                            className="sr-only peer"
-                                        />
-                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                                    </div>
-                                    <span className="font-bold text-gray-700">Enable Twilio SMS</span>
-                                </label>
-                           </div>
+                      {/* Messaging: SMS */}
+                      <section>
+                          <h3 className="font-bold text-gray-800 mb-4 border-b pb-2 pt-4 flex items-center gap-2"><MessageSquare size={18}/> SMS Configuration (Twilio)</h3>
+                          
+                          <div className="p-4 border rounded-xl bg-gray-50 mb-4">
+                               <div className="flex items-center gap-4 mb-4">
+                                    <label className="flex items-center gap-2 cursor-pointer">
+                                        <div className="relative">
+                                            <input 
+                                                type="checkbox" 
+                                                checked={settings.enableTwilio}
+                                                onChange={e => setSettings({...settings, enableTwilio: e.target.checked})}
+                                                className="sr-only peer"
+                                            />
+                                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                        </div>
+                                        <span className="font-bold text-gray-700">Enable Twilio SMS</span>
+                                    </label>
+                               </div>
 
-                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Account SID</label>
-                                    <input 
-                                        type="password"
-                                        value={settings.twilioAccountSid}
-                                        onChange={e => setSettings({...settings, twilioAccountSid: e.target.value})}
-                                        className="w-full p-3 border rounded-xl bg-white"
-                                        placeholder="AC..."
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Auth Token</label>
-                                    <input 
-                                        type="password"
-                                        value={settings.twilioAuthToken}
-                                        onChange={e => setSettings({...settings, twilioAuthToken: e.target.value})}
-                                        className="w-full p-3 border rounded-xl bg-white"
-                                        placeholder="Auth Token"
-                                    />
-                                </div>
-                                <div className="md:col-span-2">
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Sender ID / Phone Number</label>
-                                    <input 
-                                        value={settings.twilioSenderId}
-                                        onChange={e => setSettings({...settings, twilioSenderId: e.target.value})}
-                                        className="w-full p-3 border rounded-xl bg-white"
-                                        placeholder="+1234567890 or Brand Name"
-                                    />
-                                    <p className="text-[10px] text-gray-400 mt-1">Ensure this Sender ID is registered on your Twilio Console.</p>
-                                </div>
-                           </div>
-                      </div>
+                               {settings.enableTwilio && (
+                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in">
+                                        <div>
+                                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Account SID</label>
+                                            <input 
+                                                type="password"
+                                                value={settings.twilioAccountSid}
+                                                onChange={e => setSettings({...settings, twilioAccountSid: e.target.value})}
+                                                className="w-full p-3 border rounded-xl bg-white"
+                                                placeholder="AC..."
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Auth Token</label>
+                                            <input 
+                                                type="password"
+                                                value={settings.twilioAuthToken}
+                                                onChange={e => setSettings({...settings, twilioAuthToken: e.target.value})}
+                                                className="w-full p-3 border rounded-xl bg-white"
+                                                placeholder="Auth Token"
+                                            />
+                                        </div>
+                                        <div className="md:col-span-2">
+                                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Sender ID / Phone Number</label>
+                                            <input 
+                                                value={settings.twilioSenderId}
+                                                onChange={e => setSettings({...settings, twilioSenderId: e.target.value})}
+                                                className="w-full p-3 border rounded-xl bg-white"
+                                                placeholder="+1234567890 or Brand Name"
+                                            />
+                                        </div>
+                                   </div>
+                               )}
+                          </div>
+                      </section>
 
-                      <h3 className="font-bold text-gray-800 mb-4 border-b pb-2 pt-4">Email Configuration (SMTP)</h3>
-                      
-                      <div className="p-4 border rounded-xl bg-gray-50 mb-4">
-                           <div className="flex items-center gap-4 mb-4">
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                    <div className="relative">
-                                        <input 
-                                            type="checkbox" 
-                                            checked={settings.enableEmail}
-                                            onChange={e => setSettings({...settings, enableEmail: e.target.checked})}
-                                            className="sr-only peer"
-                                        />
-                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                                    </div>
-                                    <span className="font-bold text-gray-700">Enable SMTP Email</span>
-                                </label>
-                           </div>
+                      {/* Messaging: Email */}
+                      <section>
+                          <h3 className="font-bold text-gray-800 mb-4 border-b pb-2 pt-4 flex items-center gap-2"><Mail size={18}/> Email Configuration</h3>
+                          
+                          <div className="p-4 border rounded-xl bg-gray-50 mb-4">
+                               <div className="mb-4">
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Email Provider</label>
+                                    <select 
+                                        className="w-full p-3 border rounded-xl bg-white font-medium"
+                                        value={settings.emailProvider}
+                                        onChange={(e) => setSettings({...settings, emailProvider: e.target.value as EmailProvider})}
+                                    >
+                                        <option value="SMTP">SMTP (Standard)</option>
+                                        <option value="RESEND">Resend.com (API)</option>
+                                    </select>
+                               </div>
 
-                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">SMTP Host</label>
-                                    <input 
-                                        value={settings.smtpHost}
-                                        onChange={e => setSettings({...settings, smtpHost: e.target.value})}
-                                        className="w-full p-3 border rounded-xl bg-white"
-                                        placeholder="smtp.gmail.com"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">SMTP Port</label>
-                                    <input 
-                                        type="number"
-                                        value={settings.smtpPort}
-                                        onChange={e => setSettings({...settings, smtpPort: Number(e.target.value)})}
-                                        className="w-full p-3 border rounded-xl bg-white"
-                                        placeholder="587"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">SMTP Username</label>
-                                    <input 
-                                        value={settings.smtpUser}
-                                        onChange={e => setSettings({...settings, smtpUser: e.target.value})}
-                                        className="w-full p-3 border rounded-xl bg-white"
-                                        placeholder="email@example.com"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">SMTP Password</label>
-                                    <input 
-                                        type="password"
-                                        value={settings.smtpPass}
-                                        onChange={e => setSettings({...settings, smtpPass: e.target.value})}
-                                        className="w-full p-3 border rounded-xl bg-white"
-                                        placeholder="********"
-                                    />
-                                </div>
-                                 <div className="md:col-span-2">
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">From Email Address</label>
-                                    <input 
-                                        value={settings.emailFrom}
-                                        onChange={e => setSettings({...settings, emailFrom: e.target.value})}
-                                        className="w-full p-3 border rounded-xl bg-white"
-                                        placeholder="noreply@yourdomain.com"
-                                    />
-                                </div>
-                           </div>
-                      </div>
+                               {settings.emailProvider === 'SMTP' ? (
+                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in">
+                                        <div>
+                                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">SMTP Host</label>
+                                            <input 
+                                                value={settings.smtpHost}
+                                                onChange={e => setSettings({...settings, smtpHost: e.target.value})}
+                                                className="w-full p-3 border rounded-xl bg-white"
+                                                placeholder="smtp.gmail.com"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">SMTP Port</label>
+                                            <input 
+                                                type="number"
+                                                value={settings.smtpPort}
+                                                onChange={e => setSettings({...settings, smtpPort: Number(e.target.value)})}
+                                                className="w-full p-3 border rounded-xl bg-white"
+                                                placeholder="587"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">SMTP Username</label>
+                                            <input 
+                                                value={settings.smtpUser}
+                                                onChange={e => setSettings({...settings, smtpUser: e.target.value})}
+                                                className="w-full p-3 border rounded-xl bg-white"
+                                                placeholder="email@example.com"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">SMTP Password</label>
+                                            <input 
+                                                type="password"
+                                                value={settings.smtpPass}
+                                                onChange={e => setSettings({...settings, smtpPass: e.target.value})}
+                                                className="w-full p-3 border rounded-xl bg-white"
+                                                placeholder="********"
+                                            />
+                                        </div>
+                                         <div className="md:col-span-2">
+                                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">From Email Address</label>
+                                            <input 
+                                                value={settings.emailFrom}
+                                                onChange={e => setSettings({...settings, emailFrom: e.target.value})}
+                                                className="w-full p-3 border rounded-xl bg-white"
+                                                placeholder="noreply@yourdomain.com"
+                                            />
+                                        </div>
+                                   </div>
+                               ) : (
+                                   <div className="animate-fade-in">
+                                       <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Resend API Key</label>
+                                       <div className="relative">
+                                           <Key className="absolute left-3 top-3 text-gray-400" size={18}/>
+                                           <input 
+                                               type="password"
+                                               value={settings.resendApiKey}
+                                               onChange={e => setSettings({...settings, resendApiKey: e.target.value})}
+                                               className="w-full pl-10 p-3 border rounded-xl bg-white"
+                                               placeholder="re_..."
+                                           />
+                                       </div>
+                                       <div className="mt-4">
+                                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">From Email Address</label>
+                                            <input 
+                                                value={settings.emailFrom}
+                                                onChange={e => setSettings({...settings, emailFrom: e.target.value})}
+                                                className="w-full p-3 border rounded-xl bg-white"
+                                                placeholder="onboarding@resend.dev"
+                                            />
+                                        </div>
+                                   </div>
+                               )}
+                          </div>
+                      </section>
+
+                      {/* Messaging: Push Notifications */}
+                      <section>
+                          <h3 className="font-bold text-gray-800 mb-4 border-b pb-2 pt-4 flex items-center gap-2"><Bell size={18}/> Push Notifications</h3>
+                          
+                          <div className="p-4 border rounded-xl bg-gray-50 mb-4">
+                               <div className="mb-4">
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Push Provider</label>
+                                    <select 
+                                        className="w-full p-3 border rounded-xl bg-white font-medium"
+                                        value={settings.pushProvider}
+                                        onChange={(e) => setSettings({...settings, pushProvider: e.target.value as PushProvider})}
+                                    >
+                                        <option value="NONE">Disabled</option>
+                                        <option value="FIREBASE">Firebase Cloud Messaging (FCM)</option>
+                                        <option value="ONESIGNAL">OneSignal</option>
+                                    </select>
+                               </div>
+
+                               {settings.pushProvider === 'FIREBASE' && (
+                                   <div className="grid grid-cols-1 gap-4 animate-fade-in">
+                                        <div>
+                                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Firebase Project ID</label>
+                                            <input 
+                                                value={settings.firebaseProjectId}
+                                                onChange={e => setSettings({...settings, firebaseProjectId: e.target.value})}
+                                                className="w-full p-3 border rounded-xl bg-white"
+                                                placeholder="my-project-id"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Server Key (Legacy) / Service Account</label>
+                                            <input 
+                                                type="password"
+                                                value={settings.firebaseServerKey}
+                                                onChange={e => setSettings({...settings, firebaseServerKey: e.target.value})}
+                                                className="w-full p-3 border rounded-xl bg-white"
+                                                placeholder="AAAA..."
+                                            />
+                                        </div>
+                                   </div>
+                               )}
+
+                               {settings.pushProvider === 'ONESIGNAL' && (
+                                   <div className="grid grid-cols-1 gap-4 animate-fade-in">
+                                        <div>
+                                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">OneSignal App ID</label>
+                                            <input 
+                                                value={settings.oneSignalAppId}
+                                                onChange={e => setSettings({...settings, oneSignalAppId: e.target.value})}
+                                                className="w-full p-3 border rounded-xl bg-white"
+                                                placeholder="uuid-format..."
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">REST API Key</label>
+                                            <input 
+                                                type="password"
+                                                value={settings.oneSignalRestApiKey}
+                                                onChange={e => setSettings({...settings, oneSignalRestApiKey: e.target.value})}
+                                                className="w-full p-3 border rounded-xl bg-white"
+                                                placeholder="Token..."
+                                            />
+                                        </div>
+                                   </div>
+                               )}
+                          </div>
+                      </section>
 
                       <button onClick={handleSave} disabled={isSaving} className="px-6 py-3 bg-green-700 text-white rounded-xl font-bold hover:bg-green-800 mt-4">
-                          {isSaving ? 'Saving...' : 'Update API & Messaging Config'}
+                          {isSaving ? 'Saving...' : 'Update Integrations'}
                       </button>
                   </div>
               )}
 
+              {/* ... Other Tabs remain the same ... */}
               {/* --- SERVICES SETTINGS --- */}
               {activeTab === 'services' && (
                   <div className="space-y-6">
@@ -496,7 +596,7 @@ export const AdminSettings: React.FC = () => {
                   </div>
               )}
 
-              {/* --- REFERRALS SETTINGS (NEW TAB) --- */}
+              {/* --- REFERRALS SETTINGS --- */}
               {activeTab === 'referrals' && (
                   <div className="space-y-6">
                       {/* Configuration Card */}
