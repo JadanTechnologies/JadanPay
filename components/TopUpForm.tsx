@@ -221,10 +221,13 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
       setSuccessMsg(successText);
       
       // Play Success Sound
+      // readablePhone spaces out digits so TTS reads "Zero Eight Zero..." instead of "Eight Billion..."
+      const readablePhone = phone.split('').join(' ');
+
       if (type === TransactionType.DATA) {
-          playNotification("Data has been sent to customer successfully.");
+          playNotification(`Data has been sent to ${readablePhone} successfully.`);
       } else {
-          playNotification("Airtime has been sent to customer successfully.");
+          playNotification(`Airtime has been sent to ${readablePhone} successfully.`);
       }
 
       onSuccess();
