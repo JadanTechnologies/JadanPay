@@ -276,9 +276,16 @@ export const History: React.FC<HistoryProps> = ({ user, highlightId }) => {
                          )}
                       </div>
 
-                      {/* QR Code Placeholder for visual appeal */}
-                      <div className="mt-6 flex justify-center opacity-40 grayscale text-gray-400 dark:text-gray-600">
-                          <QrCode size={48} />
+                      {/* QR Code Real Implementation */}
+                      <div className="mt-6 flex flex-col items-center justify-center">
+                          <div className="p-2 bg-white rounded-xl border border-gray-100 shadow-sm">
+                              <img 
+                                  src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&color=000000&bgcolor=ffffff&data=${encodeURIComponent(`https://jadanpay.com/receipt/${selectedTx.id}`)}`}
+                                  alt="Transaction QR" 
+                                  className="w-32 h-32" 
+                              />
+                          </div>
+                          <p className="text-[10px] text-gray-400 mt-2 font-bold uppercase tracking-wider">Scan to share receipt</p>
                       </div>
 
                       {/* Action Buttons */}

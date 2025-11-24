@@ -6,7 +6,7 @@ import { processAirtimePurchase, processDataPurchase, processBillPayment } from 
 import { SettingsService } from '../services/settingsService';
 import { MockDB } from '../services/mockDb';
 import { playNotification } from '../utils/audio';
-import { Smartphone, Wifi, PiggyBank, Loader2, Sparkles, Star, Check, AlertTriangle, Info, Share2, Ban, Activity, ChevronDown, Tv, Zap, User as UserIcon, Phone, RefreshCw, X, Receipt } from 'lucide-react';
+import { Smartphone, Wifi, PiggyBank, Loader2, Sparkles, Star, Check, AlertTriangle, Info, Share2, Ban, Activity, ChevronDown, Tv, Zap, User as UserIcon, Phone, RefreshCw, X, Receipt, QrCode } from 'lucide-react';
 
 interface TopUpFormProps {
   user: User;
@@ -62,6 +62,9 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
   
   // Result View State
   const [resultState, setResultState] = useState<'idle' | 'success' | 'error'>('idle');
+  
+  // QR State
+  const [showQr, setShowQr] = useState(false);
 
   useEffect(() => {
       loadData();
@@ -145,6 +148,7 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
       setError(null);
       setValidationError(null);
       setResultState('idle');
+      setShowQr(false);
       
       // Set default provider based on type
       if (newType === TransactionType.CABLE) setProvider(BillProvider.DSTV);
@@ -157,6 +161,7 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
     setError(null);
     setLastTx(null);
     setResultState('idle');
+    setShowQr(false);
 
     if (!phone) {
         setError("Please enter the number");
@@ -243,6 +248,7 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
       setResultState('idle');
       setAmount('');
       setSelectedBundle(null);
+      setShowQr(false);
       if (type !== TransactionType.DATA && type !== TransactionType.AIRTIME) {
           setPhone(''); 
           setCustomerName(null);
@@ -302,6 +308,17 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
               <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-xs mx-auto">
                   You successfully sent <span className="font-bold text-gray-900 dark:text-white">{lastTx.bundleName || `₦${lastTx.amount}`}</span> to <span className="font-mono text-gray-800 dark:text-gray-200">{lastTx.destinationNumber}</span>.
               </p>
+              
+              {showQr && (
+                  <div className="mb-6 p-4 bg-white rounded-xl shadow-inner border border-gray-100 flex flex-col items-center animate-in zoom-in slide-in-from-bottom-2">
+                      <img 
+                          src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`https://jadanpay.com/receipt/${lastTx.id}`)}`}
+                          alt="Receipt QR"
+                          className="rounded-lg mix-blend-multiply"
+                      />
+                      <p className="text-[10px] text-gray-400 mt-2 font-bold uppercase tracking-wider">Scan to view receipt</p>
+                  </div>
+              )}
 
               <div className="flex flex-col gap-3 w-full max-w-xs">
                   <div className="grid grid-cols-2 gap-3">
@@ -309,15 +326,26 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
                           onClick={handleShareReceipt}
                           className="py-3 px-4 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-white rounded-xl font-bold hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center gap-2 text-sm"
                       >
-                          <Share2 size={16}/> Share Receipt
+                          <Share2 size={16}/> Share
                       </button>
                       <button 
-                          onClick={() => onViewReceipt(lastTx.id)}
-                          className="py-3 px-4 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-white rounded-xl font-bold hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center gap-2 text-sm"
+                          onClick={() => setShowQr(!showQr)}
+                          className={`py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 text-sm border transition-colors ${
+                              showQr 
+                                ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-700 dark:text-green-400' 
+                                : 'bg-gray-100 dark:bg-gray-800 border-transparent text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700'
+                          }`}
                       >
-                          <Receipt size={16}/> View Details
+                          <QrCode size={16}/> {showQr ? 'Hide QR' : 'Code'}
                       </button>
                   </div>
+
+                  <button 
+                      onClick={() => onViewReceipt(lastTx.id)}
+                      className="w-full py-3 px-4 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-white rounded-xl font-bold hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center gap-2 text-sm"
+                  >
+                      <Receipt size={16}/> View Full Receipt
+                  </button>
 
                   {(type === TransactionType.AIRTIME || type === TransactionType.DATA) && (
                        <a 
