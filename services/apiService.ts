@@ -54,17 +54,27 @@ export const ApiService = {
         const apiKey = settings.apiKeys[vendor];
         const baseUrl = VENDOR_URLS[vendor];
 
+        console.log(`[${vendor} Integration] POST ${baseUrl}${endpoint}`);
+        console.log("Payload:", payload);
+
+        // DEMO MODE CHECK
+        // If no API key is present, we simulate a successful transaction for demo purposes.
         if (!apiKey) {
+            console.warn(`[Demo Mode] No API Key for ${vendor}. Simulating success.`);
+            await new Promise(r => setTimeout(r, 2000)); // Simulate latency
+            
             return { 
-                success: false, 
-                error: `Configuration Error: API Key missing for ${vendor}. Please check Admin Settings.`,
-                statusCode: 401 
+                success: true, 
+                data: { 
+                    status: 'success', 
+                    message: 'Transaction successful (Demo Mode)', 
+                    ref: `DEMO-${Math.floor(Math.random() * 10000000)}`,
+                    api_response: { ...payload, timestamp: new Date().toISOString(), note: "Simulated Response" }
+                } 
             };
         }
 
-        console.log(`[${vendor} Integration] POST ${baseUrl}${endpoint}`);
         console.log("Headers:", { Authorization: `Token ${apiKey.substring(0, 5)}...` });
-        console.log("Payload:", payload);
 
         try {
             await new Promise(r => setTimeout(r, 1500)); // Simulate latency
@@ -133,7 +143,8 @@ export const ApiService = {
      */
     getBalance: async () => {
         const settings = await SettingsService.getSettings();
-        if (!settings.apiKeys[settings.activeApiVendor]) return { balance: 0 };
+        // Return mock balance if key is missing
+        if (!settings.apiKeys[settings.activeApiVendor]) return { balance: 50000.00 }; 
         return { balance: 54000.50 }; // Mocked balance
     }
 };

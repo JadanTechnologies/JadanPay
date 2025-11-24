@@ -188,16 +188,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
       
       {/* Navigation */}
       <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrollY > 50 ? 'bg-white/90 dark:bg-black/90 backdrop-blur-lg border-b border-gray-200 dark:border-white/10' : 'bg-transparent'}`}>
-        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 flex justify-between items-center">
           <div className="flex items-center gap-2">
             {logoUrl ? (
-                <img src={logoUrl} alt="Logo" className="w-10 h-10 object-contain drop-shadow-sm" />
+                <img src={logoUrl} alt="Logo" className="w-8 h-8 md:w-10 md:h-10 object-contain drop-shadow-sm" />
             ) : (
-                <div className="w-10 h-10 bg-green-500 rounded-xl flex items-center justify-center text-black font-black text-xl shadow-[0_0_20px_rgba(34,197,94,0.5)]">
+                <div className="w-8 h-8 md:w-10 md:h-10 bg-green-500 rounded-xl flex items-center justify-center text-black font-black text-lg md:text-xl shadow-[0_0_20px_rgba(34,197,94,0.5)]">
                     {appName.charAt(0)}
                 </div>
             )}
-            <span className="text-xl font-bold tracking-tight hidden sm:inline-block">{appName}</span>
+            <span className="text-lg md:text-xl font-bold tracking-tight">{appName}</span>
           </div>
           <div className="hidden md:flex gap-8 text-sm font-medium text-gray-600 dark:text-gray-400">
             <a href="#features" className="hover:text-green-600 dark:hover:text-white transition-colors">Features</a>
@@ -205,35 +205,35 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
             <button onClick={() => setActiveInfoModal('about')} className="hover:text-green-600 dark:hover:text-white transition-colors">About</button>
             <button onClick={() => setActiveInfoModal('contact')} className="hover:text-green-600 dark:hover:text-white transition-colors">Contact</button>
           </div>
-          <div className="flex gap-4 items-center">
+          <div className="flex gap-2 md:gap-4 items-center">
             <button 
                 onClick={toggleTheme} 
                 className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-white/10 transition-colors"
             >
                 {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
             </button>
-            <button onClick={onLogin} className="text-sm font-bold text-gray-800 dark:text-white hover:text-green-600 dark:hover:text-green-400 transition-colors">Log In</button>
-            <button onClick={onGetStarted} className="px-6 py-2 bg-black dark:bg-white text-white dark:text-black rounded-full font-bold text-sm hover:bg-green-600 dark:hover:bg-green-400 hover:scale-105 transition-all duration-300 shadow-md">Get Started</button>
+            <button onClick={onLogin} className="text-sm font-bold text-gray-800 dark:text-white hover:text-green-600 dark:hover:text-green-400 transition-colors hidden sm:block">Log In</button>
+            <button onClick={onGetStarted} className="px-4 md:px-6 py-2 bg-black dark:bg-white text-white dark:text-black rounded-full font-bold text-xs md:text-sm hover:bg-green-600 dark:hover:bg-green-400 hover:scale-105 transition-all duration-300 shadow-md">Get Started</button>
           </div>
         </div>
       </nav>
 
       {/* Hero Section with 3D Parallax */}
-      <section className="relative min-h-screen flex items-center pt-20 overflow-hidden">
-        {/* Abstract Background Gradients - Adjusted for Light/Dark */}
+      <section className="relative min-h-screen flex items-center pt-24 md:pt-20 overflow-hidden">
+        {/* Abstract Background Gradients */}
         <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
-            <div className="absolute top-[-20%] right-[-10%] w-[800px] h-[800px] bg-green-500/10 dark:bg-green-600/20 rounded-full blur-[120px] animate-pulse"></div>
-            <div className="absolute bottom-[-10%] left-[-10%] w-[600px] h-[600px] bg-blue-500/10 dark:bg-blue-600/10 rounded-full blur-[100px]"></div>
+            <div className="absolute top-[-20%] right-[-10%] w-[500px] md:w-[800px] h-[500px] md:h-[800px] bg-green-500/10 dark:bg-green-600/20 rounded-full blur-[80px] md:blur-[120px] animate-pulse"></div>
+            <div className="absolute bottom-[-10%] left-[-10%] w-[400px] md:w-[600px] h-[400px] md:h-[600px] bg-blue-500/10 dark:bg-blue-600/10 rounded-full blur-[80px] md:blur-[100px]"></div>
         </div>
 
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative z-10">
             
             {/* Text Content */}
-            <div className="space-y-8" style={{ transform: `translateY(${scrollY * 0.2}px)` }}>
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-50 dark:bg-white/5 border border-green-100 dark:border-white/10 text-green-600 dark:text-green-400 text-xs font-bold uppercase tracking-wider mb-4 animate-fade-in-up">
+            <div className="space-y-6 md:space-y-8" style={{ transform: `translateY(${scrollY * 0.2}px)` }}>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-50 dark:bg-white/5 border border-green-100 dark:border-white/10 text-green-600 dark:text-green-400 text-xs font-bold uppercase tracking-wider mb-2 md:mb-4 animate-fade-in-up">
                     <Zap size={12} className="fill-current" /> Fast. Secure. Reliable.
                 </div>
-                <h1 className="text-5xl md:text-7xl font-black leading-tight tracking-tight text-gray-900 dark:text-white">
+                <h1 className="text-4xl sm:text-5xl md:text-7xl font-black leading-tight tracking-tight text-gray-900 dark:text-white">
                     {settings?.landingHeroTitle || "Stop Overpaying For Data."}
                 </h1>
                 <p className="text-gray-600 dark:text-gray-400 text-lg md:text-xl max-w-lg leading-relaxed">
@@ -269,8 +269,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
                 </div>
             </div>
 
-            {/* 3D Visual Element */}
-            <div className="relative h-[600px] flex items-center justify-center perspective-1000 hidden lg:flex">
+            {/* 3D Visual Element (Hidden on mobile) */}
+            <div className="relative h-[600px] items-center justify-center perspective-1000 hidden lg:flex">
                 <div 
                     className="relative w-[300px] h-[600px] bg-gray-900 rounded-[40px] border-8 border-gray-800 shadow-2xl transition-transform duration-100 ease-out"
                     style={{
@@ -323,37 +323,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
                         </div>
                     </div>
                 </div>
-
-                {/* Floating 3D Cards around Phone */}
-                <div 
-                    className="absolute top-20 right-0 bg-white/50 dark:bg-white/10 backdrop-blur-xl border border-gray-200 dark:border-white/20 p-4 rounded-2xl animate-float shadow-lg"
-                    style={{ transform: `translateZ(50px) translateX(${-mousePos.x * 1.5}px)` }}
-                >
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-yellow-400 rounded-full flex items-center justify-center text-black font-bold">M</div>
-                        <div>
-                            <p className="text-xs text-gray-500 dark:text-gray-300">MTN SME</p>
-                            <p className="font-bold text-gray-900 dark:text-white">1GB @ ₦250</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div 
-                    className="absolute bottom-40 -left-10 bg-white/50 dark:bg-white/10 backdrop-blur-xl border border-gray-200 dark:border-white/20 p-4 rounded-2xl animate-float-delayed shadow-lg"
-                    style={{ transform: `translateZ(80px) translateX(${mousePos.x * 1.5}px)` }}
-                >
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center text-white font-bold">G</div>
-                        <div>
-                            <p className="text-xs text-gray-500 dark:text-gray-300">Glo Data</p>
-                            <p className="font-bold text-gray-900 dark:text-white">Instant Delivery</p>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
         
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce">
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce hidden md:block">
             <ChevronDown className="text-gray-500" />
         </div>
       </section>
@@ -368,19 +341,19 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
                   { label: "Support", val: settings?.landingStats?.support || "24/7" }
               ].map((stat, i) => (
                   <div key={i}>
-                      <h3 className="text-4xl font-black text-gray-900 dark:text-white mb-2">{stat.val}</h3>
-                      <p className="text-gray-500 uppercase tracking-wider text-xs font-bold">{stat.label}</p>
+                      <h3 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white mb-2">{stat.val}</h3>
+                      <p className="text-gray-500 uppercase tracking-wider text-[10px] md:text-xs font-bold">{stat.label}</p>
                   </div>
               ))}
           </div>
       </section>
 
       {/* Features Grid */}
-      <section id="features" className="py-32 relative">
+      <section id="features" className="py-20 md:py-32 relative">
           <div className="max-w-7xl mx-auto px-6">
-              <div className="text-center mb-20">
-                  <h2 className="text-3xl md:text-5xl font-bold mb-6 text-gray-900 dark:text-white">Why {appName}?</h2>
-                  <p className="text-gray-500 dark:text-gray-400 max-w-2xl mx-auto">We've built a platform that puts speed and reliability first. No more "Transaction Pending" nightmares.</p>
+              <div className="text-center mb-12 md:mb-20">
+                  <h2 className="text-3xl md:text-5xl font-bold mb-4 md:mb-6 text-gray-900 dark:text-white">Why {appName}?</h2>
+                  <p className="text-gray-500 dark:text-gray-400 max-w-2xl mx-auto text-sm md:text-base">We've built a platform that puts speed and reliability first. No more "Transaction Pending" nightmares.</p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -389,106 +362,77 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
                           <Zap size={28} />
                       </div>
                       <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Lightning Fast</h3>
-                      <p className="text-gray-500 dark:text-gray-400 leading-relaxed">Automated delivery system ensures you get value instantly. 99% of transactions complete in under 5 seconds.</p>
+                      <p className="text-gray-500 dark:text-gray-400 leading-relaxed text-sm md:text-base">Automated delivery system ensures you get value instantly. 99% of transactions complete in under 5 seconds.</p>
                   </div>
                   <div className="p-8 rounded-3xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-white/5 hover:border-blue-500/50 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all group shadow-sm hover:shadow-xl">
                       <div className="w-14 h-14 bg-blue-50 dark:bg-gray-800 rounded-2xl flex items-center justify-center text-blue-500 dark:text-blue-400 mb-6 group-hover:scale-110 transition-transform">
                           <Shield size={28} />
                       </div>
                       <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Bank-Grade Security</h3>
-                      <p className="text-gray-500 dark:text-gray-400 leading-relaxed">Your wallet is secured with industry standard encryption. Two-factor authentication keeps your funds safe.</p>
+                      <p className="text-gray-500 dark:text-gray-400 leading-relaxed text-sm md:text-base">Your wallet is secured with industry standard encryption. Two-factor authentication keeps your funds safe.</p>
                   </div>
                   <div className="p-8 rounded-3xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-white/5 hover:border-purple-500/50 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all group shadow-sm hover:shadow-xl">
                       <div className="w-14 h-14 bg-purple-50 dark:bg-gray-800 rounded-2xl flex items-center justify-center text-purple-500 dark:text-purple-400 mb-6 group-hover:scale-110 transition-transform">
                           <Box size={28} />
                       </div>
                       <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Developer API</h3>
-                      <p className="text-gray-500 dark:text-gray-400 leading-relaxed">Building your own VTU site? Integrate with our robust API documentation and start reselling in minutes.</p>
+                      <p className="text-gray-500 dark:text-gray-400 leading-relaxed text-sm md:text-base">Building your own VTU site? Integrate with our robust API documentation and start reselling in minutes.</p>
                   </div>
               </div>
           </div>
       </section>
 
-      {/* Testimonials (Reviews) Section */}
-      <section id="reviews" className="py-20 bg-gray-50 dark:bg-black relative border-y border-gray-100 dark:border-white/5">
-         <div className="max-w-7xl mx-auto px-6">
-            <div className="text-center mb-16">
-                 <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">What Our Users Say</h2>
-                 <p className="text-gray-500 dark:text-gray-400">Trusted by resellers and individuals across Nigeria.</p>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {[
-                    { name: "Ahmed Musa", role: "Reseller", text: "JadanPay changed my business. The API is super fast and my customers are always happy." },
-                    { name: "Grace Eze", role: "Student", text: "Best data rates I've seen. I save almost ₦5,000 monthly on data subscriptions here." },
-                    { name: "Tola B", role: "Developer", text: "Integration was smooth. Documentation is clear and support is responsive. Highly recommended." }
-                ].map((review, i) => (
-                    <div key={i} className="bg-white dark:bg-gray-900 p-8 rounded-3xl border border-gray-100 dark:border-white/5 shadow-sm">
-                        <Quote className="text-green-500 mb-4 opacity-50" size={32}/>
-                        <p className="text-gray-600 dark:text-gray-300 mb-6 italic leading-relaxed">"{review.text}"</p>
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-gray-200 dark:bg-gray-800 rounded-full flex items-center justify-center font-bold text-gray-500 dark:text-gray-400">
-                                {review.name.charAt(0)}
-                            </div>
-                            <div>
-                                <h4 className="font-bold text-gray-900 dark:text-white">{review.name}</h4>
-                                <p className="text-xs text-green-600 dark:text-green-400">{review.role}</p>
-                            </div>
-                        </div>
-                    </div>
-                ))}
-            </div>
-         </div>
-      </section>
-
-      {/* Referral Section */}
-      <section className="py-20 bg-green-50 dark:bg-gradient-to-r dark:from-green-900/20 dark:to-black border-y border-gray-100 dark:border-white/5 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-1/2 h-full bg-green-500/5 blur-[100px] pointer-events-none"></div>
-          <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+      {/* Referral Section - FIXED CONTRAST */}
+      <section className="py-20 bg-gray-900 text-white relative overflow-hidden">
+          {/* Subtle Background Effect */}
+          <div className="absolute top-0 right-0 w-1/2 h-full bg-green-600/10 blur-[100px] pointer-events-none"></div>
+          
+          <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative z-10">
               <div>
-                  <div className="inline-block px-4 py-1 rounded-full bg-green-500/10 text-green-600 dark:text-green-400 font-bold text-xs uppercase tracking-wider mb-6">
+                  <div className="inline-block px-4 py-1 rounded-full bg-green-500/20 text-green-300 font-bold text-xs uppercase tracking-wider mb-6 border border-green-500/30">
                       Refer & Earn
                   </div>
-                  <h2 className="text-4xl md:text-5xl font-bold mb-6 text-gray-900 dark:text-white">Free Data for You and Your Friends.</h2>
-                  <p className="text-gray-600 dark:text-gray-400 text-lg mb-8 leading-relaxed">
+                  <h2 className="text-4xl md:text-5xl font-bold mb-6 text-white">Free Data for You and Your Friends.</h2>
+                  <p className="text-gray-300 text-lg mb-8 leading-relaxed">
                       Share your unique referral code with friends. When they join {appName}, you earn instant bonus credits which you can swap for data bundles.
                   </p>
                   <ul className="space-y-4 mb-8">
-                      <li className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
-                          <CheckCircle className="text-green-500" size={20} /> Earn ₦{settings?.referralReward || 100} per referral instant bonus
+                      <li className="flex items-center gap-3 text-gray-300">
+                          <CheckCircle className="text-green-400 shrink-0" size={20} /> Earn ₦{settings?.referralReward || 100} per referral instant bonus
                       </li>
-                      <li className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
-                          <CheckCircle className="text-green-500" size={20} /> Use bonus to buy any data plan
+                      <li className="flex items-center gap-3 text-gray-300">
+                          <CheckCircle className="text-green-400 shrink-0" size={20} /> Use bonus to buy any data plan
                       </li>
-                      <li className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
-                          <CheckCircle className="text-green-500" size={20} /> No limits on earnings
+                      <li className="flex items-center gap-3 text-gray-300">
+                          <CheckCircle className="text-green-400 shrink-0" size={20} /> No limits on earnings
                       </li>
                   </ul>
-                  <button onClick={onGetStarted} className="px-8 py-3 bg-black dark:bg-white text-white dark:text-black rounded-xl font-bold hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors shadow-lg">
+                  <button onClick={onGetStarted} className="px-8 py-3 bg-white text-gray-900 rounded-xl font-bold hover:bg-gray-100 transition-colors shadow-lg">
                       Start Earning Now
                   </button>
               </div>
+              
               <div className="relative">
-                   <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-3xl p-8 transform rotate-3 hover:rotate-0 transition-transform duration-500 shadow-2xl">
+                   <div className="bg-white/5 border border-white/10 rounded-3xl p-8 transform rotate-3 hover:rotate-0 transition-transform duration-500 shadow-2xl backdrop-blur-md">
                        <div className="flex justify-between items-center mb-8">
-                           <h3 className="font-bold text-xl text-gray-900 dark:text-white">Referral Earnings</h3>
-                           <div className="p-2 bg-green-500/10 text-green-500 dark:text-green-400 rounded-lg">
+                           <h3 className="font-bold text-xl text-white">Referral Earnings</h3>
+                           <div className="p-2 bg-green-500/20 text-green-400 rounded-lg">
                                <Activity size={20} />
                            </div>
                        </div>
-                       <div className="flex gap-4 mb-8">
-                           <div className="flex-1 bg-gray-50 dark:bg-black p-4 rounded-2xl border border-gray-100 dark:border-gray-800">
-                               <p className="text-gray-500 text-xs uppercase">Total Earned</p>
-                               <p className="text-2xl font-bold text-green-600 dark:text-green-400">₦15,000</p>
+                       <div className="flex flex-col sm:flex-row gap-4 mb-8">
+                           <div className="flex-1 bg-black/40 p-4 rounded-2xl border border-white/10">
+                               <p className="text-gray-400 text-xs uppercase">Total Earned</p>
+                               <p className="text-2xl font-bold text-green-400">₦15,000</p>
                            </div>
-                            <div className="flex-1 bg-gray-50 dark:bg-black p-4 rounded-2xl border border-gray-100 dark:border-gray-800">
-                               <p className="text-gray-500 text-xs uppercase">Invited</p>
-                               <p className="text-2xl font-bold text-gray-900 dark:text-white">150</p>
+                            <div className="flex-1 bg-black/40 p-4 rounded-2xl border border-white/10">
+                               <p className="text-gray-400 text-xs uppercase">Invited</p>
+                               <p className="text-2xl font-bold text-white">150</p>
                            </div>
                        </div>
-                       <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl flex items-center justify-between border border-dashed border-gray-300 dark:border-gray-600">
-                           <code className="text-lg font-mono text-green-600 dark:text-green-400">JADAN-2024</code>
-                           <span className="text-xs font-bold text-gray-400 uppercase">Your Code</span>
+                       <div className="bg-black/40 p-4 rounded-xl flex items-center justify-between border border-dashed border-gray-600">
+                           <code className="text-lg font-mono text-green-400">JADAN-2024</code>
+                           <span className="text-xs font-bold text-gray-500 uppercase">Your Code</span>
                        </div>
                    </div>
               </div>
@@ -499,7 +443,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
       <footer className="py-12 border-t border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-black">
           <div className="max-w-7xl mx-auto px-6">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
-                  <div>
+                  <div className="col-span-2 md:col-span-1">
                       <div className="flex items-center gap-2 mb-4">
                         {logoUrl ? (
                             <img src={logoUrl} alt="Logo" className="w-8 h-8 object-contain" />
@@ -515,19 +459,19 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
                   <div>
                       <h4 className="font-bold mb-4 text-gray-900 dark:text-white">Services</h4>
                       <ul className="space-y-2 text-sm text-gray-500">
-                          <li><button onClick={onLogin} className="hover:text-green-600 dark:hover:text-green-400">Buy Data</button></li>
-                          <li><button onClick={onLogin} className="hover:text-green-600 dark:hover:text-green-400">Airtime Top-up</button></li>
-                          <li><button onClick={onLogin} className="hover:text-green-600 dark:hover:text-green-400">Cable TV</button></li>
-                          <li><button onClick={onLogin} className="hover:text-green-600 dark:hover:text-green-400">Electricity</button></li>
+                          <li><button onClick={onLogin} className="hover:text-green-600 dark:hover:text-green-400 text-left">Buy Data</button></li>
+                          <li><button onClick={onLogin} className="hover:text-green-600 dark:hover:text-green-400 text-left">Airtime Top-up</button></li>
+                          <li><button onClick={onLogin} className="hover:text-green-600 dark:hover:text-green-400 text-left">Cable TV</button></li>
+                          <li><button onClick={onLogin} className="hover:text-green-600 dark:hover:text-green-400 text-left">Electricity</button></li>
                       </ul>
                   </div>
                   <div>
                       <h4 className="font-bold mb-4 text-gray-900 dark:text-white">Company</h4>
                       <ul className="space-y-2 text-sm text-gray-500">
-                          <li><button onClick={() => setActiveInfoModal('about')} className="hover:text-green-600 dark:hover:text-green-400">About Us</button></li>
-                          <li><button onClick={() => setActiveInfoModal('contact')} className="hover:text-green-600 dark:hover:text-green-400">Contact</button></li>
-                          <li><button onClick={() => setActiveInfoModal('privacy')} className="hover:text-green-600 dark:hover:text-green-400">Privacy Policy</button></li>
-                          <li><button onClick={() => setActiveInfoModal('terms')} className="hover:text-green-600 dark:hover:text-green-400">Terms of Service</button></li>
+                          <li><button onClick={() => setActiveInfoModal('about')} className="hover:text-green-600 dark:hover:text-green-400 text-left">About Us</button></li>
+                          <li><button onClick={() => setActiveInfoModal('contact')} className="hover:text-green-600 dark:hover:text-green-400 text-left">Contact</button></li>
+                          <li><button onClick={() => setActiveInfoModal('privacy')} className="hover:text-green-600 dark:hover:text-green-400 text-left">Privacy Policy</button></li>
+                          <li><button onClick={() => setActiveInfoModal('terms')} className="hover:text-green-600 dark:hover:text-green-400 text-left">Terms of Service</button></li>
                       </ul>
                   </div>
                   <div>

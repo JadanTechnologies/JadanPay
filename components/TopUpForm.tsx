@@ -250,7 +250,7 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
   const details = getTransactionDetails();
 
   return (
-    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 relative overflow-hidden">
+    <div className="bg-white rounded-2xl p-4 md:p-6 shadow-sm border border-gray-100 relative overflow-hidden">
       <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-green-50 to-transparent rounded-bl-full -z-0 opacity-50"></div>
       
       <h2 className="text-lg font-bold mb-4 flex items-center gap-2 relative z-10">
@@ -259,7 +259,7 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
       </h2>
 
       {/* TABS */}
-      <div className="flex bg-gray-100 p-1 rounded-xl mb-6 relative z-10 overflow-x-auto">
+      <div className="flex bg-gray-100 p-1 rounded-xl mb-6 relative z-10 overflow-x-auto no-scrollbar">
         {[
             { id: TransactionType.AIRTIME, icon: Smartphone, label: 'Airtime' },
             { id: TransactionType.DATA, icon: Wifi, label: 'Data' },
@@ -280,7 +280,7 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
 
       <form onSubmit={handleFormSubmit} className="space-y-5 relative z-10 animate-fade-in">
         
-        {/* Provider Selection */}
+        {/* Provider Selection - Adjusted for Mobile */}
         <div className="grid grid-cols-4 gap-2">
             {(type === TransactionType.AIRTIME || type === TransactionType.DATA 
                 ? Object.values(Provider) 
@@ -292,13 +292,13 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
                   key={p}
                   type="button"
                   onClick={() => setProvider(p)}
-                  className={`relative py-3 rounded-lg text-[10px] md:text-xs font-bold transition-all border-2 flex flex-col items-center gap-1 ${
+                  className={`relative py-2 md:py-3 rounded-lg text-[10px] md:text-xs font-bold transition-all border-2 flex flex-col items-center gap-1 ${
                     provider === p 
                       ? `${PROVIDER_COLORS[p] || 'bg-gray-800 text-white'} border-transparent shadow-md scale-105` 
                       : 'bg-white border-gray-100 text-gray-400 grayscale hover:grayscale-0'
                   }`}
                 >
-                  {PROVIDER_LOGOS[p] || p}
+                  <span className="truncate w-full text-center">{PROVIDER_LOGOS[p] || p}</span>
                 </button>
             ))}
         </div>
