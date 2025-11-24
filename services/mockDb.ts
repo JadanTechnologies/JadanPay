@@ -184,14 +184,16 @@ export const MockDB = {
 
   getUsers: async () => {
     await delay(300);
-    return [...db.users];
+    // Return copies to prevent reference issues with React state
+    return db.users.map(u => ({ ...u }));
   },
   
   getRecentSignups: async (limit: number = 5) => {
       await delay(200);
       return db.users
         .sort((a, b) => new Date(b.joinedDate || 0).getTime() - new Date(a.joinedDate || 0).getTime())
-        .slice(0, limit);
+        .slice(0, limit)
+        .map(u => ({...u}));
   },
 
   getInactiveUsersCount: async () => {
@@ -214,12 +216,14 @@ export const MockDB = {
       return db.users
         .filter(u => u.referralCount > 0)
         .sort((a, b) => b.referralCount - a.referralCount)
-        .slice(0, limit);
+        .slice(0, limit)
+        .map(u => ({...u}));
   },
 
   getUserByEmail: async (email: string) => {
     await delay(200);
-    return db.users.find(u => u.email.toLowerCase() === email.toLowerCase());
+    const user = db.users.find(u => u.email.toLowerCase() === email.toLowerCase());
+    return user ? { ...user } : undefined;
   },
 
   registerUser: async (name: string, email: string, phone: string, referrerCode?: string): Promise<User> => {
@@ -298,7 +302,7 @@ export const MockDB = {
       });
 
       saveDatabase();
-      return newUser;
+      return { ...newUser };
   },
 
   resetUserPin: async (userId: string) => {
@@ -449,9 +453,11 @@ export const MockDB = {
       await delay(300);
       const index = db.users.findIndex(u => u.id === updatedData.id);
       if (index !== -1) {
-          db.users[index] = updatedData;
+          // Merge existing data with updates to prevent data loss
+          const mergedUser = { ...db.users[index], ...updatedData };
+          db.users[index] = mergedUser;
           saveDatabase();
-          return updatedData;
+          return { ...mergedUser };
       }
       throw new Error("User not found");
   },

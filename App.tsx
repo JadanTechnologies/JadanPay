@@ -77,7 +77,7 @@ export default function App() {
                   const users = await MockDB.getUsers();
                   const found = users.find(u => u.id === savedUserId);
                   if (found) {
-                      setUser(found);
+                      setUser({ ...found });
                       setShowLanding(false);
                   } else {
                       // Session invalid
@@ -105,7 +105,7 @@ export default function App() {
     try {
         const updatedUserList = await MockDB.getUsers();
         const currentUser = updatedUserList.find(u => u.id === user.id);
-        if(currentUser) setUser(currentUser);
+        if(currentUser) setUser({ ...currentUser }); // Force new reference
     } catch (e) {
         console.error("Failed to refresh user", e);
     } finally {
