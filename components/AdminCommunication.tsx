@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { MockDB } from '../services/mockDb';
 import { Announcement, CommunicationTemplate } from '../types';
@@ -107,11 +108,11 @@ export const AdminCommunication: React.FC = () => {
     <div className="space-y-6 animate-fade-in pb-24">
         
         {/* Header / Tabs */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-            <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                <Megaphone size={24} className="text-green-600"/> Communication Hub
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-gray-800 p-4 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm transition-colors">
+            <h2 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                <Megaphone size={24} className="text-green-600 dark:text-green-400"/> Communication Hub
             </h2>
-            <div className="flex bg-gray-100 p-1 rounded-lg">
+            <div className="flex bg-gray-100 dark:bg-gray-700 p-1 rounded-lg">
                 {[
                     { id: 'broadcast', label: 'Broadcast', icon: Send },
                     { id: 'announcements', label: 'Announcements', icon: Bell },
@@ -122,8 +123,8 @@ export const AdminCommunication: React.FC = () => {
                         onClick={() => setActiveTab(tab.id as any)}
                         className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${
                             activeTab === tab.id 
-                            ? 'bg-white shadow text-green-700' 
-                            : 'text-gray-500 hover:text-gray-700'
+                            ? 'bg-white dark:bg-gray-600 shadow text-green-700 dark:text-green-300' 
+                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
                         }`}
                     >
                         <tab.icon size={16}/> {tab.label}
@@ -136,16 +137,16 @@ export const AdminCommunication: React.FC = () => {
         {activeTab === 'broadcast' && (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2 space-y-6">
-                     <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-                        <h3 className="font-bold text-gray-800 mb-6">Compose Message</h3>
+                     <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm transition-colors">
+                        <h3 className="font-bold text-gray-800 dark:text-white mb-6">Compose Message</h3>
                         
                         <div className="grid grid-cols-2 gap-4 mb-4">
                              <div>
-                                 <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Target Audience</label>
+                                 <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Target Audience</label>
                                  <select 
                                     value={broadcastAudience} 
                                     onChange={(e) => setBroadcastAudience(e.target.value)}
-                                    className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
+                                    className="w-full p-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-green-500 outline-none text-gray-900 dark:text-white transition-colors"
                                  >
                                      <option value="all">All Users</option>
                                      <option value="resellers">Resellers Only</option>
@@ -154,11 +155,11 @@ export const AdminCommunication: React.FC = () => {
                                  </select>
                              </div>
                              <div>
-                                 <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Channel</label>
+                                 <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Channel</label>
                                  <select 
                                     value={broadcastChannel} 
                                     onChange={(e) => setBroadcastChannel(e.target.value)}
-                                    className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
+                                    className="w-full p-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-green-500 outline-none text-gray-900 dark:text-white transition-colors"
                                  >
                                      <option value="email">Email</option>
                                      <option value="sms">SMS</option>
@@ -170,35 +171,35 @@ export const AdminCommunication: React.FC = () => {
 
                         {(broadcastChannel === 'email' || broadcastChannel === 'push') && (
                             <div className="mb-4">
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Subject</label>
+                                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Subject</label>
                                 <input 
                                     type="text" 
                                     value={broadcastSubject}
                                     onChange={(e) => setBroadcastSubject(e.target.value)}
-                                    className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
+                                    className="w-full p-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-green-500 outline-none text-gray-900 dark:text-white transition-colors"
                                     placeholder="e.g., Important Update regarding prices"
                                 />
                             </div>
                         )}
 
                         <div className="mb-6">
-                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Message Body</label>
+                            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Message Body</label>
                             <textarea 
                                 value={broadcastMessage}
                                 onChange={(e) => setBroadcastMessage(e.target.value)}
-                                className="w-full h-40 p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
+                                className="w-full h-40 p-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-green-500 outline-none text-gray-900 dark:text-white transition-colors"
                                 placeholder="Type your message here..."
                             ></textarea>
                             <div className="flex gap-2 mt-2">
-                                <span className="text-xs bg-gray-100 px-2 py-1 rounded text-gray-500">{'{name}'}</span>
-                                <span className="text-xs bg-gray-100 px-2 py-1 rounded text-gray-500">{'{balance}'}</span>
+                                <span className="text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-gray-500 dark:text-gray-400">{'{name}'}</span>
+                                <span className="text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-gray-500 dark:text-gray-400">{'{balance}'}</span>
                             </div>
                         </div>
 
                         <button 
                             onClick={handleSendBroadcast}
                             disabled={sending || !broadcastMessage}
-                            className="w-full py-3 bg-green-700 text-white rounded-xl font-bold shadow-lg shadow-green-200 hover:bg-green-800 transition-colors flex items-center justify-center gap-2 disabled:opacity-70"
+                            className="w-full py-3 bg-green-700 text-white rounded-xl font-bold shadow-lg shadow-green-200 dark:shadow-green-900/20 hover:bg-green-800 transition-colors flex items-center justify-center gap-2 disabled:opacity-70"
                         >
                             {sending ? 'Sending...' : <><Send size={18}/> Send Broadcast</>}
                         </button>
@@ -206,7 +207,7 @@ export const AdminCommunication: React.FC = () => {
                 </div>
 
                 <div className="lg:col-span-1">
-                     <div className="bg-blue-50 p-6 rounded-2xl border border-blue-100 text-blue-800">
+                     <div className="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-2xl border border-blue-100 dark:border-blue-800 text-blue-800 dark:text-blue-200">
                          <h4 className="font-bold mb-2 flex items-center gap-2"><Info size={18}/> Quick Tips</h4>
                          <ul className="text-sm space-y-2 opacity-80 list-disc pl-4">
                              <li>Use <strong>SMS</strong> for urgent alerts (downtime, security).</li>
@@ -225,7 +226,7 @@ export const AdminCommunication: React.FC = () => {
                 <div className="flex justify-end">
                     <button 
                         onClick={() => setShowAnnounceModal(true)}
-                        className="flex items-center gap-2 px-4 py-2 bg-green-700 text-white rounded-xl font-bold hover:bg-green-800"
+                        className="flex items-center gap-2 px-4 py-2 bg-green-700 text-white rounded-xl font-bold hover:bg-green-800 shadow-md"
                     >
                         <Plus size={18}/> New Announcement
                     </button>
@@ -233,26 +234,26 @@ export const AdminCommunication: React.FC = () => {
 
                 <div className="grid grid-cols-1 gap-4">
                     {announcements.map(ann => (
-                        <div key={ann.id} className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex justify-between items-center">
+                        <div key={ann.id} className="bg-white dark:bg-gray-800 p-5 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm flex justify-between items-center transition-colors">
                             <div className="flex items-start gap-4">
                                 <div className={`p-3 rounded-xl ${
-                                    ann.type === 'info' ? 'bg-blue-50 text-blue-600' :
-                                    ann.type === 'warning' ? 'bg-yellow-50 text-yellow-600' :
-                                    ann.type === 'success' ? 'bg-green-50 text-green-600' :
-                                    'bg-purple-50 text-purple-600'
+                                    ann.type === 'info' ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' :
+                                    ann.type === 'warning' ? 'bg-yellow-50 dark:bg-yellow-900/20 text-yellow-600 dark:text-yellow-400' :
+                                    ann.type === 'success' ? 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400' :
+                                    'bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400'
                                 }`}>
                                     <Bell size={24} />
                                 </div>
                                 <div>
                                     <div className="flex items-center gap-2 mb-1">
-                                        <h3 className="font-bold text-gray-800">{ann.title}</h3>
+                                        <h3 className="font-bold text-gray-800 dark:text-white">{ann.title}</h3>
                                         {ann.isActive ? (
-                                            <span className="px-2 py-0.5 bg-green-100 text-green-700 text-[10px] font-bold uppercase rounded-full">Active</span>
+                                            <span className="px-2 py-0.5 bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-400 text-[10px] font-bold uppercase rounded-full">Active</span>
                                         ) : (
-                                            <span className="px-2 py-0.5 bg-gray-100 text-gray-500 text-[10px] font-bold uppercase rounded-full">Inactive</span>
+                                            <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300 text-[10px] font-bold uppercase rounded-full">Inactive</span>
                                         )}
                                     </div>
-                                    <p className="text-sm text-gray-600 max-w-2xl">{ann.message}</p>
+                                    <p className="text-sm text-gray-600 dark:text-gray-300 max-w-2xl">{ann.message}</p>
                                     <div className="flex gap-3 mt-2 text-xs text-gray-400">
                                         <span>Audience: <span className="capitalize">{ann.audience}</span></span>
                                         <span>•</span>
@@ -262,14 +263,14 @@ export const AdminCommunication: React.FC = () => {
                             </div>
                             <button 
                                 onClick={() => handleDeleteAnnouncement(ann.id)}
-                                className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                             >
                                 <Trash2 size={20}/>
                             </button>
                         </div>
                     ))}
                     {announcements.length === 0 && (
-                        <div className="text-center py-10 text-gray-400">No announcements found.</div>
+                        <div className="text-center py-10 text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-dashed border-gray-200 dark:border-gray-700">No announcements found.</div>
                     )}
                 </div>
             </div>
@@ -281,7 +282,7 @@ export const AdminCommunication: React.FC = () => {
                  <div className="flex justify-end">
                     <button 
                         onClick={() => { setEditingTemplate({channel: 'sms', variables: []}); setShowTemplateModal(true); }}
-                        className="flex items-center gap-2 px-4 py-2 bg-green-700 text-white rounded-xl font-bold hover:bg-green-800"
+                        className="flex items-center gap-2 px-4 py-2 bg-green-700 text-white rounded-xl font-bold hover:bg-green-800 shadow-md"
                     >
                         <Plus size={18}/> New Template
                     </button>
@@ -289,23 +290,23 @@ export const AdminCommunication: React.FC = () => {
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {templates.map(t => (
-                        <div key={t.id} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm relative group">
+                        <div key={t.id} className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm relative group transition-colors">
                             <div className="flex justify-between items-start mb-4">
                                 <span className={`px-2 py-1 rounded-md text-xs font-bold uppercase ${
-                                    t.channel === 'email' ? 'bg-blue-50 text-blue-600' :
-                                    t.channel === 'sms' ? 'bg-orange-50 text-orange-600' :
-                                    'bg-purple-50 text-purple-600'
+                                    t.channel === 'email' ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' :
+                                    t.channel === 'sms' ? 'bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400' :
+                                    'bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400'
                                 }`}>
                                     {t.channel}
                                 </span>
                                 <div className="flex gap-1">
-                                    <button onClick={() => handleEditTemplate(t)} className="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded"><Edit2 size={14}/></button>
-                                    <button onClick={() => handleDeleteTemplate(t.id)} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"><Trash2 size={14}/></button>
+                                    <button onClick={() => handleEditTemplate(t)} className="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded"><Edit2 size={14}/></button>
+                                    <button onClick={() => handleDeleteTemplate(t.id)} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"><Trash2 size={14}/></button>
                                 </div>
                             </div>
-                            <h3 className="font-bold text-gray-800 mb-2">{t.name}</h3>
-                            {t.subject && <p className="text-xs text-gray-500 mb-2"><strong>Subject:</strong> {t.subject}</p>}
-                            <div className="bg-gray-50 p-3 rounded-lg text-xs text-gray-600 font-mono h-20 overflow-y-auto border border-gray-100">
+                            <h3 className="font-bold text-gray-800 dark:text-white mb-2">{t.name}</h3>
+                            {t.subject && <p className="text-xs text-gray-500 dark:text-gray-400 mb-2"><strong>Subject:</strong> {t.subject}</p>}
+                            <div className="bg-gray-50 dark:bg-gray-900 p-3 rounded-lg text-xs text-gray-600 dark:text-gray-300 font-mono h-20 overflow-y-auto border border-gray-100 dark:border-gray-700">
                                 {t.body}
                             </div>
                         </div>
@@ -318,25 +319,25 @@ export const AdminCommunication: React.FC = () => {
         
         {/* Announcement Modal */}
         {showAnnounceModal && (
-            <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-                <div className="bg-white w-full max-w-md rounded-2xl p-6 shadow-2xl">
-                    <h3 className="font-bold text-lg mb-4">New Announcement</h3>
+            <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+                <div className="bg-white dark:bg-gray-800 w-full max-w-md rounded-2xl p-6 shadow-2xl animate-fade-in-up">
+                    <h3 className="font-bold text-lg mb-4 text-gray-900 dark:text-white">New Announcement</h3>
                     <div className="space-y-4">
                         <input 
-                            className="w-full p-3 border rounded-xl" 
+                            className="w-full p-3 border dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white outline-none focus:border-green-500"
                             placeholder="Title" 
                             value={newAnnouncement.title || ''}
                             onChange={e => setNewAnnouncement({...newAnnouncement, title: e.target.value})}
                         />
                          <textarea 
-                            className="w-full p-3 border rounded-xl h-24" 
+                            className="w-full p-3 border dark:border-gray-700 rounded-xl h-24 bg-white dark:bg-gray-900 text-gray-900 dark:text-white outline-none focus:border-green-500"
                             placeholder="Message Content" 
                             value={newAnnouncement.message || ''}
                             onChange={e => setNewAnnouncement({...newAnnouncement, message: e.target.value})}
                         />
                         <div className="grid grid-cols-2 gap-4">
                              <select 
-                                className="p-3 border rounded-xl bg-white"
+                                className="p-3 border dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white outline-none focus:border-green-500"
                                 value={newAnnouncement.type}
                                 onChange={e => setNewAnnouncement({...newAnnouncement, type: e.target.value as any})}
                              >
@@ -346,7 +347,7 @@ export const AdminCommunication: React.FC = () => {
                                  <option value="promo">Promo (Purple)</option>
                              </select>
                              <select 
-                                className="p-3 border rounded-xl bg-white"
+                                className="p-3 border dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white outline-none focus:border-green-500"
                                 value={newAnnouncement.audience}
                                 onChange={e => setNewAnnouncement({...newAnnouncement, audience: e.target.value as any})}
                              >
@@ -355,7 +356,7 @@ export const AdminCommunication: React.FC = () => {
                                  <option value="staff">Staff</option>
                              </select>
                         </div>
-                        <label className="flex items-center gap-2">
+                        <label className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
                             <input 
                                 type="checkbox" 
                                 checked={newAnnouncement.isActive}
@@ -364,8 +365,8 @@ export const AdminCommunication: React.FC = () => {
                             <span className="text-sm">Set as Active immediately</span>
                         </label>
                         <div className="flex gap-3 mt-4">
-                            <button onClick={() => setShowAnnounceModal(false)} className="flex-1 py-2 bg-gray-100 rounded-xl font-bold text-gray-600">Cancel</button>
-                            <button onClick={handleSaveAnnouncement} className="flex-1 py-2 bg-green-700 text-white rounded-xl font-bold">Save</button>
+                            <button onClick={() => setShowAnnounceModal(false)} className="flex-1 py-2 bg-gray-100 dark:bg-gray-700 rounded-xl font-bold text-gray-600 dark:text-gray-300">Cancel</button>
+                            <button onClick={handleSaveAnnouncement} className="flex-1 py-2 bg-green-700 text-white rounded-xl font-bold hover:bg-green-800">Save</button>
                         </div>
                     </div>
                 </div>
@@ -374,18 +375,18 @@ export const AdminCommunication: React.FC = () => {
 
         {/* Template Modal */}
         {showTemplateModal && (
-            <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-                <div className="bg-white w-full max-w-md rounded-2xl p-6 shadow-2xl">
-                    <h3 className="font-bold text-lg mb-4">{editingTemplate.id ? 'Edit' : 'New'} Template</h3>
+            <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+                <div className="bg-white dark:bg-gray-800 w-full max-w-md rounded-2xl p-6 shadow-2xl animate-fade-in-up">
+                    <h3 className="font-bold text-lg mb-4 text-gray-900 dark:text-white">{editingTemplate.id ? 'Edit' : 'New'} Template</h3>
                     <div className="space-y-4">
                         <input 
-                            className="w-full p-3 border rounded-xl" 
+                            className="w-full p-3 border dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white outline-none focus:border-green-500"
                             placeholder="Template Name (e.g. Welcome Email)" 
                             value={editingTemplate.name || ''}
                             onChange={e => setEditingTemplate({...editingTemplate, name: e.target.value})}
                         />
                         <select 
-                            className="w-full p-3 border rounded-xl bg-white"
+                            className="w-full p-3 border dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white outline-none focus:border-green-500"
                             value={editingTemplate.channel}
                             onChange={e => setEditingTemplate({...editingTemplate, channel: e.target.value as any})}
                         >
@@ -395,21 +396,21 @@ export const AdminCommunication: React.FC = () => {
                         </select>
                         {editingTemplate.channel !== 'sms' && (
                             <input 
-                                className="w-full p-3 border rounded-xl" 
+                                className="w-full p-3 border dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white outline-none focus:border-green-500"
                                 placeholder="Subject Line" 
                                 value={editingTemplate.subject || ''}
                                 onChange={e => setEditingTemplate({...editingTemplate, subject: e.target.value})}
                             />
                         )}
                         <textarea 
-                            className="w-full p-3 border rounded-xl h-32 font-mono text-sm" 
+                            className="w-full p-3 border dark:border-gray-700 rounded-xl h-32 font-mono text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-white outline-none focus:border-green-500"
                             placeholder="Body content... Use {name} for variables." 
                             value={editingTemplate.body || ''}
                             onChange={e => setEditingTemplate({...editingTemplate, body: e.target.value})}
                         />
                         <div className="flex gap-3 mt-4">
-                            <button onClick={() => setShowTemplateModal(false)} className="flex-1 py-2 bg-gray-100 rounded-xl font-bold text-gray-600">Cancel</button>
-                            <button onClick={handleSaveTemplate} className="flex-1 py-2 bg-green-700 text-white rounded-xl font-bold">Save</button>
+                            <button onClick={() => setShowTemplateModal(false)} className="flex-1 py-2 bg-gray-100 dark:bg-gray-700 rounded-xl font-bold text-gray-600 dark:text-gray-300">Cancel</button>
+                            <button onClick={handleSaveTemplate} className="flex-1 py-2 bg-green-700 text-white rounded-xl font-bold hover:bg-green-800">Save</button>
                         </div>
                     </div>
                 </div>
