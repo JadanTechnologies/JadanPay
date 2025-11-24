@@ -49,7 +49,7 @@ export enum TransactionType {
   DATA = 'DATA',
   CABLE = 'CABLE',           
   ELECTRICITY = 'ELECTRICITY',
-  BILL_PAYMENT = 'BILL_PAYMENT', // New
+  BILL_PAYMENT = 'BILL_PAYMENT',
   WALLET_FUND = 'WALLET_FUND',
   ADMIN_CREDIT = 'ADMIN_CREDIT',
   ADMIN_DEBIT = 'ADMIN_DEBIT',
@@ -110,6 +110,7 @@ export interface Transaction {
   proofUrl?: string; // For manual payment evidence
   adminActionDate?: string;
   customerName?: string; // For Bill Validation
+  customerAddress?: string; // For Electricity Bills
   meterToken?: string; // For Electricity Tokens
 }
 
