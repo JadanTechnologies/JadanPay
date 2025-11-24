@@ -6,7 +6,7 @@ import { processAirtimePurchase, processDataPurchase, processBillPayment } from 
 import { SettingsService } from '../services/settingsService';
 import { MockDB } from '../services/mockDb';
 import { playNotification } from '../utils/audio';
-import { Smartphone, Wifi, PiggyBank, Loader2, Sparkles, Star, Check, AlertTriangle, Info, Share2, Ban, Activity, ChevronDown, Tv, Zap, User as UserIcon } from 'lucide-react';
+import { Smartphone, Wifi, PiggyBank, Loader2, Sparkles, Star, Check, AlertTriangle, Info, Share2, Ban, Activity, ChevronDown, Tv, Zap, User as UserIcon, Phone, RefreshCw, X, Receipt } from 'lucide-react';
 
 interface TopUpFormProps {
   user: User;
@@ -54,12 +54,14 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
   const [loading, setLoading] = useState(false);
   const [roundUp, setRoundUp] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
   const [lastTx, setLastTx] = useState<Transaction | null>(null);
   
   // Dynamic Settings
   const [providerStatus, setProviderStatus] = useState<Record<string, boolean>>({});
+  
+  // Result View State
+  const [resultState, setResultState] = useState<'idle' | 'success' | 'error'>('idle');
 
   useEffect(() => {
       loadData();
@@ -142,6 +144,7 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
       setCustomerName(null);
       setError(null);
       setValidationError(null);
+      setResultState('idle');
       
       // Set default provider based on type
       if (newType === TransactionType.CABLE) setProvider(BillProvider.DSTV);
@@ -152,8 +155,8 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    setSuccessMsg(null);
     setLastTx(null);
+    setResultState('idle');
 
     if (!phone) {
         setError("Please enter the number");
@@ -184,6 +187,8 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
   const executeTransaction = async () => {
     setShowConfirm(false);
     setLoading(true);
+    setResultState('idle');
+    setError(null);
     
     try {
       let tx: Transaction;
@@ -193,8 +198,6 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
         tx = await processDataPurchase(user, selectedBundle!, phone, roundUp);
       } else {
         // Bills
-        // For bills, the processBillPayment usually expects the full amount to deduct
-        // In this implementation, we assume the fee is part of the deduction shown to the user
         const baseAmt = type === TransactionType.CABLE ? selectedBundle!.price : Number(amount);
         const totalDeduct = baseAmt + BILL_SERVICE_FEE;
         
@@ -202,23 +205,41 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
       }
       
       setLastTx(tx);
-      setSuccessMsg("Transaction Successful!");
       playNotification("Transaction successful.");
       onSuccess();
+      setResultState('success');
       
-      // Clear sensitive fields
-      setAmount('');
-      setSelectedBundle(null);
-      if (type !== TransactionType.DATA && type !== TransactionType.AIRTIME) {
-          setPhone(''); // Clear Meter/IUC but keep phone for airtime/data as user might repeat
-          setCustomerName(null);
-      }
     } catch (err: any) {
       setError(err.message || "Transaction failed");
       playNotification("Transaction failed.", 'error');
+      setResultState('error');
     } finally {
       setLoading(false);
     }
+  };
+
+  const resetForm = () => {
+      setResultState('idle');
+      setAmount('');
+      setSelectedBundle(null);
+      if (type !== TransactionType.DATA && type !== TransactionType.AIRTIME) {
+          setPhone(''); 
+          setCustomerName(null);
+      }
+      setLastTx(null);
+  };
+
+  const handleShareReceipt = async () => {
+      if (!lastTx) return;
+      const shareText = `JadanPay Receipt\nType: ${lastTx.type}\nAmount: ₦${lastTx.amount.toLocaleString()}\nRef: ${lastTx.reference}\nTo: ${lastTx.destinationNumber}\nStatus: Successful`;
+      if (navigator.share) {
+          try {
+              await navigator.share({ title: 'Transaction Receipt', text: shareText });
+          } catch (e) { console.log(e); }
+      } else {
+          navigator.clipboard.writeText(shareText);
+          alert("Receipt copied to clipboard!");
+      }
   };
 
   const getTransactionDetails = () => {
@@ -249,6 +270,85 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
   };
   const details = getTransactionDetails();
 
+  // --- RESULT VIEW ---
+  if (resultState === 'success' && lastTx) {
+      return (
+          <div className="bg-white dark:bg-gray-900 rounded-2xl p-8 shadow-sm border border-gray-100 dark:border-gray-800 text-center animate-fade-in flex flex-col items-center justify-center min-h-[400px]">
+              <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center mb-6 shadow-lg shadow-green-200 dark:shadow-green-900/10">
+                  <Check size={40} strokeWidth={4} />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Transaction Successful!</h2>
+              <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-xs mx-auto">
+                  You successfully sent <span className="font-bold text-gray-900 dark:text-white">{lastTx.bundleName || `₦${lastTx.amount}`}</span> to <span className="font-mono text-gray-800 dark:text-gray-200">{lastTx.destinationNumber}</span>.
+              </p>
+
+              <div className="flex flex-col gap-3 w-full max-w-xs">
+                  <div className="grid grid-cols-2 gap-3">
+                      <button 
+                          onClick={handleShareReceipt}
+                          className="py-3 px-4 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-white rounded-xl font-bold hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center gap-2 text-sm"
+                      >
+                          <Share2 size={16}/> Share Receipt
+                      </button>
+                      <button 
+                          onClick={() => onViewReceipt(lastTx.id)}
+                          className="py-3 px-4 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-white rounded-xl font-bold hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center gap-2 text-sm"
+                      >
+                          <Receipt size={16}/> View Details
+                      </button>
+                  </div>
+
+                  {(type === TransactionType.AIRTIME || type === TransactionType.DATA) && (
+                       <a 
+                          href={`tel:${lastTx.destinationNumber}`}
+                          className="w-full py-3.5 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 flex items-center justify-center gap-2 shadow-lg shadow-green-200 dark:shadow-green-900/20"
+                       >
+                           <Phone size={18}/> Call Recipient
+                       </a>
+                  )}
+                  
+                  <button 
+                      onClick={resetForm}
+                      className="w-full py-3 text-gray-400 hover:text-gray-600 dark:hover:text-white text-sm font-medium mt-2"
+                  >
+                      Perform Another Transaction
+                  </button>
+              </div>
+          </div>
+      );
+  }
+
+  if (resultState === 'error') {
+      return (
+          <div className="bg-white dark:bg-gray-900 rounded-2xl p-8 shadow-sm border border-gray-100 dark:border-gray-800 text-center animate-fade-in flex flex-col items-center justify-center min-h-[400px]">
+              <div className="w-20 h-20 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full flex items-center justify-center mb-6 shadow-lg shadow-red-200 dark:shadow-red-900/10">
+                  <X size={40} strokeWidth={4} />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Transaction Failed</h2>
+              <p className="text-red-500 mb-8 max-w-xs mx-auto text-sm font-medium bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border border-red-100 dark:border-red-800">
+                  {error || "Something went wrong. Please try again."}
+              </p>
+              
+              <div className="flex flex-col gap-3 w-full max-w-xs">
+                  <button 
+                      onClick={executeTransaction}
+                      disabled={loading}
+                      className="w-full py-3.5 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 flex items-center justify-center gap-2 shadow-lg shadow-red-200 dark:shadow-red-900/20"
+                  >
+                      {loading ? <Loader2 className="animate-spin"/> : <><RefreshCw size={18}/> Retry Transaction</>}
+                  </button>
+                  <button 
+                      onClick={() => setResultState('idle')}
+                      className="w-full py-3 text-gray-400 hover:text-gray-600 dark:hover:text-white text-sm font-medium mt-2"
+                  >
+                      Edit Details
+                  </button>
+              </div>
+          </div>
+      );
+  }
+
+  // --- FORM VIEW ---
   return (
     <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 md:p-6 shadow-sm border border-gray-100 dark:border-gray-800 relative overflow-hidden transition-colors">
       <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-green-50 to-transparent dark:from-green-900/20 rounded-bl-full -z-0 opacity-50"></div>
@@ -451,18 +551,6 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
                      <span>₦{((type === TransactionType.CABLE ? (selectedBundle?.price || 0) : (Number(amount) || 0)) + BILL_SERVICE_FEE).toLocaleString()}</span>
                 </div>
             </div>
-        )}
-
-        {error && (
-          <div className="p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm rounded-lg border border-red-100 dark:border-red-800 flex items-center gap-2 animate-pulse">
-            <AlertTriangle size={16} /> <span>{error}</span>
-          </div>
-        )}
-
-        {successMsg && (
-             <div className="p-3 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 text-sm rounded-lg border border-green-100 dark:border-green-800 flex items-center gap-2 animate-fade-in">
-                <Check size={16} /> {successMsg}
-             </div>
         )}
 
         <button

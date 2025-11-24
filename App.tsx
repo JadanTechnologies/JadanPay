@@ -17,6 +17,7 @@ import { LandingPage } from './components/LandingPage';
 import { UserProfile } from './components/UserProfile';
 import { User, UserRole } from './types';
 import { MockDB } from './services/mockDb';
+import { SettingsService } from './services/settingsService';
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -42,6 +43,29 @@ export default function App() {
       root.classList.remove('dark');
     }
   }, [isDarkMode]);
+
+  // Apply Favicon and App Name
+  useEffect(() => {
+      const applySettings = async () => {
+          try {
+              const s = await SettingsService.getSettings();
+              document.title = s.appName;
+              
+              if (s.faviconUrl) {
+                  let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
+                  if (!link) {
+                      link = document.createElement('link');
+                      link.rel = 'icon';
+                      document.getElementsByTagName('head')[0].appendChild(link);
+                  }
+                  link.href = s.faviconUrl;
+              }
+          } catch (e) {
+              console.error("Failed to load settings", e);
+          }
+      };
+      applySettings();
+  }, []);
 
   useEffect(() => {
       const loadUserSession = async () => {

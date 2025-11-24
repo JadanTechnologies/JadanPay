@@ -8,6 +8,7 @@ export type PushProvider = 'NONE' | 'FIREBASE' | 'ONESIGNAL';
 export interface AppSettings {
   appName: string;
   logoUrl: string;
+  faviconUrl: string; // New: Favicon
   supportEmail: string;
   supportPhone: string;
   maintenanceMode: boolean;
@@ -99,6 +100,7 @@ export interface AppSettings {
 const defaultSettings: AppSettings = {
   appName: 'JadanPay',
   logoUrl: 'https://cdn-icons-png.flaticon.com/512/8992/8992203.png',
+  faviconUrl: '',
   supportEmail: 'help@jadanpay.com',
   supportPhone: '0800-JADANPAY',
   maintenanceMode: false,

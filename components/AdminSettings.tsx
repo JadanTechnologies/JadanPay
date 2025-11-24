@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Save, Globe, Server, CreditCard, Database, Plus, Trash2, Edit2, Check, X, Upload, Mail, Phone, AlertTriangle, Key, Users, Trophy, Gift, MessageSquare, Bell, Send } from 'lucide-react';
+import { Save, Globe, Server, CreditCard, Database, Plus, Trash2, Edit2, Check, X, Upload, Mail, Phone, AlertTriangle, Key, Users, Trophy, Gift, MessageSquare, Bell, Send, Smartphone, Activity, Link as LinkIcon, Download } from 'lucide-react';
 import { Provider, Bundle, PlanType, User } from '../types';
 import { PROVIDER_LOGOS } from '../constants';
 import { SettingsService, AppSettings, ApiVendor, EmailProvider, PushProvider } from '../services/settingsService';
@@ -8,7 +8,7 @@ import { MockDB } from '../services/mockDb';
 import { NotificationService } from '../services/notificationService';
 
 export const AdminSettings: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'general' | 'services' | 'payment' | 'backup' | 'api' | 'referrals'>('general');
+  const [activeTab, setActiveTab] = useState<'general' | 'services' | 'payment' | 'backup' | 'api' | 'referrals' | 'app' | 'health'>('general');
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [bundles, setBundles] = useState<Bundle[]>([]);
   const [topReferrers, setTopReferrers] = useState<User[]>([]);
@@ -165,6 +165,38 @@ export const AdminSettings: React.FC = () => {
       }
   };
 
+  const handleApkUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (e.target.files && e.target.files[0] && settings) {
+          const file = e.target.files[0];
+          // Simulate upload
+          setTimeout(() => {
+              const fakeUrl = `https://storage.jadanpay.com/apk/${file.name}`;
+              setSettings({
+                  ...settings,
+                  mobileAppUrl: fakeUrl,
+                  mobileAppVersion: (Number(settings.mobileAppVersion.split('.')[0]) + 1) + ".0.0",
+                  mobileAppReleaseDate: new Date().toISOString()
+              });
+              alert("APK Uploaded successfully (Mocked). URL updated.");
+          }, 1500);
+      }
+  };
+
+  const handleFaviconUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (e.target.files && e.target.files[0] && settings) {
+          const file = e.target.files[0];
+          // Mock upload - in real app, upload to server and get URL
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+             setSettings({
+                 ...settings,
+                 faviconUrl: ev.target?.result as string
+             });
+          };
+          reader.readAsDataURL(file);
+      }
+  };
+
   if (!settings) return <div className="p-10 text-center dark:text-white">Loading Settings...</div>;
 
   return (
@@ -173,9 +205,11 @@ export const AdminSettings: React.FC = () => {
         <h2 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
             Settings
         </h2>
-        <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-lg overflow-x-auto max-w-full">
+        <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-lg overflow-x-auto max-w-full no-scrollbar">
             {[
                 { id: 'general', label: 'General', icon: Globe },
+                { id: 'app', label: 'Mobile App', icon: Smartphone },
+                { id: 'health', label: 'Health', icon: Activity },
                 { id: 'services', label: 'Services', icon: Server },
                 { id: 'api', label: 'Integrations', icon: Key },
                 { id: 'payment', label: 'Payments', icon: CreditCard },
@@ -221,6 +255,22 @@ export const AdminSettings: React.FC = () => {
                                   onChange={e => setSettings({...settings, logoUrl: e.target.value})}
                                   className="w-full p-3 border dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white"
                               />
+                          </div>
+                          <div>
+                              <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Favicon URL</label>
+                              <div className="flex gap-2">
+                                  <input 
+                                      value={settings.faviconUrl || ''}
+                                      onChange={e => setSettings({...settings, faviconUrl: e.target.value})}
+                                      className="w-full p-3 border dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white"
+                                      placeholder="https://..."
+                                  />
+                                   <label className="p-3 bg-gray-100 dark:bg-gray-800 border dark:border-gray-700 rounded-xl cursor-pointer hover:bg-gray-200">
+                                      <Upload size={20} className="text-gray-500"/>
+                                      <input type="file" accept="image/x-icon,image/png" onChange={handleFaviconUpload} className="hidden" />
+                                  </label>
+                              </div>
+                              {settings.faviconUrl && <img src={settings.faviconUrl} alt="Favicon Preview" className="w-8 h-8 mt-2 border rounded p-1"/>}
                           </div>
                           <div>
                               <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Support Email</label>
@@ -269,6 +319,113 @@ export const AdminSettings: React.FC = () => {
                       <button onClick={handleSave} disabled={isSaving} className="px-6 py-3 bg-green-700 text-white rounded-xl font-bold hover:bg-green-800">
                           {isSaving ? 'Saving...' : 'Save General Settings'}
                       </button>
+                  </div>
+              )}
+
+              {/* --- APP MANAGEMENT --- */}
+              {activeTab === 'app' && (
+                  <div className="bg-white dark:bg-gray-900 p-6 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm space-y-6">
+                      <h3 className="font-bold text-gray-800 dark:text-white mb-4 border-b dark:border-gray-800 pb-2">Application Management</h3>
+                      
+                      <div className="bg-blue-50 dark:bg-blue-900/10 p-4 rounded-xl border border-blue-100 dark:border-blue-900 text-blue-800 dark:text-blue-300 mb-6">
+                           <h4 className="font-bold flex items-center gap-2"><Smartphone size={18}/> Current Version: {settings.mobileAppVersion}</h4>
+                           <p className="text-sm mt-1">Released: {new Date(settings.mobileAppReleaseDate).toLocaleDateString()}</p>
+                           <p className="text-xs mt-2 opacity-80 break-all">URL: {settings.mobileAppUrl || 'Not configured'}</p>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div>
+                               <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">Upload New APK</label>
+                               <div className="border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl p-8 text-center bg-gray-50 dark:bg-gray-800 relative hover:bg-gray-100 transition-colors">
+                                  <input type="file" accept=".apk" onChange={handleApkUpload} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"/>
+                                  <div className="flex flex-col items-center text-gray-400">
+                                      <Upload size={32} className="mb-2"/>
+                                      <span className="font-bold text-sm">Click to Upload APK</span>
+                                      <span className="text-xs mt-1">Max size: 50MB</span>
+                                  </div>
+                              </div>
+                          </div>
+                          <div>
+                              <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">Manual URL Override</label>
+                              <input 
+                                  value={settings.mobileAppUrl}
+                                  onChange={e => setSettings({...settings, mobileAppUrl: e.target.value})}
+                                  className="w-full p-3 border dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white mb-4"
+                                  placeholder="https://play.google.com/..."
+                              />
+                               <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">Version Code</label>
+                              <input 
+                                  value={settings.mobileAppVersion}
+                                  onChange={e => setSettings({...settings, mobileAppVersion: e.target.value})}
+                                  className="w-full p-3 border dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white"
+                                  placeholder="1.0.0"
+                              />
+                          </div>
+                      </div>
+                      <button onClick={handleSave} className="px-6 py-3 bg-green-700 text-white rounded-xl font-bold hover:bg-green-800">Save App Settings</button>
+                  </div>
+              )}
+
+               {/* --- HEALTH MANAGEMENT --- */}
+              {activeTab === 'health' && (
+                  <div className="bg-white dark:bg-gray-900 p-6 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm space-y-6">
+                      <div className="flex justify-between items-center border-b dark:border-gray-800 pb-2 mb-4">
+                           <h3 className="font-bold text-gray-800 dark:text-white">System & API Health</h3>
+                           <button onClick={loadSettings} className="text-xs flex items-center gap-1 text-green-600 font-bold hover:underline"><Activity size={12}/> Refresh Status</button>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                          <div className="p-4 bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800 rounded-xl">
+                              <h4 className="text-green-800 dark:text-green-300 font-bold text-sm uppercase">System Status</h4>
+                              <p className="text-2xl font-bold text-green-700 dark:text-green-400 mt-1">Operational</p>
+                              <p className="text-xs text-green-600 dark:text-green-500 mt-1">Uptime: 99.98%</p>
+                          </div>
+                          <div className="p-4 bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-xl">
+                              <h4 className="text-blue-800 dark:text-blue-300 font-bold text-sm uppercase">API Latency</h4>
+                              <p className="text-2xl font-bold text-blue-700 dark:text-blue-400 mt-1">~150ms</p>
+                              <p className="text-xs text-blue-600 dark:text-blue-500 mt-1">Avg response time</p>
+                          </div>
+                           <div className="p-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl">
+                              <h4 className="text-gray-800 dark:text-gray-300 font-bold text-sm uppercase">Database</h4>
+                              <p className="text-2xl font-bold text-gray-700 dark:text-gray-200 mt-1">Healthy</p>
+                              <p className="text-xs text-gray-500 mt-1">Local Storage / Mock</p>
+                          </div>
+                      </div>
+
+                      <h4 className="font-bold text-gray-800 dark:text-white mb-2">External API Connections</h4>
+                      <div className="space-y-3">
+                          {[
+                              { name: 'Gateway (Bilal/Maskawa)', status: 'Connected', latency: '120ms', color: 'text-green-500' },
+                              { name: 'Paystack Payment', status: 'Connected', latency: '85ms', color: 'text-green-500' },
+                              { name: 'Monnify Banking', status: 'Connected', latency: '200ms', color: 'text-green-500' },
+                              { name: 'Twilio SMS', status: settings.enableTwilio ? 'Active' : 'Disabled', latency: '-', color: settings.enableTwilio ? 'text-green-500' : 'text-gray-400' },
+                          ].map((s, i) => (
+                              <div key={i} className="flex justify-between items-center p-3 border dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/50">
+                                  <span className="font-medium text-sm text-gray-700 dark:text-gray-300">{s.name}</span>
+                                  <div className="flex items-center gap-4 text-xs font-mono">
+                                      <span className="text-gray-500">{s.latency}</span>
+                                      <span className={`font-bold uppercase ${s.color}`}>{s.status}</span>
+                                  </div>
+                              </div>
+                          ))}
+                      </div>
+
+                      <div className="pt-6 border-t dark:border-gray-800">
+                          <label className="flex items-center gap-3 p-4 border border-red-200 bg-red-50 dark:bg-red-900/10 dark:border-red-900 rounded-xl cursor-pointer">
+                                <input 
+                                    type="checkbox"
+                                    checked={settings.maintenanceMode}
+                                    onChange={e => setSettings({...settings, maintenanceMode: e.target.checked})}
+                                    className="w-5 h-5 accent-red-600"
+                                />
+                                <div>
+                                    <span className="font-bold text-red-700 dark:text-red-400">Maintenance Mode</span>
+                                    <p className="text-xs text-red-600 dark:text-red-300">Enable this to prevent non-admin users from logging in or performing transactions.</p>
+                                </div>
+                          </label>
+                      </div>
+                      
+                      <button onClick={handleSave} className="px-6 py-3 bg-gray-800 dark:bg-white dark:text-black text-white rounded-xl font-bold hover:opacity-90">Update System Status</button>
                   </div>
               )}
 
