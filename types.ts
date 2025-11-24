@@ -47,8 +47,9 @@ export enum TransactionStatus {
 export enum TransactionType {
   AIRTIME = 'AIRTIME',
   DATA = 'DATA',
-  CABLE = 'CABLE',           // New
-  ELECTRICITY = 'ELECTRICITY', // New
+  CABLE = 'CABLE',           
+  ELECTRICITY = 'ELECTRICITY',
+  BILL_PAYMENT = 'BILL_PAYMENT', // New
   WALLET_FUND = 'WALLET_FUND',
   ADMIN_CREDIT = 'ADMIN_CREDIT',
   ADMIN_DEBIT = 'ADMIN_DEBIT',
@@ -109,6 +110,7 @@ export interface Transaction {
   proofUrl?: string; // For manual payment evidence
   adminActionDate?: string;
   customerName?: string; // For Bill Validation
+  meterToken?: string; // For Electricity Tokens
 }
 
 export interface DashboardStats {
