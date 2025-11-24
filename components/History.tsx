@@ -99,6 +99,14 @@ export const History: React.FC<HistoryProps> = ({ user, highlightId }) => {
       (t.destinationNumber && t.destinationNumber.includes(searchTerm))
   );
 
+  const getProviderLogo = (providerName: string) => {
+      return (PROVIDER_LOGOS as any)[providerName] || providerName;
+  };
+
+  const getProviderColor = (providerName: string) => {
+      return (PROVIDER_COLORS as any)[providerName] || 'bg-gray-500 text-white';
+  };
+
   return (
     <div className="space-y-6 animate-fade-in pb-20">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white dark:bg-gray-900 p-4 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm transition-colors">
@@ -114,7 +122,7 @@ export const History: React.FC<HistoryProps> = ({ user, highlightId }) => {
                     placeholder="Search ref or phone..." 
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 outline-none"
+                    className="w-full pl-9 pr-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 outline-none transition-colors"
                 />
             </div>
             <button onClick={loadData} className="p-2 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
@@ -133,9 +141,9 @@ export const History: React.FC<HistoryProps> = ({ user, highlightId }) => {
             <div className="flex justify-between items-start z-10">
                <div className="flex items-center gap-3">
                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg shadow-sm ${
-                       tx.provider ? (PROVIDER_COLORS[tx.provider] || 'bg-green-50 text-green-700') : 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400'
+                       tx.provider ? getProviderColor(tx.provider) : 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400'
                    }`}>
-                      {tx.provider ? (PROVIDER_LOGOS[tx.provider] ? PROVIDER_LOGOS[tx.provider].slice(0,1) : tx.provider.slice(0,1)) : 'W'}
+                      {tx.provider ? getProviderLogo(tx.provider).slice(0,1) : 'W'}
                    </div>
                    <div>
                       <p className="font-bold text-gray-800 dark:text-white truncate max-w-[120px]">
@@ -241,12 +249,14 @@ export const History: React.FC<HistoryProps> = ({ user, highlightId }) => {
                          <div className="flex justify-between items-center pb-3 border-b border-dashed border-gray-200 dark:border-gray-600">
                              <span className="text-gray-500 dark:text-gray-400 font-medium">Provider</span>
                              <div className="flex items-center gap-2">
-                                 {selectedTx.provider && PROVIDER_LOGOS[selectedTx.provider] && (
-                                     <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-bold ${PROVIDER_COLORS[selectedTx.provider]} text-white shadow-sm`}>
-                                         {PROVIDER_LOGOS[selectedTx.provider].charAt(0)}
+                                 {selectedTx.provider && (
+                                     <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${getProviderColor(selectedTx.provider)} shadow-sm`}>
+                                         {getProviderLogo(selectedTx.provider).charAt(0)}
                                      </span>
                                  )}
-                                 <span className="font-bold text-gray-900 dark:text-white">{selectedTx.provider || 'Wallet'}</span>
+                                 <span className="font-bold text-gray-900 dark:text-white">
+                                     {selectedTx.provider ? getProviderLogo(selectedTx.provider) : 'Wallet'}
+                                 </span>
                              </div>
                          </div>
 
@@ -267,7 +277,7 @@ export const History: React.FC<HistoryProps> = ({ user, highlightId }) => {
                       </div>
 
                       {/* QR Code Placeholder for visual appeal */}
-                      <div className="mt-6 flex justify-center opacity-40 grayscale">
+                      <div className="mt-6 flex justify-center opacity-40 grayscale text-gray-400 dark:text-gray-600">
                           <QrCode size={48} />
                       </div>
 

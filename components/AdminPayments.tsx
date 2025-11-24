@@ -118,7 +118,7 @@ export const AdminPayments: React.FC = () => {
         {/* Proof Modal */}
         {selectedProof && (
              <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setSelectedProof(null)}>
-                 <div className="bg-white dark:bg-gray-900 p-2 rounded-xl max-w-lg w-full relative shadow-2xl">
+                 <div className="bg-white dark:bg-gray-900 p-2 rounded-xl max-w-lg w-full relative shadow-2xl border dark:border-gray-700">
                      <img src={selectedProof} alt="Proof" className="w-full h-auto rounded-lg"/>
                      <button className="absolute top-4 right-4 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-colors"><X size={24}/></button>
                  </div>

@@ -320,7 +320,7 @@ export const AdminCommunication: React.FC = () => {
         {/* Announcement Modal */}
         {showAnnounceModal && (
             <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-                <div className="bg-white dark:bg-gray-800 w-full max-w-md rounded-2xl p-6 shadow-2xl animate-fade-in-up">
+                <div className="bg-white dark:bg-gray-800 w-full max-w-md rounded-2xl p-6 shadow-2xl animate-fade-in-up border dark:border-gray-700">
                     <h3 className="font-bold text-lg mb-4 text-gray-900 dark:text-white">New Announcement</h3>
                     <div className="space-y-4">
                         <input 
@@ -376,7 +376,7 @@ export const AdminCommunication: React.FC = () => {
         {/* Template Modal */}
         {showTemplateModal && (
             <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-                <div className="bg-white dark:bg-gray-800 w-full max-w-md rounded-2xl p-6 shadow-2xl animate-fade-in-up">
+                <div className="bg-white dark:bg-gray-800 w-full max-w-md rounded-2xl p-6 shadow-2xl animate-fade-in-up border dark:border-gray-700">
                     <h3 className="font-bold text-lg mb-4 text-gray-900 dark:text-white">{editingTemplate.id ? 'Edit' : 'New'} Template</h3>
                     <div className="space-y-4">
                         <input 

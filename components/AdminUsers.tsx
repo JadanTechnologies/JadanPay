@@ -341,7 +341,7 @@ export const AdminUsers: React.FC = () => {
 
       {viewMode === 'fund' && selectedUser && (
           <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-              <div className="bg-white dark:bg-gray-800 w-full max-w-sm rounded-2xl p-6 shadow-2xl animate-fade-in-up">
+              <div className="bg-white dark:bg-gray-800 w-full max-w-sm rounded-2xl p-6 shadow-2xl animate-fade-in-up border dark:border-gray-700">
                   <h3 className="text-lg font-bold mb-4 capitalize text-gray-900 dark:text-white">{fundType} User Wallet</h3>
                   <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
                       You are about to {fundType} <strong>{selectedUser.name}</strong>. This action will be logged.
@@ -380,7 +380,7 @@ export const AdminUsers: React.FC = () => {
        {/* Edit Modal */}
        {showEditModal && (
             <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-                <div className="bg-white dark:bg-gray-800 w-full max-w-md rounded-2xl p-6 shadow-2xl animate-fade-in-up">
+                <div className="bg-white dark:bg-gray-800 w-full max-w-md rounded-2xl p-6 shadow-2xl animate-fade-in-up border dark:border-gray-700">
                     <div className="flex justify-between items-center mb-6">
                         <h3 className="text-lg font-bold text-gray-900 dark:text-white">Edit User Details</h3>
                         <button onClick={() => setShowEditModal(false)}><X size={20} className="text-gray-400"/></button>
