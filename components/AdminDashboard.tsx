@@ -61,7 +61,7 @@ export const AdminDashboard: React.FC = () => {
 
   return (
     <div className="space-y-8 animate-fade-in pb-20">
-      <div className="flex justify-between items-center bg-white dark:bg-gray-800 p-4 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
+      <div className="flex justify-between items-center bg-white dark:bg-gray-800 p-4 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm transition-colors">
         <h2 className="text-xl font-bold text-gray-800 dark:text-white">Admin Dashboard</h2>
         <button onClick={exportCSV} className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-white shadow-sm transition-colors">
             <Download size={16} /> Export Ledger
@@ -138,7 +138,7 @@ export const AdminDashboard: React.FC = () => {
              <h3 className="font-bold text-gray-700 dark:text-gray-200 mb-4 shrink-0">Recent Transactions</h3>
              <div className="overflow-y-auto flex-1">
                  <table className="w-full text-xs text-left text-gray-600 dark:text-gray-300">
-                    <thead className="text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-700 uppercase font-semibold sticky top-0">
+                    <thead className="text-gray-400 dark:text-gray-300 bg-gray-50 dark:bg-gray-700 uppercase font-semibold sticky top-0">
                         <tr>
                             <th className="px-2 py-2">User</th>
                             <th className="px-2 py-2">Type</th>

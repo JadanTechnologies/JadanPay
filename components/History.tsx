@@ -249,7 +249,7 @@ export const History: React.FC<HistoryProps> = ({ user, highlightId }) => {
                          <div className="flex justify-between items-center pb-3 border-b border-dashed border-gray-200 dark:border-gray-600">
                              <span className="text-gray-500 dark:text-gray-400 font-medium">Provider</span>
                              <div className="flex items-center gap-2">
-                                 {selectedTx.provider && (
+                                 {selectedTx.provider && (getProviderLogo(selectedTx.provider) as any) && (
                                      <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${getProviderColor(selectedTx.provider)} shadow-sm`}>
                                          {getProviderLogo(selectedTx.provider).charAt(0)}
                                      </span>

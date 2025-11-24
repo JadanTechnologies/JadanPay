@@ -176,7 +176,7 @@ export const AdminCommunication: React.FC = () => {
                                     type="text" 
                                     value={broadcastSubject}
                                     onChange={(e) => setBroadcastSubject(e.target.value)}
-                                    className="w-full p-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-green-500 outline-none text-gray-900 dark:text-white transition-colors"
+                                    className="w-full p-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-green-500 outline-none text-gray-900 dark:text-white transition-colors placeholder-gray-400 dark:placeholder-gray-500"
                                     placeholder="e.g., Important Update regarding prices"
                                 />
                             </div>
@@ -187,7 +187,7 @@ export const AdminCommunication: React.FC = () => {
                             <textarea 
                                 value={broadcastMessage}
                                 onChange={(e) => setBroadcastMessage(e.target.value)}
-                                className="w-full h-40 p-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-green-500 outline-none text-gray-900 dark:text-white transition-colors"
+                                className="w-full h-40 p-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-green-500 outline-none text-gray-900 dark:text-white transition-colors placeholder-gray-400 dark:placeholder-gray-500"
                                 placeholder="Type your message here..."
                             ></textarea>
                             <div className="flex gap-2 mt-2">

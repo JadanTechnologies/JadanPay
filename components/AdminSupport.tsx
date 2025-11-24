@@ -97,7 +97,7 @@ export const AdminSupport: React.FC = () => {
                             value={replyText}
                             onChange={e => setReplyText(e.target.value)}
                             placeholder="Type your reply..." 
-                            className="flex-1 p-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-green-500 outline-none text-gray-900 dark:text-white placeholder:text-gray-400"
+                            className="flex-1 p-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-green-500 outline-none text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder-gray-500"
                         />
                         <button type="submit" className="p-3 bg-green-700 text-white rounded-xl hover:bg-green-800 transition-colors shadow-lg shadow-green-900/20">
                             <Send size={20} />

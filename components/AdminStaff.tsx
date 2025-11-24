@@ -1,7 +1,8 @@
+
 import React, { useEffect, useState } from 'react';
 import { Staff, Role } from '../types';
 import { MockDB } from '../services/mockDb';
-import { User, Shield, Lock, Plus, Trash2, Mail, Check } from 'lucide-react';
+import { User, Shield, Lock, Plus, Trash2, Mail, Check, X } from 'lucide-react';
 
 export const AdminStaff: React.FC = () => {
   const [staff, setStaff] = useState<Staff[]>([]);
@@ -77,28 +78,28 @@ export const AdminStaff: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
-        <div className="flex justify-between items-center bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-            <h2 className="text-xl font-bold text-gray-800">Staff & Access Control</h2>
-            <div className="flex bg-gray-100 p-1 rounded-lg">
-                <button onClick={() => setActiveTab('staff')} className={`px-4 py-1.5 rounded-md text-sm font-bold transition-all ${activeTab === 'staff' ? 'bg-white shadow text-gray-900' : 'text-gray-500'}`}>Staff Members</button>
-                <button onClick={() => setActiveTab('roles')} className={`px-4 py-1.5 rounded-md text-sm font-bold transition-all ${activeTab === 'roles' ? 'bg-white shadow text-gray-900' : 'text-gray-500'}`}>Roles & Permissions</button>
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-white dark:bg-gray-800 p-4 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm transition-colors">
+            <h2 className="text-xl font-bold text-gray-800 dark:text-white">Staff & Access Control</h2>
+            <div className="flex bg-gray-100 dark:bg-gray-700 p-1 rounded-lg">
+                <button onClick={() => setActiveTab('staff')} className={`px-4 py-1.5 rounded-md text-sm font-bold transition-all ${activeTab === 'staff' ? 'bg-white dark:bg-gray-600 shadow text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}>Staff Members</button>
+                <button onClick={() => setActiveTab('roles')} className={`px-4 py-1.5 rounded-md text-sm font-bold transition-all ${activeTab === 'roles' ? 'bg-white dark:bg-gray-600 shadow text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}>Roles & Permissions</button>
             </div>
         </div>
 
         {activeTab === 'staff' && (
-            <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm transition-colors">
                 <div className="flex justify-between items-center mb-6">
-                    <h3 className="font-bold text-gray-800">Staff Directory</h3>
+                    <h3 className="font-bold text-gray-800 dark:text-white">Staff Directory</h3>
                     <button 
                         onClick={() => setShowStaffModal(true)}
-                        className="flex items-center gap-2 px-4 py-2 bg-green-700 text-white rounded-lg text-sm font-bold shadow-lg shadow-green-200 hover:bg-green-800"
+                        className="flex items-center gap-2 px-4 py-2 bg-green-700 text-white rounded-lg text-sm font-bold shadow-lg shadow-green-200 dark:shadow-green-900/20 hover:bg-green-800"
                     >
                         <Plus size={16}/> Add Staff
                     </button>
                 </div>
 
                 {staff.length === 0 ? (
-                    <div className="text-center py-10 text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                    <div className="text-center py-10 text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-900 rounded-xl border border-dashed border-gray-200 dark:border-gray-700">
                         <User size={32} className="mx-auto mb-2 opacity-30"/>
                         <p>No staff members created yet.</p>
                     </div>
@@ -107,19 +108,19 @@ export const AdminStaff: React.FC = () => {
                         {staff.map(s => {
                             const roleName = roles.find(r => r.id === s.roleId)?.name || 'Unknown Role';
                             return (
-                                <div key={s.id} className="p-4 border border-gray-200 rounded-xl flex justify-between items-center hover:border-green-200 transition-colors bg-gray-50">
+                                <div key={s.id} className="p-4 border border-gray-200 dark:border-gray-700 rounded-xl flex justify-between items-center hover:border-green-200 dark:hover:border-green-800 transition-colors bg-gray-50 dark:bg-gray-900">
                                     <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-green-700 font-bold shadow-sm">
+                                        <div className="w-10 h-10 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center text-green-700 dark:text-green-400 font-bold shadow-sm">
                                             {s.name.charAt(0)}
                                         </div>
                                         <div>
-                                            <p className="font-bold text-gray-800">{s.name}</p>
-                                            <p className="text-xs text-gray-500 flex items-center gap-1"><Mail size={10}/> {s.email}</p>
+                                            <p className="font-bold text-gray-800 dark:text-white">{s.name}</p>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1"><Mail size={10}/> {s.email}</p>
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <span className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded-md text-[10px] font-bold uppercase">{roleName}</span>
-                                        <button onClick={() => handleDeleteStaff(s.id)} className="block ml-auto mt-2 text-gray-400 hover:text-red-500">
+                                        <span className="px-2 py-0.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-md text-[10px] font-bold uppercase">{roleName}</span>
+                                        <button onClick={() => handleDeleteStaff(s.id)} className="block ml-auto mt-2 text-gray-400 hover:text-red-500 dark:hover:text-red-400">
                                             <Trash2 size={16}/>
                                         </button>
                                     </div>
@@ -132,26 +133,26 @@ export const AdminStaff: React.FC = () => {
         )}
 
         {activeTab === 'roles' && (
-            <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm transition-colors">
                 <div className="flex justify-between items-center mb-6">
-                    <h3 className="font-bold text-gray-800">Roles</h3>
+                    <h3 className="font-bold text-gray-800 dark:text-white">Roles</h3>
                     <button 
                         onClick={() => setShowRoleModal(true)}
-                        className="flex items-center gap-2 px-4 py-2 bg-purple-700 text-white rounded-lg text-sm font-bold shadow-lg shadow-purple-200 hover:bg-purple-800"
+                        className="flex items-center gap-2 px-4 py-2 bg-purple-700 text-white rounded-lg text-sm font-bold shadow-lg shadow-purple-200 dark:shadow-purple-900/20 hover:bg-purple-800"
                     >
                         <Plus size={16}/> Create Role
                     </button>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {roles.map(role => (
-                        <div key={role.id} className="p-4 border border-gray-200 rounded-xl hover:border-purple-200 transition-colors">
+                        <div key={role.id} className="p-4 border border-gray-200 dark:border-gray-700 rounded-xl hover:border-purple-200 dark:hover:border-purple-800 transition-colors dark:bg-gray-900">
                             <div className="flex items-center justify-between mb-2">
-                                <h4 className="font-bold text-gray-800">{role.name}</h4>
+                                <h4 className="font-bold text-gray-800 dark:text-white">{role.name}</h4>
                                 <Shield size={16} className="text-purple-500"/>
                             </div>
                             <div className="flex flex-wrap gap-2">
                                 {role.permissions.map(p => (
-                                    <span key={p} className="px-2 py-1 bg-gray-100 text-gray-500 rounded-md text-[10px] font-mono">{p}</span>
+                                    <span key={p} className="px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-300 rounded-md text-[10px] font-mono">{p}</span>
                                 ))}
                             </div>
                         </div>
@@ -162,25 +163,28 @@ export const AdminStaff: React.FC = () => {
 
         {/* Add Staff Modal */}
         {showStaffModal && (
-            <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-                <div className="bg-white w-full max-w-md rounded-2xl p-6 shadow-2xl">
-                    <h3 className="font-bold text-lg mb-4">Add New Staff</h3>
+            <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+                <div className="bg-white dark:bg-gray-800 w-full max-w-md rounded-2xl p-6 shadow-2xl animate-fade-in-up border dark:border-gray-700">
+                    <div className="flex justify-between items-center mb-4">
+                        <h3 className="font-bold text-lg text-gray-900 dark:text-white">Add New Staff</h3>
+                        <button onClick={() => setShowStaffModal(false)}><X size={20} className="text-gray-400"/></button>
+                    </div>
                     <div className="space-y-4">
                         <input 
-                            className="w-full p-3 border rounded-xl" 
+                            className="w-full p-3 border dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white outline-none focus:border-green-500"
                             placeholder="Full Name" 
                             value={newStaff.name || ''}
                             onChange={e => setNewStaff({...newStaff, name: e.target.value})}
                         />
                         <input 
                             type="email"
-                            className="w-full p-3 border rounded-xl" 
+                            className="w-full p-3 border dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white outline-none focus:border-green-500"
                             placeholder="Email Address" 
                             value={newStaff.email || ''}
                             onChange={e => setNewStaff({...newStaff, email: e.target.value})}
                         />
                         <select 
-                            className="w-full p-3 border rounded-xl bg-white"
+                            className="w-full p-3 border dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white outline-none focus:border-green-500"
                             value={newStaff.roleId || ''}
                             onChange={e => setNewStaff({...newStaff, roleId: e.target.value})}
                         >
@@ -188,8 +192,8 @@ export const AdminStaff: React.FC = () => {
                             {roles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
                         </select>
                         <div className="flex gap-3 mt-4">
-                            <button onClick={() => setShowStaffModal(false)} className="flex-1 py-2 bg-gray-100 rounded-xl font-bold text-gray-600">Cancel</button>
-                            <button onClick={handleAddStaff} className="flex-1 py-2 bg-green-700 text-white rounded-xl font-bold">Add Staff</button>
+                            <button onClick={() => setShowStaffModal(false)} className="flex-1 py-2 bg-gray-100 dark:bg-gray-700 rounded-xl font-bold text-gray-600 dark:text-gray-300">Cancel</button>
+                            <button onClick={handleAddStaff} className="flex-1 py-2 bg-green-700 text-white rounded-xl font-bold hover:bg-green-800">Add Staff</button>
                         </div>
                     </div>
                 </div>
@@ -198,34 +202,38 @@ export const AdminStaff: React.FC = () => {
 
         {/* Create Role Modal */}
         {showRoleModal && (
-            <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-                <div className="bg-white w-full max-w-md rounded-2xl p-6 shadow-2xl">
-                    <h3 className="font-bold text-lg mb-4">Create New Role</h3>
+            <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+                <div className="bg-white dark:bg-gray-800 w-full max-w-md rounded-2xl p-6 shadow-2xl animate-fade-in-up border dark:border-gray-700">
+                    <div className="flex justify-between items-center mb-4">
+                        <h3 className="font-bold text-lg text-gray-900 dark:text-white">Create New Role</h3>
+                        <button onClick={() => setShowRoleModal(false)}><X size={20} className="text-gray-400"/></button>
+                    </div>
                     <div className="space-y-4">
                         <input 
-                            className="w-full p-3 border rounded-xl" 
+                            className="w-full p-3 border dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white outline-none focus:border-green-500"
                             placeholder="Role Name (e.g., Auditor)" 
                             value={newRole.name || ''}
                             onChange={e => setNewRole({...newRole, name: e.target.value})}
                         />
                         <div>
-                            <p className="text-xs font-bold text-gray-500 uppercase mb-2">Permissions</p>
+                            <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">Permissions</p>
                             <div className="grid grid-cols-2 gap-2">
                                 {ALL_PERMISSIONS.map(perm => (
-                                    <label key={perm} className="flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-gray-50">
+                                    <label key={perm} className="flex items-center gap-2 p-2 border dark:border-gray-700 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50">
                                         <input 
                                             type="checkbox" 
                                             checked={newRole.permissions?.includes(perm)}
                                             onChange={() => togglePermission(perm)}
+                                            className="accent-purple-600"
                                         />
-                                        <span className="text-xs font-mono">{perm}</span>
+                                        <span className="text-xs font-mono text-gray-700 dark:text-gray-300">{perm}</span>
                                     </label>
                                 ))}
                             </div>
                         </div>
                         <div className="flex gap-3 mt-4">
-                            <button onClick={() => setShowRoleModal(false)} className="flex-1 py-2 bg-gray-100 rounded-xl font-bold text-gray-600">Cancel</button>
-                            <button onClick={handleCreateRole} className="flex-1 py-2 bg-purple-700 text-white rounded-xl font-bold">Create Role</button>
+                            <button onClick={() => setShowRoleModal(false)} className="flex-1 py-2 bg-gray-100 dark:bg-gray-700 rounded-xl font-bold text-gray-600 dark:text-gray-300">Cancel</button>
+                            <button onClick={handleCreateRole} className="flex-1 py-2 bg-purple-700 text-white rounded-xl font-bold hover:bg-purple-800">Create Role</button>
                         </div>
                     </div>
                 </div>
