@@ -250,16 +250,16 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
   const details = getTransactionDetails();
 
   return (
-    <div className="bg-white rounded-2xl p-4 md:p-6 shadow-sm border border-gray-100 relative overflow-hidden">
-      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-green-50 to-transparent rounded-bl-full -z-0 opacity-50"></div>
+    <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 md:p-6 shadow-sm border border-gray-100 dark:border-gray-800 relative overflow-hidden transition-colors">
+      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-green-50 to-transparent dark:from-green-900/20 rounded-bl-full -z-0 opacity-50"></div>
       
-      <h2 className="text-lg font-bold mb-4 flex items-center gap-2 relative z-10">
+      <h2 className="text-lg font-bold mb-4 flex items-center gap-2 relative z-10 text-gray-900 dark:text-white">
         <Sparkles className="text-yellow-500" size={20} />
         Quick Pay
       </h2>
 
       {/* TABS */}
-      <div className="flex bg-gray-100 p-1 rounded-xl mb-6 relative z-10 overflow-x-auto no-scrollbar">
+      <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl mb-6 relative z-10 overflow-x-auto no-scrollbar">
         {[
             { id: TransactionType.AIRTIME, icon: Smartphone, label: 'Airtime' },
             { id: TransactionType.DATA, icon: Wifi, label: 'Data' },
@@ -270,7 +270,9 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
               key={tab.id}
               onClick={() => handleTabChange(tab.id)}
               className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-xs md:text-sm font-medium transition-all whitespace-nowrap ${
-                type === tab.id ? 'bg-white shadow-sm text-green-700 scale-[1.02]' : 'text-gray-500 hover:text-gray-700'
+                type === tab.id 
+                    ? 'bg-white dark:bg-gray-700 shadow-sm text-green-700 dark:text-green-400 scale-[1.02]' 
+                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
               }`}
             >
               <tab.icon size={16} /> {tab.label}
@@ -280,8 +282,8 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
 
       <form onSubmit={handleFormSubmit} className="space-y-5 relative z-10 animate-fade-in">
         
-        {/* Provider Selection - Adjusted for Mobile */}
-        <div className="grid grid-cols-4 gap-2">
+        {/* Provider Selection - Adjusted for Mobile (2 cols on mobile, 4 on desktop) */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {(type === TransactionType.AIRTIME || type === TransactionType.DATA 
                 ? Object.values(Provider) 
                 : type === TransactionType.CABLE 
@@ -292,10 +294,10 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
                   key={p}
                   type="button"
                   onClick={() => setProvider(p)}
-                  className={`relative py-2 md:py-3 rounded-lg text-[10px] md:text-xs font-bold transition-all border-2 flex flex-col items-center gap-1 ${
+                  className={`relative py-3 rounded-lg text-xs font-bold transition-all border-2 flex flex-col items-center gap-1 ${
                     provider === p 
                       ? `${PROVIDER_COLORS[p] || 'bg-gray-800 text-white'} border-transparent shadow-md scale-105` 
-                      : 'bg-white border-gray-100 text-gray-400 grayscale hover:grayscale-0'
+                      : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 text-gray-400 grayscale hover:grayscale-0'
                   }`}
                 >
                   <span className="truncate w-full text-center">{PROVIDER_LOGOS[p] || p}</span>
@@ -305,7 +307,7 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
 
         {/* Input Field (Phone/Meter/IUC) */}
         <div>
-          <label className="block text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wider">
+          <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wider">
               {type === TransactionType.ELECTRICITY ? 'Meter Number' : type === TransactionType.CABLE ? 'Smartcard / IUC' : 'Phone Number'}
           </label>
           <div className="relative">
@@ -314,7 +316,7 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
                 value={phone}
                 onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
                 placeholder={type === TransactionType.ELECTRICITY ? "Enter Meter No" : type === TransactionType.CABLE ? "Enter IUC Number" : "080..."}
-                className={`w-full p-3 bg-gray-50 border rounded-xl focus:ring-2 focus:ring-green-500 outline-none font-mono text-lg transition-colors ${validationError ? 'border-red-300 bg-red-50' : 'border-gray-200'}`}
+                className="w-full p-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-green-500 outline-none font-mono text-lg text-black dark:text-white transition-colors"
                 required
               />
               {isValidating && <div className="absolute right-3 top-3.5"><Loader2 className="animate-spin text-green-600" size={20}/></div>}
@@ -322,7 +324,7 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
           
           {/* Customer Validation Result */}
           {customerName && (
-              <div className="mt-2 p-2 bg-green-50 border border-green-100 rounded-lg flex items-center gap-2 text-xs text-green-700 font-bold animate-in slide-in-from-top-2">
+              <div className="mt-2 p-2 bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800 rounded-lg flex items-center gap-2 text-xs text-green-700 dark:text-green-400 font-bold animate-in slide-in-from-top-2">
                   <UserIcon size={12} /> {customerName}
               </div>
           )}
@@ -336,13 +338,13 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
         {/* Amount Input (Airtime & Electricity) */}
         {(type === TransactionType.AIRTIME || type === TransactionType.ELECTRICITY) && (
              <div className="animate-fade-in">
-                <label className="block text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wider">Amount (₦)</label>
+                <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wider">Amount (₦)</label>
                 <input
                   type="number"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value === '' ? '' : Number(e.target.value))}
                   placeholder="0.00"
-                  className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none font-mono text-lg"
+                  className="w-full p-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-green-500 outline-none font-mono text-lg text-black dark:text-white transition-colors placeholder:text-gray-400"
                   required
                 />
              </div>
@@ -352,12 +354,12 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
         {type === TransactionType.DATA && (
              <div className="animate-fade-in">
                  <div className="mb-4">
-                     <label className="block text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wider">Plan Type</label>
+                     <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wider">Plan Type</label>
                      <div className="relative">
                         <select
                             value={selectedPlanType}
                             onChange={(e) => { setSelectedPlanType(e.target.value as PlanType); setSelectedBundle(null); }}
-                            className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none appearance-none font-medium text-gray-700"
+                            className="w-full p-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-green-500 outline-none appearance-none font-medium text-gray-900 dark:text-white"
                         >
                             {availablePlanTypes.map(pt => (
                                 <option key={pt} value={pt}>{pt}</option>
@@ -373,12 +375,14 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
                             key={b.id}
                             onClick={() => setSelectedBundle(b)}
                             className={`p-3 rounded-xl border-2 cursor-pointer transition-all ${
-                                selectedBundle?.id === b.id ? 'border-green-500 bg-green-50 shadow-md' : 'border-gray-100 bg-white hover:border-green-200'
+                                selectedBundle?.id === b.id 
+                                    ? 'border-green-500 bg-green-50 dark:bg-green-900/30 shadow-md' 
+                                    : 'border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-green-200 dark:hover:border-green-700'
                             }`}
                         >
-                            <div className="text-lg font-black text-gray-800">{b.dataAmount}</div>
+                            <div className="text-lg font-black text-gray-800 dark:text-white">{b.dataAmount}</div>
                             <div className="text-xs text-gray-400">{b.validity}</div>
-                            <div className="mt-2 font-bold text-green-700">₦{b.price.toLocaleString()}</div>
+                            <div className="mt-2 font-bold text-green-700 dark:text-green-400">₦{b.price.toLocaleString()}</div>
                         </div>
                     ))}
                  </div>
@@ -388,21 +392,23 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
         {/* Plan Selection (Cable) */}
         {type === TransactionType.CABLE && (
             <div className="animate-fade-in">
-                 <label className="block text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wider">Select Package</label>
+                 <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wider">Select Package</label>
                  <div className="grid grid-cols-1 gap-2 max-h-60 overflow-y-auto pr-1">
                      {CABLE_PLANS.filter(b => b.provider === provider).map((b) => (
                         <div
                             key={b.id}
                             onClick={() => setSelectedBundle(b)}
                             className={`p-3 rounded-xl border-2 cursor-pointer transition-all flex justify-between items-center ${
-                                selectedBundle?.id === b.id ? 'border-blue-500 bg-blue-50 shadow-md' : 'border-gray-100 bg-white hover:border-blue-200'
+                                selectedBundle?.id === b.id 
+                                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 shadow-md' 
+                                    : 'border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-blue-200 dark:hover:border-blue-700'
                             }`}
                         >
                             <div>
-                                <div className="font-bold text-gray-800">{b.name}</div>
+                                <div className="font-bold text-gray-800 dark:text-white">{b.name}</div>
                                 <div className="text-xs text-gray-400">{b.validity}</div>
                             </div>
-                            <div className="font-bold text-blue-700">₦{b.price.toLocaleString()}</div>
+                            <div className="font-bold text-blue-700 dark:text-blue-400">₦{b.price.toLocaleString()}</div>
                         </div>
                     ))}
                  </div>
@@ -413,30 +419,34 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
         {(type === TransactionType.AIRTIME || type === TransactionType.DATA) && (
             <div 
                 onClick={() => setRoundUp(!roundUp)}
-                className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${roundUp ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-100'}`}
+                className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${
+                    roundUp 
+                        ? 'bg-blue-50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800' 
+                        : 'bg-gray-50 dark:bg-gray-800 border-gray-100 dark:border-gray-700'
+                }`}
             >
-                <div className={`p-2 rounded-full ${roundUp ? 'bg-blue-100 text-blue-600' : 'bg-gray-200 text-gray-400'}`}><PiggyBank size={20} /></div>
+                <div className={`p-2 rounded-full ${roundUp ? 'bg-blue-100 text-blue-600 dark:bg-blue-800 dark:text-blue-300' : 'bg-gray-200 dark:bg-gray-700 text-gray-400'}`}><PiggyBank size={20} /></div>
                 <div className="flex-1">
-                    <p className="text-sm font-semibold text-gray-800">Round-up & Save</p>
-                    <p className="text-xs text-gray-500">Add small change to your savings.</p>
+                    <p className="text-sm font-semibold text-gray-800 dark:text-white">Round-up & Save</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Add small change to your savings.</p>
                 </div>
-                {roundUp && <Check size={16} className="text-blue-600"/>}
+                {roundUp && <Check size={16} className="text-blue-600 dark:text-blue-400"/>}
             </div>
         )}
 
         {/* Fee Summary for Bills */}
         {(type === TransactionType.CABLE || type === TransactionType.ELECTRICITY) && (
-            <div className="p-3 bg-orange-50 rounded-xl border border-orange-100 mb-4 animate-fade-in">
-                <div className="flex justify-between items-center text-xs text-orange-800">
+            <div className="p-3 bg-orange-50 dark:bg-orange-900/10 rounded-xl border border-orange-100 dark:border-orange-800 mb-4 animate-fade-in">
+                <div className="flex justify-between items-center text-xs text-orange-800 dark:text-orange-300">
                     <span className="font-medium">Transaction Amount</span>
                     <span className="font-bold">₦{type === TransactionType.CABLE ? (selectedBundle?.price || 0) : (Number(amount) || 0)}</span>
                 </div>
-                <div className="flex justify-between items-center text-xs text-orange-800 mt-1">
+                <div className="flex justify-between items-center text-xs text-orange-800 dark:text-orange-300 mt-1">
                      <span className="font-medium">Service Fee</span>
                      <span className="font-bold">+₦{BILL_SERVICE_FEE}</span>
                 </div>
-                <div className="border-t border-orange-200 my-2"></div>
-                <div className="flex justify-between items-center text-sm font-bold text-orange-900">
+                <div className="border-t border-orange-200 dark:border-orange-800 my-2"></div>
+                <div className="flex justify-between items-center text-sm font-bold text-orange-900 dark:text-orange-200">
                      <span>Total Payable</span>
                      <span>₦{((type === TransactionType.CABLE ? (selectedBundle?.price || 0) : (Number(amount) || 0)) + BILL_SERVICE_FEE).toLocaleString()}</span>
                 </div>
@@ -444,13 +454,13 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
         )}
 
         {error && (
-          <div className="p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100 flex items-center gap-2 animate-pulse">
+          <div className="p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm rounded-lg border border-red-100 dark:border-red-800 flex items-center gap-2 animate-pulse">
             <AlertTriangle size={16} /> <span>{error}</span>
           </div>
         )}
 
         {successMsg && (
-             <div className="p-3 bg-green-50 text-green-700 text-sm rounded-lg border border-green-100 flex items-center gap-2 animate-fade-in">
+             <div className="p-3 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 text-sm rounded-lg border border-green-100 dark:border-green-800 flex items-center gap-2 animate-fade-in">
                 <Check size={16} /> {successMsg}
              </div>
         )}
@@ -467,33 +477,33 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
       {/* Confirmation Modal */}
       {showConfirm && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl animate-fade-in-up">
-            <h3 className="text-lg font-bold mb-4 text-gray-900">Confirm Transaction</h3>
-            <div className="bg-gray-50 rounded-xl p-4 space-y-3 mb-6 border border-gray-100">
-                <div className="flex justify-between"><span className="text-gray-500 text-sm">Service</span><span className="font-medium text-gray-900">{details.desc}</span></div>
-                <div className="flex justify-between"><span className="text-gray-500 text-sm">Provider</span><span className="font-medium text-gray-900">{provider}</span></div>
-                <div className="flex justify-between"><span className="text-gray-500 text-sm">Target</span><span className="font-mono text-gray-900">{phone}</span></div>
-                {customerName && <div className="flex justify-between"><span className="text-gray-500 text-sm">Name</span><span className="font-bold text-xs text-green-700">{customerName}</span></div>}
+          <div className="bg-white dark:bg-gray-800 w-full max-w-sm rounded-2xl p-6 shadow-2xl animate-fade-in-up">
+            <h3 className="text-lg font-bold mb-4 text-gray-900 dark:text-white">Confirm Transaction</h3>
+            <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 space-y-3 mb-6 border border-gray-100 dark:border-gray-700">
+                <div className="flex justify-between"><span className="text-gray-500 dark:text-gray-400 text-sm">Service</span><span className="font-medium text-gray-900 dark:text-white">{details.desc}</span></div>
+                <div className="flex justify-between"><span className="text-gray-500 dark:text-gray-400 text-sm">Provider</span><span className="font-medium text-gray-900 dark:text-white">{provider}</span></div>
+                <div className="flex justify-between"><span className="text-gray-500 dark:text-gray-400 text-sm">Target</span><span className="font-mono text-gray-900 dark:text-white">{phone}</span></div>
+                {customerName && <div className="flex justify-between"><span className="text-gray-500 dark:text-gray-400 text-sm">Name</span><span className="font-bold text-xs text-green-700 dark:text-green-400">{customerName}</span></div>}
                 
                 {details.roundupAmt > 0 && (
-                     <div className="flex justify-between text-blue-600 text-xs font-medium">
+                     <div className="flex justify-between text-blue-600 dark:text-blue-400 text-xs font-medium">
                          <span>Round-up Savings</span>
                          <span>+₦{details.roundupAmt}</span>
                      </div>
                 )}
                 
                 {details.serviceFee > 0 && (
-                     <div className="flex justify-between text-orange-600 text-xs font-medium">
+                     <div className="flex justify-between text-orange-600 dark:text-orange-400 text-xs font-medium">
                          <span>Service Charge</span>
                          <span>+₦{details.serviceFee}</span>
                      </div>
                 )}
 
-                <div className="h-px bg-gray-200 my-2"></div>
-                <div className="flex justify-between"><span className="font-bold text-gray-800">Total Deduct</span><span className="font-bold text-xl text-green-700">₦{details.total.toLocaleString()}</span></div>
+                <div className="h-px bg-gray-200 dark:bg-gray-700 my-2"></div>
+                <div className="flex justify-between"><span className="font-bold text-gray-800 dark:text-gray-200">Total Deduct</span><span className="font-bold text-xl text-green-700 dark:text-green-400">₦{details.total.toLocaleString()}</span></div>
             </div>
             <div className="flex gap-3">
-                 <button onClick={() => setShowConfirm(false)} className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200">Cancel</button>
+                 <button onClick={() => setShowConfirm(false)} className="flex-1 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-white rounded-xl font-medium hover:bg-gray-200 dark:hover:bg-gray-600">Cancel</button>
                  <button onClick={executeTransaction} className="flex-1 py-3 bg-green-700 text-white rounded-xl font-bold hover:bg-green-800">Confirm</button>
             </div>
           </div>

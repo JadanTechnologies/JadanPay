@@ -393,17 +393,17 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
                       Refer & Earn
                   </div>
                   <h2 className="text-4xl md:text-5xl font-bold mb-6 text-white">Free Data for You and Your Friends.</h2>
-                  <p className="text-gray-300 text-lg mb-8 leading-relaxed">
+                  <p className="text-gray-100 text-lg mb-8 leading-relaxed">
                       Share your unique referral code with friends. When they join {appName}, you earn instant bonus credits which you can swap for data bundles.
                   </p>
                   <ul className="space-y-4 mb-8">
-                      <li className="flex items-center gap-3 text-gray-300">
+                      <li className="flex items-center gap-3 text-white">
                           <CheckCircle className="text-green-400 shrink-0" size={20} /> Earn ₦{settings?.referralReward || 100} per referral instant bonus
                       </li>
-                      <li className="flex items-center gap-3 text-gray-300">
+                      <li className="flex items-center gap-3 text-white">
                           <CheckCircle className="text-green-400 shrink-0" size={20} /> Use bonus to buy any data plan
                       </li>
-                      <li className="flex items-center gap-3 text-gray-300">
+                      <li className="flex items-center gap-3 text-white">
                           <CheckCircle className="text-green-400 shrink-0" size={20} /> No limits on earnings
                       </li>
                   </ul>

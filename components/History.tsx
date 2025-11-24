@@ -94,9 +94,9 @@ export const History: React.FC<HistoryProps> = ({ user, highlightId }) => {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-        <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-            <Receipt size={24} className="text-green-600"/> Transaction History
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white dark:bg-gray-900 p-4 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm transition-colors">
+        <h2 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+            <Receipt size={24} className="text-green-600 dark:text-green-500"/> Transaction History
         </h2>
         
         <div className="flex gap-2 w-full md:w-auto">
@@ -107,10 +107,10 @@ export const History: React.FC<HistoryProps> = ({ user, highlightId }) => {
                     placeholder="Search ref or phone..." 
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-green-500 outline-none"
+                    className="w-full pl-9 pr-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 outline-none"
                 />
             </div>
-            <button onClick={loadData} className="p-2 bg-gray-100 text-gray-600 rounded-xl hover:bg-gray-200 transition-colors">
+            <button onClick={loadData} className="p-2 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
                 <RefreshCw size={20} className={loading ? "animate-spin" : ""} />
             </button>
         </div>
@@ -121,48 +121,48 @@ export const History: React.FC<HistoryProps> = ({ user, highlightId }) => {
           <div 
             key={tx.id}
             onClick={() => setSelectedTx(tx)}
-            className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex flex-col gap-3 cursor-pointer hover:border-green-300 hover:shadow-md transition-all group relative overflow-hidden"
+            className="bg-white dark:bg-gray-900 p-5 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm flex flex-col gap-3 cursor-pointer hover:border-green-300 dark:hover:border-green-700 hover:shadow-md transition-all group relative overflow-hidden"
           >
             <div className="flex justify-between items-start z-10">
                <div className="flex items-center gap-3">
                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg shadow-sm ${
-                       tx.provider ? 'bg-green-50 text-green-700' : 'bg-blue-50 text-blue-700'
+                       tx.provider ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400' : 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400'
                    }`}>
                       {tx.provider ? PROVIDER_LOGOS[tx.provider].slice(0,1) : 'W'}
                    </div>
                    <div>
-                      <p className="font-bold text-gray-800 truncate max-w-[120px]">
+                      <p className="font-bold text-gray-800 dark:text-white truncate max-w-[120px]">
                         {tx.type === 'WALLET_FUND' ? 'Wallet Top-up' : `${tx.provider} ${tx.type}`}
                       </p>
-                      <p className="text-xs text-gray-500 font-mono">{tx.reference.slice(0, 8)}...</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 font-mono">{tx.reference.slice(0, 8)}...</p>
                    </div>
                </div>
                <div className="text-right">
-                    <p className={`font-mono font-bold text-lg ${tx.type === 'WALLET_FUND' ? 'text-green-600' : 'text-gray-900'}`}>
+                    <p className={`font-mono font-bold text-lg ${tx.type === 'WALLET_FUND' ? 'text-green-600 dark:text-green-400' : 'text-gray-900 dark:text-white'}`}>
                         {tx.type === 'WALLET_FUND' ? '+' : '-'}₦{tx.amount.toLocaleString()}
                     </p>
                </div>
             </div>
             
-            <div className="h-px w-full bg-gray-50 z-10"></div>
+            <div className="h-px w-full bg-gray-50 dark:bg-gray-800 z-10"></div>
             
             <div className="flex justify-between items-center text-xs text-gray-400 z-10">
                 <span className="flex items-center gap-1"><Calendar size={12}/> {formatDate(tx.date)}</span>
                 <span className={`px-2 py-0.5 rounded-full font-bold uppercase tracking-wider text-[10px] ${
-                    tx.status === 'SUCCESS' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                    tx.status === 'SUCCESS' ? 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400' : 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400'
                 }`}>
                     {tx.status}
                 </span>
             </div>
 
             {/* Hover Effect Background */}
-            <div className="absolute inset-0 bg-green-50/50 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
+            <div className="absolute inset-0 bg-green-50/50 dark:bg-green-900/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
           </div>
         ))}
 
         {filteredTransactions.length === 0 && !loading && (
-            <div className="col-span-full text-center py-20 text-gray-400 bg-white rounded-3xl border border-dashed border-gray-200">
-                <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="col-span-full text-center py-20 text-gray-400 bg-white dark:bg-gray-900 rounded-3xl border border-dashed border-gray-200 dark:border-gray-800">
+                <div className="w-16 h-16 bg-gray-50 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Search size={24} className="opacity-50"/>
                 </div>
                 <p>No transactions found matching your criteria.</p>

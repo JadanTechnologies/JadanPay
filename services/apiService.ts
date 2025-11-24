@@ -61,7 +61,7 @@ export const ApiService = {
         // If no API key is present, we simulate a successful transaction for demo purposes.
         if (!apiKey) {
             console.warn(`[Demo Mode] No API Key for ${vendor}. Simulating success.`);
-            await new Promise(r => setTimeout(r, 2000)); // Simulate latency
+            await new Promise(r => setTimeout(r, 1000)); // Faster demo
             
             return { 
                 success: true, 

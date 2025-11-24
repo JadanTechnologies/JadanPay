@@ -192,25 +192,25 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
       
       {/* Top Bar with Notifications */}
       <div className="flex justify-end relative">
-          <button onClick={markNotificationsRead} className="relative p-2 rounded-full hover:bg-gray-100 transition-colors">
-              <Bell size={24} className="text-gray-600"/>
+          <button onClick={markNotificationsRead} className="relative p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+              <Bell size={24} className="text-gray-600 dark:text-gray-300"/>
               {unreadCount > 0 && (
-                  <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-white"></span>
+                  <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-white dark:border-gray-900"></span>
               )}
           </button>
           
           {showNotifications && (
-              <div className="absolute right-0 top-12 w-80 bg-white rounded-2xl shadow-xl border border-gray-100 z-50 overflow-hidden">
-                  <div className="p-3 border-b border-gray-100 font-bold text-sm text-gray-700">Notifications</div>
+              <div className="absolute right-0 top-12 w-80 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 z-50 overflow-hidden">
+                  <div className="p-3 border-b border-gray-100 dark:border-gray-700 font-bold text-sm text-gray-700 dark:text-gray-200">Notifications</div>
                   <div className="max-h-64 overflow-y-auto">
                       {notifications.length === 0 ? (
                           <div className="p-4 text-center text-xs text-gray-400">No new notifications</div>
                       ) : (
                           notifications.map(n => (
-                              <div key={n.id} className={`p-3 border-b border-gray-50 hover:bg-gray-50 ${!n.isRead ? 'bg-green-50/30' : ''}`}>
-                                  <p className="text-xs font-bold text-gray-800">{n.title}</p>
-                                  <p className="text-xs text-gray-500 mt-0.5">{n.message}</p>
-                                  <p className="text-[9px] text-gray-300 mt-1 text-right">{new Date(n.date).toLocaleDateString()}</p>
+                              <div key={n.id} className={`p-3 border-b border-gray-50 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 ${!n.isRead ? 'bg-green-50/30 dark:bg-green-900/10' : ''}`}>
+                                  <p className="text-xs font-bold text-gray-800 dark:text-white">{n.title}</p>
+                                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{n.message}</p>
+                                  <p className="text-[9px] text-gray-300 dark:text-gray-500 mt-1 text-right">{new Date(n.date).toLocaleDateString()}</p>
                               </div>
                           ))
                       )}
@@ -226,10 +226,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
                   <div 
                     key={ann.id} 
                     className={`p-4 rounded-xl border flex items-start gap-3 relative ${
-                        ann.type === 'info' ? 'bg-blue-50 border-blue-100 text-blue-800' :
-                        ann.type === 'warning' ? 'bg-yellow-50 border-yellow-100 text-yellow-800' :
-                        ann.type === 'success' ? 'bg-green-50 border-green-100 text-green-800' :
-                        'bg-purple-50 border-purple-100 text-purple-800'
+                        ann.type === 'info' ? 'bg-blue-50 border-blue-100 text-blue-800 dark:bg-blue-900/20 dark:border-blue-900 dark:text-blue-300' :
+                        ann.type === 'warning' ? 'bg-yellow-50 border-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:border-yellow-900 dark:text-yellow-300' :
+                        ann.type === 'success' ? 'bg-green-50 border-green-100 text-green-800 dark:bg-green-900/20 dark:border-green-900 dark:text-green-300' :
+                        'bg-purple-50 border-purple-100 text-purple-800 dark:bg-purple-900/20 dark:border-purple-900 dark:text-purple-300'
                     }`}
                   >
                       <Bell size={20} className="shrink-0 mt-0.5" />
@@ -339,9 +339,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
                 </div>
             </div>
 
-            <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm relative overflow-hidden">
+            <div className="bg-white dark:bg-gray-900 p-6 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm relative overflow-hidden transition-colors">
                 <div className="flex items-center justify-between mb-4 relative z-10">
-                    <h3 className="font-bold text-gray-800 text-sm flex items-center gap-2">
+                    <h3 className="font-bold text-gray-800 dark:text-white text-sm flex items-center gap-2">
                         <Smartphone size={16} className="text-gray-400"/>
                         Data Monitor
                     </h3>
@@ -356,7 +356,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
                     <div className="relative w-32 h-32">
                         <svg className="w-full h-full" viewBox="0 0 100 100">
                             <circle
-                                className="text-gray-100 stroke-current"
+                                className="text-gray-100 dark:text-gray-800 stroke-current"
                                 strokeWidth="10"
                                 cx="50"
                                 cy="50"
@@ -377,7 +377,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
                             ></circle>
                         </svg>
                         <div className="absolute inset-0 flex flex-col items-center justify-center px-2">
-                            <span className="text-2xl font-bold text-gray-800 tracking-tighter">{remainingData}</span>
+                            <span className="text-2xl font-bold text-gray-900 dark:text-white tracking-tighter">{remainingData}</span>
                             <span className="text-[10px] text-gray-400 font-medium uppercase whitespace-nowrap">{dataBalance.unit} Left</span>
                         </div>
                     </div>
@@ -389,39 +389,39 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
        {/* Fund Modal */}
        {showFundModal && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-             <div className="bg-white w-full max-w-sm rounded-3xl p-8 shadow-2xl animate-fade-in-up max-h-[90vh] overflow-y-auto">
+             <div className="bg-white dark:bg-gray-900 w-full max-w-sm rounded-3xl p-8 shadow-2xl animate-fade-in-up max-h-[90vh] overflow-y-auto">
                 <div className="text-center mb-6">
-                    <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center mx-auto mb-4">
                         <Wallet size={32} />
                     </div>
-                    <h3 className="text-xl font-bold text-gray-900">Fund Wallet</h3>
-                    <p className="text-gray-500 text-sm mt-1">Secure online payment or transfer.</p>
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">Fund Wallet</h3>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Secure online payment or transfer.</p>
                 </div>
                 
                 {/* Method Switcher */}
-                <div className="flex bg-gray-100 p-1 rounded-xl mb-6">
+                <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl mb-6">
                     <button 
                         onClick={() => setFundingMethod('card')}
-                        className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1 ${fundingMethod === 'card' ? 'bg-white shadow text-green-700' : 'text-gray-500'}`}
+                        className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1 ${fundingMethod === 'card' ? 'bg-white dark:bg-gray-700 shadow text-green-700 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}`}
                     >
                         <CreditCard size={14}/> Online / Card
                     </button>
                     <button 
                          onClick={() => setFundingMethod('manual')}
-                         className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1 ${fundingMethod === 'manual' ? 'bg-white shadow text-green-700' : 'text-gray-500'}`}
+                         className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1 ${fundingMethod === 'manual' ? 'bg-white dark:bg-gray-700 shadow text-green-700 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}`}
                     >
                         <Landmark size={14}/> Transfer
                     </button>
                 </div>
                 
-                <div className="bg-gray-50 p-4 rounded-xl mb-4 border border-gray-100">
+                <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl mb-4 border border-gray-100 dark:border-gray-700">
                     <label className="text-xs text-gray-400 uppercase font-bold mb-1 block">Amount (₦)</label>
                     <input 
                         type="number" 
                         value={fundAmount}
                         onChange={(e) => setFundAmount(e.target.value)}
                         placeholder="0.00"
-                        className="w-full bg-transparent text-2xl font-mono font-bold text-gray-800 outline-none placeholder:text-gray-300"
+                        className="w-full bg-transparent text-2xl font-mono font-bold text-gray-900 dark:text-white outline-none placeholder:text-gray-400 border-b-2 border-gray-200 dark:border-gray-700 pb-2"
                     />
                 </div>
 
@@ -430,37 +430,37 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
                          <p className="text-xs font-bold text-gray-400 uppercase">Select Gateway</p>
                          
                          {settings?.enablePaystack ? (
-                             <button onClick={() => initiatePayment('PAYSTACK')} className="w-full p-4 border rounded-xl flex items-center gap-3 hover:border-blue-500 hover:bg-blue-50 transition-all group">
-                                 <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold">P</div>
+                             <button onClick={() => initiatePayment('PAYSTACK')} className="w-full p-4 border dark:border-gray-700 rounded-xl flex items-center gap-3 hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all group">
+                                 <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold">P</div>
                                  <div className="text-left">
-                                     <span className="block font-bold text-gray-700 group-hover:text-blue-700">Paystack</span>
+                                     <span className="block font-bold text-gray-700 dark:text-gray-200 group-hover:text-blue-700 dark:group-hover:text-blue-400">Paystack</span>
                                      <span className="text-[10px] text-gray-400">Cards, USSD, Transfer</span>
                                  </div>
                              </button>
                          ) : null}
 
                          {settings?.enableFlutterwave ? (
-                             <button onClick={() => initiatePayment('FLUTTERWAVE')} className="w-full p-4 border rounded-xl flex items-center gap-3 hover:border-orange-500 hover:bg-orange-50 transition-all group">
-                                 <div className="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-bold">F</div>
+                             <button onClick={() => initiatePayment('FLUTTERWAVE')} className="w-full p-4 border dark:border-gray-700 rounded-xl flex items-center gap-3 hover:border-orange-500 hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-all group">
+                                 <div className="w-8 h-8 rounded-full bg-orange-100 dark:bg-orange-900 text-orange-600 dark:text-orange-400 flex items-center justify-center font-bold">F</div>
                                   <div className="text-left">
-                                     <span className="block font-bold text-gray-700 group-hover:text-orange-700">Flutterwave</span>
+                                     <span className="block font-bold text-gray-700 dark:text-gray-200 group-hover:text-orange-700 dark:group-hover:text-orange-400">Flutterwave</span>
                                      <span className="text-[10px] text-gray-400">International Cards, Bank</span>
                                  </div>
                              </button>
                          ) : null}
 
                          {settings?.enableMonnify ? (
-                             <button onClick={() => initiatePayment('MONNIFY')} className="w-full p-4 border rounded-xl flex items-center gap-3 hover:border-indigo-500 hover:bg-indigo-50 transition-all group">
-                                 <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold">M</div>
+                             <button onClick={() => initiatePayment('MONNIFY')} className="w-full p-4 border dark:border-gray-700 rounded-xl flex items-center gap-3 hover:border-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all group">
+                                 <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold">M</div>
                                  <div className="text-left">
-                                     <span className="block font-bold text-gray-700 group-hover:text-indigo-700">Monnify</span>
+                                     <span className="block font-bold text-gray-700 dark:text-gray-200 group-hover:text-indigo-700 dark:group-hover:text-indigo-400">Monnify</span>
                                      <span className="text-[10px] text-gray-400">Account Transfer</span>
                                  </div>
                              </button>
                          ) : null}
 
                          {!settings?.enablePaystack && !settings?.enableFlutterwave && !settings?.enableMonnify && (
-                             <div className="p-4 bg-yellow-50 text-yellow-700 rounded-xl text-xs font-bold text-center border border-yellow-100">
+                             <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400 rounded-xl text-xs font-bold text-center border border-yellow-100 dark:border-yellow-800">
                                  Online payment is currently disabled by Admin. Please use Manual Transfer.
                              </div>
                          )}
@@ -469,13 +469,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
 
                 {fundingMethod === 'manual' && (
                     <div className="mb-6 space-y-4 animate-fade-in">
-                        <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg text-xs text-blue-800">
+                        <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-lg text-xs text-blue-800 dark:text-blue-300">
                             <p className="font-bold">Bank: {bankDetails.bankName}</p>
                             <p className="font-mono mt-1">Acct: {bankDetails.accountNumber}</p>
                             <p className="mt-1">Name: {bankDetails.accountName}</p>
                         </div>
                         
-                        <div className="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center cursor-pointer hover:bg-gray-50 relative h-24 flex items-center justify-center">
+                        <div className="border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl p-4 text-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors relative h-24 flex items-center justify-center">
                             <input 
                                 type="file" 
                                 onChange={handleFileChange}
@@ -483,7 +483,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
                                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                             />
                             {manualProofFile ? (
-                                <div className="text-green-600 flex flex-col items-center">
+                                <div className="text-green-600 dark:text-green-400 flex flex-col items-center">
                                     <CheckCircle size={24} className="mb-1"/>
                                     <span className="text-xs font-bold">{manualProofFile.name}</span>
                                 </div>
@@ -506,7 +506,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
                 
                 <button 
                     onClick={() => { setShowFundModal(false); setManualProofFile(null); setActiveGateway(null); }}
-                    className="w-full py-3 text-gray-400 text-sm font-bold hover:text-gray-600"
+                    className="w-full py-3 text-gray-400 text-sm font-bold hover:text-gray-600 dark:hover:text-gray-300"
                 >
                     Cancel
                 </button>
