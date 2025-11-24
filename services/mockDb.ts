@@ -29,7 +29,9 @@ const DEFAULT_USERS: User[] = MOCK_USERS_DATA.map(u => ({
     referralCode: u.name.substring(0,3).toUpperCase() + Math.floor(Math.random() * 1000),
     referralCount: 0,
     bonusBalance: 0,
-    joinedDate: new Date().toISOString()
+    joinedDate: new Date().toISOString(),
+    dataTotal: u.id === 'u1' ? 10.5 : 50, // GB
+    dataUsed: u.id === 'u1' ? 4.2 : 12.5, // GB
 })) as User[];
 
 // In-Memory State
@@ -76,7 +78,9 @@ const sanitizeUser = (u: any): User => {
         ipAddress: u.ipAddress || '127.0.0.1',
         os: u.os || 'Unknown',
         lastLogin: u.lastLogin || new Date().toISOString(),
-        joinedDate: u.joinedDate || new Date().toISOString()
+        joinedDate: u.joinedDate || new Date().toISOString(),
+        dataTotal: typeof u.dataTotal === 'number' ? u.dataTotal : 1,
+        dataUsed: typeof u.dataUsed === 'number' ? u.dataUsed : 0,
     };
 };
 
@@ -269,7 +273,9 @@ export const MockDB = {
           ipAddress: '127.0.0.1',
           os: 'Web Browser',
           lastLogin: new Date().toISOString(),
-          joinedDate: new Date().toISOString()
+          joinedDate: new Date().toISOString(),
+          dataTotal: 0,
+          dataUsed: 0
       };
 
       db.users.push(newUser);
@@ -296,6 +302,15 @@ export const MockDB = {
     user.balance += amount;
     saveDatabase();
     return { ...user };
+  },
+
+  updateUserDataBalance: async (userId: string, gbAmount: number) => {
+    const user = db.users.find(u => u.id === userId);
+    if (user) {
+        user.dataTotal += gbAmount;
+        saveDatabase();
+        return { ...user };
+    }
   },
 
   redeemBonus: async (userId: string) => {

@@ -8,6 +8,22 @@ import { NotificationService } from './notificationService';
 const generateId = () => Math.random().toString(36).substr(2, 9);
 const generateRef = () => `REF-${Math.floor(Math.random() * 1000000000)}`;
 
+// Helper to parse Data Amount string to GB number
+const parseDataToGB = (amountStr: string): number => {
+    if (!amountStr) return 0;
+    const normalize = amountStr.toUpperCase().replace(/\s/g, '');
+    const val = parseFloat(normalize);
+    
+    if (isNaN(val)) return 0;
+    
+    if (normalize.includes('TB')) return val * 1024;
+    if (normalize.includes('GB')) return val;
+    if (normalize.includes('MB')) return val / 1024;
+    
+    // Default assumption if no unit provided (risky, but usually GB for these plans)
+    return val;
+};
+
 export const processAirtimePurchase = async (
   user: User,
   provider: Provider,
@@ -139,6 +155,12 @@ export const processDataPurchase = async (
   const updatedUser = await MockDB.updateUserBalance(user.id, -finalDeduction);
    if (savedAmount > 0) {
       await MockDB.updateUserSavings(user.id, savedAmount);
+  }
+
+  // Credit Data to User's virtual total
+  const gbAmount = parseDataToGB(bundle.dataAmount);
+  if (gbAmount > 0) {
+      await MockDB.updateUserDataBalance(user.id, gbAmount);
   }
 
   // Calculate Profit from Bundle settings

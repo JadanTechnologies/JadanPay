@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { User, Announcement, AppNotification, TransactionType, TransactionStatus } from '../types';
 import { TopUpForm } from './TopUpForm';
 import { fundWallet } from '../services/topupService';
@@ -34,15 +34,51 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
   const [activeGateway, setActiveGateway] = useState<'PAYSTACK' | 'FLUTTERWAVE' | 'MONNIFY' | null>(null);
   const [paymentSimulating, setPaymentSimulating] = useState(false);
 
-  // Mock Data Usage State
-  const [dataBalance, setDataBalance] = useState({ total: 10, used: 8.2, unit: 'GB' });
+  // Data Simulation State
+  const [simulatedUsage, setSimulatedUsage] = useState(user.dataUsed || 0);
+  const notificationSentRef = useRef(false);
 
   useEffect(() => {
       loadAnnouncements();
       loadNotifications();
-      checkLowData();
       loadSettings();
-  }, []);
+      // Reset ref when user changes or top-up happens (simulated by dataUsed decreasing or total increasing)
+      if (user.dataUsed < simulatedUsage || user.dataTotal > (user.dataTotal || 0)) {
+           notificationSentRef.current = false;
+      }
+      setSimulatedUsage(user.dataUsed);
+  }, [user]);
+
+  // Simulate Data Consumption Effect
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setSimulatedUsage(prev => {
+        const next = prev + 0.005; // Consume 5MB every interval
+        // Cap at total
+        return next > user.dataTotal ? user.dataTotal : next;
+      });
+    }, 5000); // Every 5 seconds
+
+    return () => clearInterval(interval);
+  }, [user.dataTotal]);
+
+  // Check Low Data
+  useEffect(() => {
+      if (user.dataTotal > 0) {
+          const percentageUsed = (simulatedUsage / user.dataTotal) * 100;
+          if (percentageUsed >= 80 && !notificationSentRef.current) {
+              playNotification("Warning: Your data plan is running low.", 'error');
+              MockDB.addNotification({
+                  userId: user.id,
+                  title: "Low Data Warning",
+                  message: `You have used ${percentageUsed.toFixed(0)}% of your data plan. Top up now to stay connected.`,
+                  type: 'error'
+              });
+              notificationSentRef.current = true; // Prevent spamming
+              loadNotifications();
+          }
+      }
+  }, [simulatedUsage, user.dataTotal]);
 
   const loadSettings = async () => {
       const s = await SettingsService.getSettings();
@@ -68,13 +104,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
       await MockDB.markNotificationsRead(user.id);
       loadNotifications();
       setShowNotifications(!showNotifications);
-  };
-
-  const checkLowData = () => {
-      const percentageUsed = (dataBalance.used / dataBalance.total) * 100;
-      if (percentageUsed >= 80) {
-          // Logic for low data warning
-      }
   };
 
   const handleDismiss = (id: string) => {
@@ -183,8 +212,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
   };
 
   const visibleAnnouncements = announcements.filter(a => !dismissedAnnouncements.includes(a.id));
-  const dataPercentage = (dataBalance.used / dataBalance.total) * 100;
-  const remainingData = (dataBalance.total - dataBalance.used).toFixed(2);
+  
+  // Data Logic
+  const dataTotal = user.dataTotal || 1; // Avoid div by zero
+  const dataPercentage = Math.min((simulatedUsage / dataTotal) * 100, 100);
+  const remainingData = Math.max(dataTotal - simulatedUsage, 0).toFixed(2);
+  const isLowData = dataPercentage >= 80;
+
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
   return (
@@ -344,13 +378,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
                 </div>
             </div>
 
-            <div className="bg-white dark:bg-gray-900 p-6 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm relative overflow-hidden transition-colors">
+            {/* Data Monitor */}
+            <div className={`bg-white dark:bg-gray-900 p-6 rounded-3xl border shadow-sm relative overflow-hidden transition-colors ${isLowData ? 'border-red-200 dark:border-red-900/50' : 'border-gray-100 dark:border-gray-800'}`}>
                 <div className="flex items-center justify-between mb-4 relative z-10">
                     <h3 className="font-bold text-gray-800 dark:text-white text-sm flex items-center gap-2">
                         <Smartphone size={16} className="text-gray-400"/>
-                        Data Monitor
+                        Data Plan Usage
                     </h3>
-                    {dataPercentage > 80 && (
+                    {isLowData && (
                          <span className="bg-red-100 text-red-600 text-[10px] font-bold px-2 py-1 rounded-full animate-pulse flex items-center gap-1">
                              <AlertTriangle size={10} /> Low Data
                          </span>
@@ -369,7 +404,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
                                 fill="transparent"
                             ></circle>
                             <circle
-                                className={`${dataPercentage > 90 ? 'text-red-500' : 'text-green-500'} progress-ring__circle stroke-current transition-all duration-1000 ease-out`}
+                                className={`${isLowData ? 'text-red-500' : 'text-green-500'} progress-ring__circle stroke-current transition-all duration-1000 ease-out`}
                                 strokeWidth="10"
                                 strokeLinecap="round"
                                 cx="50"
@@ -383,9 +418,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
                         </svg>
                         <div className="absolute inset-0 flex flex-col items-center justify-center px-2">
                             <span className="text-2xl font-bold text-gray-900 dark:text-white tracking-tighter">{remainingData}</span>
-                            <span className="text-[10px] text-gray-400 font-medium uppercase whitespace-nowrap">{dataBalance.unit} Left</span>
+                            <span className="text-[10px] text-gray-400 font-medium uppercase whitespace-nowrap">GB Left</span>
                         </div>
                     </div>
+                </div>
+                
+                <div className="text-center mt-2">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {simulatedUsage.toFixed(2)} GB used of {dataTotal.toFixed(1)} GB
+                    </p>
                 </div>
             </div>
          </div>

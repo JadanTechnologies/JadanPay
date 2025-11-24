@@ -76,6 +76,8 @@ export interface User {
   os?: string;
   lastLogin?: string;
   joinedDate?: string; // Added for Recent Signups
+  dataTotal: number; // In GB
+  dataUsed: number; // In GB
 }
 
 export interface Bundle {
