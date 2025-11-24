@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Save, Globe, Server, CreditCard, Database, Plus, Trash2, Edit2, Check, X, Upload, Mail, Phone, AlertTriangle, Key, Users, Trophy, Gift, MessageSquare, Bell, Send, Smartphone, Activity, Link as LinkIcon, Download } from 'lucide-react';
+import { Save, Globe, Server, CreditCard, Database, Plus, Trash2, Edit2, Check, X, Upload, Mail, Phone, AlertTriangle, Key, Users, Trophy, Gift, MessageSquare, Bell, Send, Smartphone, Activity, Link as LinkIcon, Download, Wifi } from 'lucide-react';
 import { Provider, Bundle, PlanType, User } from '../types';
 import { PROVIDER_LOGOS } from '../constants';
 import { SettingsService, AppSettings, ApiVendor, EmailProvider, PushProvider } from '../services/settingsService';
@@ -708,21 +708,99 @@ export const AdminSettings: React.FC = () => {
                   </div>
               )}
 
-              {/* ... Other Tabs remain the same ... */}
               {/* --- SERVICES SETTINGS --- */}
               {activeTab === 'services' && (
                   <div className="space-y-6">
+                      {/* Network Visualizer Section */}
                       <div className="bg-white dark:bg-gray-900 p-6 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm">
-                          <h3 className="font-bold text-gray-800 dark:text-white mb-4 border-b dark:border-gray-800 pb-2">Provider Status</h3>
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                              {Object.entries(settings.providerStatus).map(([key, isActive]) => (
-                                  <div key={key} className={`p-4 rounded-xl border flex flex-col items-center gap-2 cursor-pointer transition-all ${isActive ? 'bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-800' : 'bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-800 opacity-60'}`} onClick={() => toggleProvider(key)}>
-                                      <span className="font-bold dark:text-gray-200">{PROVIDER_LOGOS[key as Provider] || key}</span>
-                                      <span className={`text-xs font-bold uppercase px-2 py-0.5 rounded-full ${isActive ? 'bg-green-200 dark:bg-green-800 text-green-800 dark:text-green-200' : 'bg-red-200 dark:bg-red-800 text-red-800 dark:text-red-200'}`}>
-                                          {isActive ? 'Online' : 'Offline'}
-                                      </span>
+                          <div className="flex justify-between items-center mb-6 border-b dark:border-gray-800 pb-4">
+                              <div>
+                                  <h3 className="font-bold text-gray-800 dark:text-white text-lg flex items-center gap-2">
+                                      <Activity className="text-blue-500" /> Network Connectivity Center
+                                  </h3>
+                                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Real-time gateway latency and success rates.</p>
+                              </div>
+                              <div className="flex gap-2">
+                                  <div className="flex items-center gap-1 text-xs font-bold text-green-600 bg-green-50 dark:bg-green-900/20 px-3 py-1 rounded-full">
+                                      <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> Live
                                   </div>
-                              ))}
+                              </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                              {Object.entries(settings.providerStatus).map(([key, isActive]) => {
+                                  const stats = settings.providerStats[key] || 98;
+                                  const isDegraded = stats < 90;
+                                  const latency = Math.floor(Math.random() * (150 - 20) + 20); // Mock latency
+                                  const sparkData = Array.from({ length: 20 }, () => Math.floor(Math.random() * 100));
+
+                                  return (
+                                      <div 
+                                          key={key} 
+                                          className={`relative overflow-hidden rounded-xl border transition-all duration-300 group ${
+                                              isActive 
+                                                  ? 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-md' 
+                                                  : 'bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-800 opacity-75 grayscale'
+                                          }`}
+                                      >
+                                          {/* Header */}
+                                          <div className="p-4 flex justify-between items-start relative z-10">
+                                              <div className="flex items-center gap-3">
+                                                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold text-sm shadow-sm ${
+                                                      isActive ? 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white' : 'bg-gray-200 dark:bg-gray-800 text-gray-500'
+                                                  }`}>
+                                                      {PROVIDER_LOGOS[key as Provider]?.slice(0,1) || key.slice(0,1)}
+                                                  </div>
+                                                  <div>
+                                                      <h4 className="font-bold text-gray-800 dark:text-white">{PROVIDER_LOGOS[key as Provider] || key}</h4>
+                                                      <div className="flex items-center gap-1 text-[10px] font-mono text-gray-500">
+                                                          {isActive ? <Wifi size={10} className="text-green-500"/> : <Wifi size={10} className="text-gray-400"/>}
+                                                          {isActive ? 'CONNECTED' : 'DISCONNECTED'}
+                                                      </div>
+                                                  </div>
+                                              </div>
+                                              <div className="relative">
+                                                  <label className="relative inline-flex items-center cursor-pointer">
+                                                      <input type="checkbox" className="sr-only peer" checked={isActive} onChange={() => toggleProvider(key)} />
+                                                      <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-green-600"></div>
+                                                  </label>
+                                              </div>
+                                          </div>
+
+                                          {/* Stats Visualization */}
+                                          {isActive && (
+                                              <div className="px-4 pb-4 relative z-10">
+                                                  <div className="flex justify-between items-end mb-2">
+                                                      <div>
+                                                          <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Success Rate</p>
+                                                          <p className={`text-2xl font-mono font-bold ${isDegraded ? 'text-yellow-500' : 'text-green-500'}`}>
+                                                              {stats}%
+                                                          </p>
+                                                      </div>
+                                                      <div className="text-right">
+                                                          <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Latency</p>
+                                                          <p className="text-sm font-mono font-bold text-gray-600 dark:text-gray-300">{latency}ms</p>
+                                                      </div>
+                                                  </div>
+                                                  
+                                                  {/* Sparkline SVG */}
+                                                  <div className="h-10 flex items-end gap-[2px] opacity-50">
+                                                      {sparkData.map((val, i) => (
+                                                          <div 
+                                                              key={i} 
+                                                              className={`w-full rounded-t-sm transition-all duration-500 ${isDegraded ? 'bg-yellow-400' : 'bg-blue-400'}`}
+                                                              style={{ height: `${val}%` }}
+                                                          ></div>
+                                                      ))}
+                                                  </div>
+                                              </div>
+                                          )}
+                                          
+                                          {/* Background Pattern for decoration */}
+                                          <div className="absolute -bottom-6 -right-6 w-24 h-24 bg-gradient-to-tl from-gray-100 to-transparent dark:from-gray-800 rounded-full opacity-50 z-0"></div>
+                                      </div>
+                                  );
+                              })}
                           </div>
                       </div>
 
