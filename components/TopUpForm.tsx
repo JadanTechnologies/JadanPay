@@ -205,14 +205,37 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
       }
       
       setLastTx(tx);
-      playNotification("Transaction successful.");
-      onSuccess();
       setResultState('success');
+      onSuccess();
       
+      // --- DYNAMIC AUDIO NOTIFICATION START ---
+      let successMessage = "Transaction successful.";
+      const provName = PROVIDER_LOGOS[provider as Provider] || provider;
+      const targetPhone = phone.split('').join(' '); // Split for clearer TTS
+
+      if (type === TransactionType.DATA && selectedBundle) {
+          successMessage = `${provName} data bundle ${selectedBundle.dataAmount} has been sent to ${phone} successfully.`;
+      } else if (type === TransactionType.AIRTIME) {
+          successMessage = `${provName} airtime worth ${amount} Naira has been sent to ${phone} successfully.`;
+      } else {
+          successMessage = `${type} payment for ${provName} was successful.`;
+      }
+      playNotification(successMessage);
+      // --- DYNAMIC AUDIO NOTIFICATION END ---
+
     } catch (err: any) {
       setError(err.message || "Transaction failed");
-      playNotification("Transaction failed.", 'error');
       setResultState('error');
+      
+      // --- ERROR AUDIO NOTIFICATION START ---
+      let errorMsg = "Transaction failed due to insufficient balance or network issue.";
+      if (err.message && (err.message.includes('balance') || err.message.includes('network'))) {
+          // If the error message is specific enough, we can use it, but user requested specific wording
+          // Using standard error message as requested
+      }
+      playNotification(errorMsg, 'error');
+      // --- ERROR AUDIO NOTIFICATION END ---
+
     } finally {
       setLoading(false);
     }

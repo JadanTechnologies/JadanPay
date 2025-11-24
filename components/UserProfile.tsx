@@ -72,7 +72,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdate }) => {
                             type="text" 
                             value={formData.name}
                             onChange={e => setFormData({...formData, name: e.target.value})}
-                            className="w-full pl-10 p-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-green-500 outline-none transition-all text-gray-900 dark:text-white"
+                            className="w-full pl-10 p-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-green-500 outline-none transition-all text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600"
                             required
                         />
                     </div>
@@ -86,7 +86,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdate }) => {
                             type="tel" 
                             value={formData.phone}
                             onChange={e => setFormData({...formData, phone: e.target.value})}
-                            className="w-full pl-10 p-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-green-500 outline-none transition-all text-gray-900 dark:text-white"
+                            className="w-full pl-10 p-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-green-500 outline-none transition-all text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600"
                             required
                         />
                     </div>
@@ -94,13 +94,13 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdate }) => {
 
                 <div>
                     <label className="block text-sm font-bold text-gray-500 dark:text-gray-400 mb-2">Email Address (Read Only)</label>
-                    <div className="relative opacity-60">
+                    <div className="relative">
                         <Mail className="absolute left-3 top-3.5 text-gray-400" size={18}/>
                         <input 
                             type="email" 
                             value={user.email}
                             readOnly
-                            className="w-full pl-10 p-3 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl cursor-not-allowed text-gray-700 dark:text-gray-300"
+                            className="w-full pl-10 p-3 bg-gray-100 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-xl cursor-not-allowed text-gray-500 dark:text-gray-400"
                         />
                     </div>
                 </div>
