@@ -5,6 +5,7 @@ import { Provider, Bundle, PlanType, User } from '../types';
 import { PROVIDER_LOGOS } from '../constants';
 import { SettingsService, AppSettings, ApiVendor, EmailProvider, PushProvider } from '../services/settingsService';
 import { MockDB } from '../services/mockDb';
+import { NotificationService } from '../services/notificationService';
 
 export const AdminSettings: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'general' | 'services' | 'payment' | 'backup' | 'api' | 'referrals'>('general');
@@ -64,6 +65,23 @@ export const AdminSettings: React.FC = () => {
         setIsSaving(false);
     }
   };
+
+  const handleTestPush = async () => {
+        if(!settings) return;
+        setIsSaving(true);
+        try {
+            const result = await NotificationService.sendPush('test-admin', 'Test Notification', 'This is a test message from your configuration.');
+            if (result?.success) {
+                alert("Test notification sent! Check the browser console logs for details.");
+            } else {
+                alert("Failed to send test notification. Check console for errors.");
+            }
+        } catch(e) {
+            alert("Failed to send test notification");
+        } finally {
+            setIsSaving(false);
+        }
+    };
 
   const toggleProvider = (key: string) => {
       if(!settings) return;
@@ -452,7 +470,16 @@ export const AdminSettings: React.FC = () => {
 
                       {/* Messaging: Push Notifications */}
                       <section>
-                          <h3 className="font-bold text-gray-800 dark:text-white mb-4 border-b dark:border-gray-800 pb-2 pt-4 flex items-center gap-2"><Bell size={18}/> Push Notifications</h3>
+                          <div className="flex justify-between items-center mb-4 border-b dark:border-gray-800 pb-2 pt-4">
+                                <h3 className="font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                                    <Bell size={18}/> Push Notifications
+                                </h3>
+                                {settings.pushProvider !== 'NONE' && (
+                                    <button onClick={handleTestPush} className="text-xs flex items-center gap-1 text-green-600 dark:text-green-400 font-bold hover:underline">
+                                        <Send size={12} /> Test Config
+                                    </button>
+                                )}
+                          </div>
                           
                           <div className="p-4 border dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 mb-4">
                                <div className="mb-4">

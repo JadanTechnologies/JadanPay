@@ -37,5 +37,43 @@ export const NotificationService = {
             console.error("[Notification] Failed to send SMS:", error);
             return { success: false };
         }
+    },
+
+    /**
+     * Send Push Notification (Mock)
+     * @param userId Target user ID
+     * @param title Notification Title
+     * @param body Notification Body
+     */
+    sendPush: async (userId: string, title: string, body: string) => {
+         try {
+            const settings = await SettingsService.getSettings();
+            
+            if (settings.pushProvider === 'NONE') {
+                console.log("[Notification] Push disabled. Skipped.");
+                return { success: false, error: 'Push disabled' };
+            }
+
+            console.log(`[Notification] Sending Push via ${settings.pushProvider}`);
+            console.log(`[Notification] To User: ${userId}`);
+            console.log(`[Notification] Title: ${title}`);
+            console.log(`[Notification] Body: ${body}`);
+
+            if (settings.pushProvider === 'FIREBASE') {
+                if (!settings.firebaseServerKey) console.warn("[Notification] Warning: Firebase Server Key missing");
+                // Mock Firebase send logic here
+            } else if (settings.pushProvider === 'ONESIGNAL') {
+                if (!settings.oneSignalRestApiKey) console.warn("[Notification] Warning: OneSignal API Key missing");
+                // Mock OneSignal send logic here
+            }
+
+            await new Promise(r => setTimeout(r, 500));
+            console.log("[Notification] Push Sent Successfully ✅");
+            return { success: true };
+
+        } catch (error) {
+             console.error("[Notification] Failed to send Push:", error);
+             return { success: false, error };
+        }
     }
 };
