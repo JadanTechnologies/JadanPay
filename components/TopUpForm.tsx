@@ -59,6 +59,7 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
   
   // Dynamic Settings
   const [providerStatus, setProviderStatus] = useState<Record<string, boolean>>({});
+  const [providerStats, setProviderStats] = useState<Record<string, number>>({});
   
   // Result View State
   const [resultState, setResultState] = useState<'idle' | 'success' | 'error'>('idle');
@@ -74,6 +75,7 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
       try {
         const settings = await SettingsService.getSettings();
         setProviderStatus(settings.providerStatus || {});
+        setProviderStats(settings.providerStats || {});
         const dbBundles = await MockDB.getBundles();
         setBundles(dbBundles);
       } catch (e) {
@@ -90,7 +92,7 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
       else if (phone.startsWith('0802') || phone.startsWith('0812') || phone.startsWith('0902')) suggested = Provider.AIRTEL;
       else if (phone.startsWith('0809') || phone.startsWith('0819') || phone.startsWith('0909')) suggested = Provider.NMOBILE;
 
-      if (suggested && providerStatus[suggested]) {
+      if (suggested && providerStatus[suggested] !== false) {
          setProvider(suggested);
       }
     }
@@ -295,6 +297,17 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
 
      return { cost, desc, total: cost + roundupAmt + serviceFee, roundupAmt, serviceFee };
   };
+  
+  const getNetworkStatus = (p: string) => {
+      const isOnline = providerStatus[p] !== false;
+      const stat = providerStats[p] || 98; // Default high if missing for better UX
+
+      if (!isOnline) return { label: 'Offline', color: 'bg-red-500', text: 'text-red-600 dark:text-red-400' };
+      if (stat >= 90) return { label: 'Good', color: 'bg-green-500', text: 'text-green-600 dark:text-green-400' };
+      if (stat >= 70) return { label: 'Fair', color: 'bg-yellow-500', text: 'text-yellow-600 dark:text-yellow-400' };
+      return { label: 'Poor', color: 'bg-orange-500', text: 'text-orange-600 dark:text-orange-400' };
+  };
+
   const details = getTransactionDetails();
 
   // --- RESULT VIEW ---
@@ -438,20 +451,30 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
                 : type === TransactionType.CABLE 
                     ? BILL_PROVIDERS.CABLE 
                     : BILL_PROVIDERS.ELECTRICITY
-            ).map((p) => (
+            ).map((p) => {
+                const { label: statusLabel, color: statusColor, text: statusText } = getNetworkStatus(p);
+                return (
                 <button
                   key={p}
                   type="button"
                   onClick={() => setProvider(p)}
-                  className={`relative py-3 rounded-lg text-xs font-bold transition-all border-2 flex flex-col items-center gap-1 ${
+                  className={`relative py-3 rounded-lg text-xs font-bold transition-all border-2 flex flex-col items-center gap-1 overflow-hidden group ${
                     provider === p 
                       ? `${PROVIDER_COLORS[p] || 'bg-gray-800 text-white'} border-transparent shadow-md scale-105` 
                       : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 text-gray-400 grayscale hover:grayscale-0'
                   }`}
                 >
-                  <span className="truncate w-full text-center">{PROVIDER_LOGOS[p] || p}</span>
+                  <span className="truncate w-full text-center mt-1">{PROVIDER_LOGOS[p] || p}</span>
+                  
+                  {/* Network Status Indicator */}
+                  <div className="flex items-center gap-1 mb-1">
+                      <div className={`w-1.5 h-1.5 rounded-full ${statusColor} ring-1 ring-white dark:ring-gray-800`}></div>
+                      <span className={`text-[8px] uppercase tracking-wide font-semibold ${provider === p ? 'text-white/80' : statusText}`}>
+                          {statusLabel}
+                      </span>
+                  </div>
                 </button>
-            ))}
+            )})}
         </div>
 
         {/* Input Field (Phone/Meter/IUC) */}
