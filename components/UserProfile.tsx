@@ -37,76 +37,76 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdate }) => {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6 animate-fade-in">
-        <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm relative overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 p-8 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm relative overflow-hidden transition-colors">
             <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-r from-green-600 to-teal-600"></div>
             
             <div className="relative z-10 mt-16 flex flex-col items-center">
-                <div className="w-32 h-32 rounded-full border-4 border-white shadow-xl bg-gray-100 overflow-hidden mb-4">
+                <div className="w-32 h-32 rounded-full border-4 border-white dark:border-gray-800 shadow-xl bg-gray-100 dark:bg-gray-700 overflow-hidden mb-4">
                     <img src={`https://ui-avatars.com/api/?name=${user.name}&background=random&size=128`} className="w-full h-full object-cover" alt="" />
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900">{user.name}</h2>
-                <p className="text-gray-500">{user.email}</p>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{user.name}</h2>
+                <p className="text-gray-500 dark:text-gray-400">{user.email}</p>
                 
                 <div className="flex gap-2 mt-4">
-                    <span className="px-3 py-1 bg-gray-100 rounded-full text-xs font-bold capitalize text-gray-600 flex items-center gap-1">
+                    <span className="px-3 py-1 bg-gray-100 dark:bg-gray-700 rounded-full text-xs font-bold capitalize text-gray-600 dark:text-gray-300 flex items-center gap-1">
                         <Shield size={12}/> {user.role}
                     </span>
-                    <span className="px-3 py-1 bg-green-100 rounded-full text-xs font-bold text-green-700 flex items-center gap-1">
+                    <span className="px-3 py-1 bg-green-100 dark:bg-green-900/30 rounded-full text-xs font-bold text-green-700 dark:text-green-400 flex items-center gap-1">
                         <CheckCircle size={12}/> Verified
                     </span>
                 </div>
             </div>
         </div>
 
-        <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
-            <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
-                <UserIcon size={20} className="text-green-600"/> Edit Profile
+        <div className="bg-white dark:bg-gray-800 p-8 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm transition-colors">
+            <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2">
+                <UserIcon size={20} className="text-green-600 dark:text-green-400"/> Edit Profile
             </h3>
             
             <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
-                    <label className="block text-sm font-bold text-gray-500 mb-2">Full Name</label>
+                    <label className="block text-sm font-bold text-gray-500 dark:text-gray-400 mb-2">Full Name</label>
                     <div className="relative">
                         <UserIcon className="absolute left-3 top-3.5 text-gray-400" size={18}/>
                         <input 
                             type="text" 
                             value={formData.name}
                             onChange={e => setFormData({...formData, name: e.target.value})}
-                            className="w-full pl-10 p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none transition-all"
+                            className="w-full pl-10 p-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-green-500 outline-none transition-all text-gray-900 dark:text-white"
                             required
                         />
                     </div>
                 </div>
 
                 <div>
-                    <label className="block text-sm font-bold text-gray-500 mb-2">Phone Number</label>
+                    <label className="block text-sm font-bold text-gray-500 dark:text-gray-400 mb-2">Phone Number</label>
                     <div className="relative">
                         <Phone className="absolute left-3 top-3.5 text-gray-400" size={18}/>
                         <input 
                             type="tel" 
                             value={formData.phone}
                             onChange={e => setFormData({...formData, phone: e.target.value})}
-                            className="w-full pl-10 p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none transition-all"
+                            className="w-full pl-10 p-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-green-500 outline-none transition-all text-gray-900 dark:text-white"
                             required
                         />
                     </div>
                 </div>
 
                 <div>
-                    <label className="block text-sm font-bold text-gray-500 mb-2">Email Address (Read Only)</label>
+                    <label className="block text-sm font-bold text-gray-500 dark:text-gray-400 mb-2">Email Address (Read Only)</label>
                     <div className="relative opacity-60">
                         <Mail className="absolute left-3 top-3.5 text-gray-400" size={18}/>
                         <input 
                             type="email" 
                             value={user.email}
                             readOnly
-                            className="w-full pl-10 p-3 bg-gray-100 border border-gray-200 rounded-xl cursor-not-allowed"
+                            className="w-full pl-10 p-3 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl cursor-not-allowed text-gray-700 dark:text-gray-300"
                         />
                     </div>
                 </div>
 
                 {success && (
-                    <div className="p-4 bg-green-50 text-green-700 rounded-xl flex items-center gap-2">
+                    <div className="p-4 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 rounded-xl flex items-center gap-2 border border-green-100 dark:border-green-800">
                         <CheckCircle size={20}/> Profile updated successfully!
                     </div>
                 )}
@@ -115,7 +115,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdate }) => {
                     <button 
                         type="submit" 
                         disabled={loading}
-                        className="w-full py-4 bg-green-700 text-white rounded-xl font-bold shadow-lg shadow-green-200 hover:bg-green-800 transition-all flex items-center justify-center gap-2"
+                        className="w-full py-4 bg-green-700 text-white rounded-xl font-bold shadow-lg shadow-green-200 dark:shadow-green-900/20 hover:bg-green-800 transition-all flex items-center justify-center gap-2"
                     >
                         {loading ? 'Saving...' : <><Save size={18}/> Save Changes</>}
                     </button>

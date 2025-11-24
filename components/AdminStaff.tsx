@@ -81,8 +81,8 @@ export const AdminStaff: React.FC = () => {
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-white dark:bg-gray-800 p-4 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm transition-colors">
             <h2 className="text-xl font-bold text-gray-800 dark:text-white">Staff & Access Control</h2>
             <div className="flex bg-gray-100 dark:bg-gray-700 p-1 rounded-lg">
-                <button onClick={() => setActiveTab('staff')} className={`px-4 py-1.5 rounded-md text-sm font-bold transition-all ${activeTab === 'staff' ? 'bg-white dark:bg-gray-600 shadow text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}>Staff Members</button>
-                <button onClick={() => setActiveTab('roles')} className={`px-4 py-1.5 rounded-md text-sm font-bold transition-all ${activeTab === 'roles' ? 'bg-white dark:bg-gray-600 shadow text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}>Roles & Permissions</button>
+                <button onClick={() => setActiveTab('staff')} className={`px-4 py-1.5 rounded-md text-sm font-bold transition-all ${activeTab === 'staff' ? 'bg-white dark:bg-gray-600 shadow text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-300'}`}>Staff Members</button>
+                <button onClick={() => setActiveTab('roles')} className={`px-4 py-1.5 rounded-md text-sm font-bold transition-all ${activeTab === 'roles' ? 'bg-white dark:bg-gray-600 shadow text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-300'}`}>Roles & Permissions</button>
             </div>
         </div>
 
@@ -110,7 +110,7 @@ export const AdminStaff: React.FC = () => {
                             return (
                                 <div key={s.id} className="p-4 border border-gray-200 dark:border-gray-700 rounded-xl flex justify-between items-center hover:border-green-200 dark:hover:border-green-800 transition-colors bg-gray-50 dark:bg-gray-900">
                                     <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center text-green-700 dark:text-green-400 font-bold shadow-sm">
+                                        <div className="w-10 h-10 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center text-green-700 dark:text-green-400 font-bold shadow-sm border border-gray-100 dark:border-gray-700">
                                             {s.name.charAt(0)}
                                         </div>
                                         <div>
@@ -145,14 +145,14 @@ export const AdminStaff: React.FC = () => {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {roles.map(role => (
-                        <div key={role.id} className="p-4 border border-gray-200 dark:border-gray-700 rounded-xl hover:border-purple-200 dark:hover:border-purple-800 transition-colors dark:bg-gray-900">
+                        <div key={role.id} className="p-4 border border-gray-200 dark:border-gray-700 rounded-xl hover:border-purple-200 dark:hover:border-purple-800 transition-colors bg-gray-50 dark:bg-gray-900">
                             <div className="flex items-center justify-between mb-2">
                                 <h4 className="font-bold text-gray-800 dark:text-white">{role.name}</h4>
                                 <Shield size={16} className="text-purple-500"/>
                             </div>
                             <div className="flex flex-wrap gap-2">
                                 {role.permissions.map(p => (
-                                    <span key={p} className="px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-300 rounded-md text-[10px] font-mono">{p}</span>
+                                    <span key={p} className="px-2 py-1 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-300 border border-gray-100 dark:border-gray-700 rounded-md text-[10px] font-mono">{p}</span>
                                 ))}
                             </div>
                         </div>
@@ -171,20 +171,20 @@ export const AdminStaff: React.FC = () => {
                     </div>
                     <div className="space-y-4">
                         <input 
-                            className="w-full p-3 border dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white outline-none focus:border-green-500"
+                            className="w-full p-3 border dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/20"
                             placeholder="Full Name" 
                             value={newStaff.name || ''}
                             onChange={e => setNewStaff({...newStaff, name: e.target.value})}
                         />
                         <input 
                             type="email"
-                            className="w-full p-3 border dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white outline-none focus:border-green-500"
+                            className="w-full p-3 border dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/20"
                             placeholder="Email Address" 
                             value={newStaff.email || ''}
                             onChange={e => setNewStaff({...newStaff, email: e.target.value})}
                         />
                         <select 
-                            className="w-full p-3 border dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white outline-none focus:border-green-500"
+                            className="w-full p-3 border dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/20"
                             value={newStaff.roleId || ''}
                             onChange={e => setNewStaff({...newStaff, roleId: e.target.value})}
                         >
@@ -192,7 +192,7 @@ export const AdminStaff: React.FC = () => {
                             {roles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
                         </select>
                         <div className="flex gap-3 mt-4">
-                            <button onClick={() => setShowStaffModal(false)} className="flex-1 py-2 bg-gray-100 dark:bg-gray-700 rounded-xl font-bold text-gray-600 dark:text-gray-300">Cancel</button>
+                            <button onClick={() => setShowStaffModal(false)} className="flex-1 py-2 bg-gray-100 dark:bg-gray-700 rounded-xl font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600">Cancel</button>
                             <button onClick={handleAddStaff} className="flex-1 py-2 bg-green-700 text-white rounded-xl font-bold hover:bg-green-800">Add Staff</button>
                         </div>
                     </div>
@@ -210,7 +210,7 @@ export const AdminStaff: React.FC = () => {
                     </div>
                     <div className="space-y-4">
                         <input 
-                            className="w-full p-3 border dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white outline-none focus:border-green-500"
+                            className="w-full p-3 border dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/20"
                             placeholder="Role Name (e.g., Auditor)" 
                             value={newRole.name || ''}
                             onChange={e => setNewRole({...newRole, name: e.target.value})}
@@ -219,12 +219,12 @@ export const AdminStaff: React.FC = () => {
                             <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">Permissions</p>
                             <div className="grid grid-cols-2 gap-2">
                                 {ALL_PERMISSIONS.map(perm => (
-                                    <label key={perm} className="flex items-center gap-2 p-2 border dark:border-gray-700 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                                    <label key={perm} className="flex items-center gap-2 p-2 border dark:border-gray-700 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                                         <input 
                                             type="checkbox" 
                                             checked={newRole.permissions?.includes(perm)}
                                             onChange={() => togglePermission(perm)}
-                                            className="accent-purple-600"
+                                            className="accent-purple-600 w-4 h-4"
                                         />
                                         <span className="text-xs font-mono text-gray-700 dark:text-gray-300">{perm}</span>
                                     </label>
@@ -232,7 +232,7 @@ export const AdminStaff: React.FC = () => {
                             </div>
                         </div>
                         <div className="flex gap-3 mt-4">
-                            <button onClick={() => setShowRoleModal(false)} className="flex-1 py-2 bg-gray-100 dark:bg-gray-700 rounded-xl font-bold text-gray-600 dark:text-gray-300">Cancel</button>
+                            <button onClick={() => setShowRoleModal(false)} className="flex-1 py-2 bg-gray-100 dark:bg-gray-700 rounded-xl font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600">Cancel</button>
                             <button onClick={handleCreateRole} className="flex-1 py-2 bg-purple-700 text-white rounded-xl font-bold hover:bg-purple-800">Create Role</button>
                         </div>
                     </div>

@@ -105,7 +105,7 @@ export const AdminDashboard: React.FC = () => {
          {/* Chart Container - Fixed Height to prevent Recharts crash */}
          <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col h-[400px] transition-colors">
             <h3 className="font-bold text-gray-700 dark:text-gray-200 mb-4 h-6 shrink-0">Transaction Volume by Provider</h3>
-            <div className="w-full h-[300px] relative">
+            <div className="w-full flex-1 min-h-0 relative">
                 {providerData.length > 0 ? (
                     <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
