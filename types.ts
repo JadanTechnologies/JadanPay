@@ -79,6 +79,7 @@ export interface User {
   dataTotal: number; // In GB
   dataUsed: number; // In GB
   transactionPin?: string; // Secure 4-digit PIN
+  apiKey?: string; // API Key for Resellers/Developers
 }
 
 export interface Bundle {

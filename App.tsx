@@ -14,6 +14,7 @@ import { AdminCommunication } from './components/AdminCommunication';
 import { AdminPayments } from './components/AdminPayments';
 import { AdminAccessControl } from './components/AdminAccessControl';
 import { ResellerZone } from './components/ResellerZone';
+import { DeveloperApi } from './components/DeveloperApi';
 import { LandingPage } from './components/LandingPage';
 import { UserProfile } from './components/UserProfile';
 import { User, UserRole } from './types';
@@ -182,6 +183,8 @@ export default function App() {
          return <AdminSettings />;
       case 'reseller':
          return user.role === UserRole.RESELLER ? <ResellerZone /> : <div className="p-10 text-center dark:text-white">Unauthorized</div>;
+      case 'api-docs':
+         return (user.role === UserRole.RESELLER || user.apiKey) ? <DeveloperApi user={user} /> : <div className="p-10 text-center dark:text-white">Unauthorized</div>;
       default:
         if (user.role === UserRole.ADMIN) return <AdminDashboard />;
         return <Dashboard user={user} refreshUser={handleRefreshUser} onViewReceipt={handleViewReceipt} />;

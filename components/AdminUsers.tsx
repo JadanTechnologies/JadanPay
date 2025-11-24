@@ -1,8 +1,8 @@
 
 import React, { useEffect, useState } from 'react';
-import { User, UserStatus, Transaction, TransactionType, TransactionStatus } from '../types';
+import { User, UserStatus, Transaction, TransactionType, TransactionStatus, UserRole } from '../types';
 import { MockDB } from '../services/mockDb';
-import { Search, Ban, CheckCircle, MoreVertical, DollarSign, History, Shield, Smartphone, Globe, RotateCcw, AlertTriangle, Monitor, Trash2, Edit2, Save, X, Key } from 'lucide-react';
+import { Search, Ban, CheckCircle, MoreVertical, DollarSign, History, Shield, Smartphone, Globe, RotateCcw, AlertTriangle, Monitor, Trash2, Edit2, Save, X, Key, Code2 } from 'lucide-react';
 
 export const AdminUsers: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -81,6 +81,20 @@ export const AdminUsers: React.FC = () => {
       if(window.confirm(`Reset PIN for ${selectedUser.name}? They will be prompted to create a new one on next transaction.`)) {
           await MockDB.resetUserPin(selectedUser.id);
           alert("User PIN reset successfully.");
+      }
+  };
+
+  const handleUpgradeToReseller = async () => {
+      if(!selectedUser) return;
+      if(window.confirm(`Upgrade ${selectedUser.name} to Reseller? This will generate an API Key for them.`)) {
+          try {
+              const updated = await MockDB.upgradeUserToReseller(selectedUser.id);
+              setSelectedUser(updated);
+              await loadUsers();
+              alert(`User upgraded to Reseller! API Key generated.`);
+          } catch (e: any) {
+              alert(e.message);
+          }
       }
   };
 
@@ -228,6 +242,12 @@ export const AdminUsers: React.FC = () => {
                                    <Monitor size={12}/> {selectedUser.os || 'Unknown OS'}
                                </div>
                            </div>
+                           {selectedUser.apiKey && (
+                               <div className="col-span-2 bg-black/5 dark:bg-black/20 p-2 rounded-lg break-all">
+                                   <p className="text-[10px] text-gray-400 uppercase font-bold mb-1">API Key</p>
+                                   <code className="text-xs font-mono text-gray-700 dark:text-gray-300">{selectedUser.apiKey}</code>
+                               </div>
+                           )}
                       </div>
                   </div>
 
@@ -263,6 +283,15 @@ export const AdminUsers: React.FC = () => {
                           >
                               <Key size={16}/> Reset PIN
                           </button>
+
+                          {selectedUser.role !== UserRole.RESELLER && selectedUser.role !== UserRole.ADMIN && (
+                              <button 
+                                onClick={handleUpgradeToReseller}
+                                className="w-full py-2 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 rounded-xl text-sm font-bold border border-purple-100 dark:border-purple-900/50 hover:bg-purple-100 dark:hover:bg-purple-900/30 flex items-center justify-center gap-2"
+                              >
+                                  <Code2 size={16}/> Upgrade to API User
+                              </button>
+                          )}
 
                           <div className="h-px bg-gray-100 dark:bg-gray-700 my-2"></div>
                           
@@ -437,7 +466,7 @@ export const AdminUsers: React.FC = () => {
                                 className="w-full p-3 border dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white outline-none"
                             >
                                 <option value="user">User</option>
-                                <option value="reseller">Reseller</option>
+                                <option value="reseller">Reseller (API Access)</option>
                                 <option value="admin">Admin</option>
                             </select>
                         </div>

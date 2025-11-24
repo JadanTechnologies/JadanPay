@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { User, UserRole } from '../types';
-import { Home, History, LogOut, Briefcase, User as UserIcon, LayoutDashboard, Settings, Users, MessageSquare, Lock, Megaphone, CreditCard, LifeBuoy, ChevronLeft, ChevronRight, ShieldAlert } from 'lucide-react';
+import { Home, History, LogOut, Briefcase, User as UserIcon, LayoutDashboard, Settings, Users, MessageSquare, Lock, Megaphone, CreditCard, LifeBuoy, ChevronLeft, ChevronRight, ShieldAlert, Code2 } from 'lucide-react';
 import { SettingsService } from '../services/settingsService';
 
 interface LayoutProps {
@@ -100,10 +100,11 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, activeTab, onTab
                     <NavItem id="support" icon={LifeBuoy} label="Support" />
                     <NavItem id="profile" icon={UserIcon} label="Profile" />
                     
-                    {user.role === UserRole.RESELLER && (
+                    {(user.role === UserRole.RESELLER || user.apiKey) && (
                     <div className="pt-4 mt-4 border-t border-gray-100 dark:border-gray-800">
                         {!isCollapsed && <p className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Business</p>}
-                        <NavItem id="reseller" icon={Briefcase} label="Reseller" />
+                        <NavItem id="reseller" icon={Briefcase} label="Reseller Zone" />
+                        <NavItem id="api-docs" icon={Code2} label="Developer API" />
                     </div>
                     )}
                 </>

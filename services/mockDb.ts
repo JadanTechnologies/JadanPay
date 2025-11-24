@@ -32,7 +32,8 @@ const DEFAULT_USERS: User[] = MOCK_USERS_DATA.map(u => ({
     joinedDate: new Date().toISOString(),
     dataTotal: u.id === 'u1' ? 10.5 : 50, // GB
     dataUsed: u.id === 'u1' ? 4.2 : 12.5, // GB
-    transactionPin: u.id === 'u1' ? '1234' : undefined // u1 has pin, u2 needs to create
+    transactionPin: u.id === 'u1' ? '1234' : undefined, // u1 has pin, u2 needs to create
+    apiKey: u.role === UserRole.RESELLER ? 'jp_live_' + Math.random().toString(36).substr(2, 30) : undefined
 })) as User[];
 
 // In-Memory State
@@ -82,7 +83,8 @@ const sanitizeUser = (u: any): User => {
         joinedDate: u.joinedDate || new Date().toISOString(),
         dataTotal: typeof u.dataTotal === 'number' ? u.dataTotal : 1,
         dataUsed: typeof u.dataUsed === 'number' ? u.dataUsed : 0,
-        transactionPin: u.transactionPin
+        transactionPin: u.transactionPin,
+        apiKey: u.apiKey
     };
 };
 
@@ -308,6 +310,26 @@ export const MockDB = {
               title: 'Security Alert: PIN Reset',
               message: 'Your transaction PIN has been reset by an administrator. Please create a new one.',
               type: 'error'
+          });
+          
+          saveDatabase();
+          return { ...user };
+      }
+      throw new Error("User not found");
+  },
+
+  upgradeUserToReseller: async (userId: string) => {
+      await delay(400);
+      const user = db.users.find(u => u.id === userId);
+      if (user) {
+          user.role = UserRole.RESELLER;
+          user.apiKey = 'jp_live_' + Math.random().toString(36).substr(2, 30) + Date.now().toString(36);
+          
+          MockDB.addNotification({
+              userId: userId,
+              title: 'Account Upgraded!',
+              message: 'You have been upgraded to a Reseller account. You now have access to the Developer API.',
+              type: 'success'
           });
           
           saveDatabase();
