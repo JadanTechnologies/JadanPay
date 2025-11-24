@@ -6,7 +6,7 @@ import { processAirtimePurchase, processDataPurchase, processBillPayment } from 
 import { SettingsService } from '../services/settingsService';
 import { MockDB } from '../services/mockDb';
 import { playNotification } from '../utils/audio';
-import { Smartphone, Wifi, PiggyBank, Loader2, Sparkles, Star, Check, AlertTriangle, Info, Share2, Ban, Activity, ChevronDown, Tv, Zap, User as UserIcon, Phone, RefreshCw, X, Receipt, QrCode } from 'lucide-react';
+import { Smartphone, Wifi, PiggyBank, Loader2, Sparkles, Star, Check, AlertTriangle, Info, Share2, Ban, Activity, ChevronDown, Tv, Zap, User as UserIcon, Phone, RefreshCw, X, Receipt, QrCode, BarChart3 } from 'lucide-react';
 
 interface TopUpFormProps {
   user: User;
@@ -30,6 +30,19 @@ const PROVIDER_LIMITS: Record<string, { min: number; max: number }> = {
 
 // Constant Service Fee for Bills
 const BILL_SERVICE_FEE = 100;
+
+// Helper for Signal Bars
+const SignalBars = ({ level, colorClass }: { level: number, colorClass: string }) => (
+    <div className="flex gap-[2px] items-end h-3">
+        {[1, 2, 3, 4].map(bar => (
+            <div 
+                key={bar} 
+                className={`w-[3px] rounded-sm transition-all duration-500 ${bar <= level ? colorClass : 'bg-gray-200 dark:bg-gray-700 opacity-30'}`}
+                style={{ height: `${bar * 25}%` }}
+            ></div>
+        ))}
+    </div>
+);
 
 export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewReceipt }) => {
   const [type, setType] = useState<TransactionType>(TransactionType.AIRTIME);
@@ -298,14 +311,16 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
      return { cost, desc, total: cost + roundupAmt + serviceFee, roundupAmt, serviceFee };
   };
   
+  // Unique Network Visualizer Logic
   const getNetworkStatus = (p: string) => {
       const isOnline = providerStatus[p] !== false;
       const stat = providerStats[p] || 98; // Default high if missing for better UX
 
-      if (!isOnline) return { label: 'Offline', color: 'bg-red-500', text: 'text-red-600 dark:text-red-400' };
-      if (stat >= 90) return { label: 'Good', color: 'bg-green-500', text: 'text-green-600 dark:text-green-400' };
-      if (stat >= 70) return { label: 'Fair', color: 'bg-yellow-500', text: 'text-yellow-600 dark:text-yellow-400' };
-      return { label: 'Poor', color: 'bg-orange-500', text: 'text-orange-600 dark:text-orange-400' };
+      if (!isOnline) return { label: 'OFFLINE', color: 'bg-red-500', text: 'text-red-600', bars: 0, ping: '---' };
+      if (stat >= 90) return { label: 'EXCELLENT', color: 'bg-emerald-500', text: 'text-emerald-600', bars: 4, ping: '24ms' };
+      if (stat >= 70) return { label: 'GOOD', color: 'bg-green-500', text: 'text-green-600', bars: 3, ping: '45ms' };
+      if (stat >= 50) return { label: 'FAIR', color: 'bg-yellow-500', text: 'text-yellow-600', bars: 2, ping: '120ms' };
+      return { label: 'CRITICAL', color: 'bg-orange-500', text: 'text-orange-600', bars: 1, ping: '300ms' };
   };
 
   const details = getTransactionDetails();
@@ -444,34 +459,52 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
 
       <form onSubmit={handleFormSubmit} className="space-y-5 relative z-10 animate-fade-in">
         
-        {/* Provider Selection - Adjusted for Mobile (2 cols on mobile, 4 on desktop) */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        {/* Advanced Network Visualizer */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {(type === TransactionType.AIRTIME || type === TransactionType.DATA 
                 ? Object.values(Provider) 
                 : type === TransactionType.CABLE 
                     ? BILL_PROVIDERS.CABLE 
                     : BILL_PROVIDERS.ELECTRICITY
             ).map((p) => {
-                const { label: statusLabel, color: statusColor, text: statusText } = getNetworkStatus(p);
+                const { label: statusLabel, color: statusColor, text: statusText, bars, ping } = getNetworkStatus(p);
+                const isSelected = provider === p;
+                
+                // Determine Theme Color for Selected State
+                let themeClass = "border-gray-100 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-700 bg-white dark:bg-gray-900";
+                if (isSelected) {
+                    // Dynamic Border & Shadow based on brand if available, else default green
+                    if (p === Provider.MTN) themeClass = "border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20 ring-1 ring-yellow-400 shadow-lg shadow-yellow-200 dark:shadow-none";
+                    else if (p === Provider.GLO) themeClass = "border-green-500 bg-green-50 dark:bg-green-900/20 ring-1 ring-green-500 shadow-lg shadow-green-200 dark:shadow-none";
+                    else if (p === Provider.AIRTEL) themeClass = "border-red-500 bg-red-50 dark:bg-red-900/20 ring-1 ring-red-500 shadow-lg shadow-red-200 dark:shadow-none";
+                    else if (p === Provider.NMOBILE) themeClass = "border-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 ring-1 ring-emerald-600 shadow-lg shadow-emerald-200 dark:shadow-none";
+                    else themeClass = "border-blue-500 bg-blue-50 dark:bg-blue-900/20 ring-1 ring-blue-500 shadow-lg shadow-blue-200 dark:shadow-none";
+                }
+
                 return (
                 <button
                   key={p}
                   type="button"
                   onClick={() => setProvider(p)}
-                  className={`relative py-3 rounded-lg text-xs font-bold transition-all border-2 flex flex-col items-center gap-1 overflow-hidden group ${
-                    provider === p 
-                      ? `${PROVIDER_COLORS[p] || 'bg-gray-800 text-white'} border-transparent shadow-md scale-105` 
-                      : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 text-gray-400 grayscale hover:grayscale-0'
-                  }`}
+                  className={`relative overflow-hidden rounded-xl transition-all duration-300 group border flex flex-col min-h-[80px] ${themeClass}`}
                 >
-                  <span className="truncate w-full text-center mt-1">{PROVIDER_LOGOS[p] || p}</span>
-                  
-                  {/* Network Status Indicator */}
-                  <div className="flex items-center gap-1 mb-1">
-                      <div className={`w-1.5 h-1.5 rounded-full ${statusColor} ring-1 ring-white dark:ring-gray-800`}></div>
-                      <span className={`text-[8px] uppercase tracking-wide font-semibold ${provider === p ? 'text-white/80' : statusText}`}>
-                          {statusLabel}
+                  {/* Top Row: Status Dot & Bars */}
+                  <div className="w-full flex justify-between items-start p-2">
+                      <div className={`w-2 h-2 rounded-full ${statusColor} shadow-sm ${bars > 0 ? 'animate-pulse' : ''}`} title={statusLabel}></div>
+                      <SignalBars level={bars} colorClass={isSelected ? 'bg-current' : statusColor.replace('bg-', 'bg-')} />
+                  </div>
+
+                  {/* Center: Logo/Name */}
+                  <div className="flex-1 flex items-center justify-center -mt-1">
+                      <span className={`font-black tracking-tight ${isSelected ? 'scale-110' : 'grayscale group-hover:grayscale-0'} transition-all duration-300 ${p.length > 8 ? 'text-xs' : 'text-lg'}`}>
+                          {PROVIDER_LOGOS[p] || p}
                       </span>
+                  </div>
+                  
+                  {/* Bottom: HUD Stats */}
+                  <div className={`w-full flex justify-between items-center px-2 py-1 text-[8px] font-mono font-bold uppercase border-t ${isSelected ? 'border-black/5 dark:border-white/10 bg-black/5 dark:bg-white/5' : 'border-transparent text-gray-400'}`}>
+                      <span>{statusLabel}</span>
+                      <span className="opacity-70">{ping}</span>
                   </div>
                 </button>
             )})}
