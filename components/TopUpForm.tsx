@@ -201,6 +201,12 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
         return;
     }
 
+    // Extra Validation for Data Bundle Availability
+    if (type === TransactionType.DATA && selectedBundle && selectedBundle.isAvailable === false) {
+        setError("Selected plan is currently unavailable.");
+        return;
+    }
+
     setShowConfirm(true);
   };
 
@@ -575,21 +581,37 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
                  </div>
 
                  <div className="grid grid-cols-2 gap-3 max-h-60 overflow-y-auto pr-1">
-                    {bundles.filter(b => b.provider === provider && b.type === selectedPlanType).map((b) => (
+                    {bundles.filter(b => b.provider === provider && b.type === selectedPlanType).map((b) => {
+                        const isUnavailable = b.isAvailable === false;
+                        return (
                         <div
                             key={b.id}
-                            onClick={() => setSelectedBundle(b)}
-                            className={`p-3 rounded-xl border-2 cursor-pointer transition-all ${
-                                selectedBundle?.id === b.id 
-                                    ? 'border-green-500 bg-green-50 dark:bg-green-900/30 shadow-md' 
-                                    : 'border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-green-200 dark:hover:border-green-700'
+                            onClick={() => {
+                                if (isUnavailable) {
+                                    setError(`${b.dataAmount} plan is currently unavailable.`);
+                                    return;
+                                }
+                                setSelectedBundle(b);
+                                setError(null);
+                            }}
+                            className={`p-3 rounded-xl border-2 transition-all relative ${
+                                isUnavailable 
+                                    ? 'opacity-60 cursor-not-allowed border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900' 
+                                    : selectedBundle?.id === b.id 
+                                        ? 'border-green-500 bg-green-50 dark:bg-green-900/30 shadow-md cursor-pointer' 
+                                        : 'border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-green-200 dark:hover:border-green-700 cursor-pointer'
                             }`}
                         >
-                            <div className="text-lg font-black text-gray-800 dark:text-white">{b.dataAmount}</div>
+                             {isUnavailable && (
+                                <div className="absolute top-2 right-2">
+                                    <Ban size={16} className="text-gray-400"/>
+                                </div>
+                            )}
+                            <div className={`text-lg font-black ${isUnavailable ? 'text-gray-400' : 'text-gray-800 dark:text-white'}`}>{b.dataAmount}</div>
                             <div className="text-xs text-gray-400">{b.validity}</div>
-                            <div className="mt-2 font-bold text-green-700 dark:text-green-400">₦{b.price.toLocaleString()}</div>
+                            <div className={`mt-2 font-bold ${isUnavailable ? 'text-gray-400' : 'text-green-700 dark:text-green-400'}`}>₦{b.price.toLocaleString()}</div>
                         </div>
-                    ))}
+                    )})}
                  </div>
              </div>
         )}
