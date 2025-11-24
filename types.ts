@@ -80,6 +80,7 @@ export interface User {
   dataUsed: number; // In GB
   transactionPin?: string; // Secure 4-digit PIN
   apiKey?: string; // API Key for Resellers/Developers
+  resellerRequestStatus?: 'PENDING' | 'REJECTED' | 'NONE';
 }
 
 export interface Bundle {

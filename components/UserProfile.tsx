@@ -1,8 +1,8 @@
 
 import React, { useState } from 'react';
-import { User } from '../types';
+import { User, UserRole } from '../types';
 import { MockDB } from '../services/mockDb';
-import { Save, User as UserIcon, Phone, Mail, Shield, CheckCircle, Lock, Key } from 'lucide-react';
+import { Save, User as UserIcon, Phone, Mail, Shield, CheckCircle, Lock, Key, Briefcase, Clock, AlertCircle } from 'lucide-react';
 
 interface UserProfileProps {
   user: User;
@@ -21,6 +21,9 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdate }) => {
   const [pinData, setPinData] = useState({ oldPin: '', newPin: '' });
   const [pinLoading, setPinLoading] = useState(false);
   const [pinMessage, setPinMessage] = useState('');
+
+  // Reseller Request State
+  const [requestLoading, setRequestLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,8 +72,23 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdate }) => {
       }
   };
 
+  const handleRequestUpgrade = async () => {
+      if (!window.confirm("Are you sure you want to apply for a Reseller account?")) return;
+      setRequestLoading(true);
+      try {
+          await MockDB.requestResellerUpgrade(user.id);
+          onUpdate();
+          alert("Application submitted successfully! An admin will review your request.");
+      } catch (e) {
+          alert("Failed to submit request.");
+      } finally {
+          setRequestLoading(false);
+      }
+  };
+
   return (
-    <div className="max-w-2xl mx-auto space-y-6 animate-fade-in">
+    <div className="max-w-2xl mx-auto space-y-6 animate-fade-in pb-20">
+        {/* Header Card */}
         <div className="bg-white dark:bg-gray-800 p-8 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm relative overflow-hidden transition-colors">
             <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-r from-green-600 to-teal-600"></div>
             
@@ -82,7 +100,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdate }) => {
                 <p className="text-gray-500 dark:text-gray-400">{user.email}</p>
                 
                 <div className="flex gap-2 mt-4">
-                    <span className="px-3 py-1 bg-gray-100 dark:bg-gray-700 rounded-full text-xs font-bold capitalize text-gray-600 dark:text-gray-300 flex items-center gap-1">
+                    <span className={`px-3 py-1 rounded-full text-xs font-bold capitalize flex items-center gap-1 ${user.role === UserRole.RESELLER ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-300' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}`}>
                         <Shield size={12}/> {user.role}
                     </span>
                     <span className="px-3 py-1 bg-green-100 dark:bg-green-900/30 rounded-full text-xs font-bold text-green-700 dark:text-green-400 flex items-center gap-1">
@@ -91,6 +109,48 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdate }) => {
                 </div>
             </div>
         </div>
+
+        {/* Reseller Upgrade Section */}
+        {user.role === UserRole.USER && (
+            <div className="bg-gradient-to-r from-purple-800 to-indigo-900 p-6 rounded-3xl shadow-lg text-white relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
+                <div className="relative z-10">
+                    <div className="flex items-center gap-3 mb-2">
+                        <Briefcase className="text-purple-200" />
+                        <h3 className="font-bold text-lg">Business Upgrade</h3>
+                    </div>
+                    <p className="text-purple-200 text-sm mb-6 max-w-md">
+                        Become a reseller to access cheaper rates, API documentation, and bulk transaction tools. Start your own VTU business today.
+                    </p>
+
+                    {user.resellerRequestStatus === 'PENDING' ? (
+                        <div className="bg-white/10 border border-white/20 rounded-xl p-4 flex items-center gap-3">
+                            <Clock className="text-yellow-400 animate-pulse" size={20}/>
+                            <div>
+                                <p className="font-bold text-sm">Application Pending</p>
+                                <p className="text-xs text-purple-200">Your request is under review by an admin.</p>
+                            </div>
+                        </div>
+                    ) : user.resellerRequestStatus === 'REJECTED' ? (
+                         <div className="bg-red-500/20 border border-red-500/30 rounded-xl p-4 mb-4 flex items-center gap-3">
+                            <AlertCircle className="text-red-300" size={20}/>
+                            <div>
+                                <p className="font-bold text-sm text-red-100">Application Declined</p>
+                                <p className="text-xs text-red-200">Contact support for more details.</p>
+                            </div>
+                        </div>
+                    ) : (
+                        <button 
+                            onClick={handleRequestUpgrade}
+                            disabled={requestLoading}
+                            className="bg-white text-purple-900 px-6 py-3 rounded-xl font-bold text-sm shadow-lg hover:bg-purple-50 transition-colors disabled:opacity-70"
+                        >
+                            {requestLoading ? 'Submitting...' : 'Request Upgrade'}
+                        </button>
+                    )}
+                </div>
+            </div>
+        )}
 
         {/* Personal Info */}
         <div className="bg-white dark:bg-gray-800 p-8 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm transition-colors">

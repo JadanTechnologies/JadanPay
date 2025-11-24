@@ -2,14 +2,14 @@
 import React, { useEffect, useState } from 'react';
 import { User, UserStatus, Transaction, TransactionType, TransactionStatus, UserRole } from '../types';
 import { MockDB } from '../services/mockDb';
-import { Search, Ban, CheckCircle, MoreVertical, DollarSign, History, Shield, Smartphone, Globe, RotateCcw, AlertTriangle, Monitor, Trash2, Edit2, Save, X, Key, Code2 } from 'lucide-react';
+import { Search, Ban, CheckCircle, MoreVertical, DollarSign, History, Shield, Smartphone, Globe, RotateCcw, AlertTriangle, Monitor, Trash2, Edit2, Save, X, Key, Code2, UserCheck, AlertCircle } from 'lucide-react';
 
 export const AdminUsers: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [userHistory, setUserHistory] = useState<Transaction[]>([]);
-  const [viewMode, setViewMode] = useState<'list' | 'details' | 'fund'>('list');
+  const [viewMode, setViewMode] = useState<'list' | 'details' | 'fund' | 'requests'>('list');
   const [fundAmount, setFundAmount] = useState('');
   const [fundType, setFundType] = useState<'credit' | 'debit'>('credit');
   const [isLoading, setIsLoading] = useState(false);
@@ -79,20 +79,35 @@ export const AdminUsers: React.FC = () => {
   const handleResetPin = async () => {
       if(!selectedUser) return;
       if(window.confirm(`Reset PIN for ${selectedUser.name}? They will be prompted to create a new one on next transaction.`)) {
-          await MockDB.resetUserPin(selectedUser.id);
-          alert("User PIN reset successfully.");
+          const updatedUser = await MockDB.resetUserPin(selectedUser.id);
+          // Update local state to reflect change (although UI doesn't show PIN)
+          setSelectedUser(updatedUser);
+          await loadUsers();
+          alert(`PIN has been reset for ${selectedUser.name}.`);
       }
   };
 
-  const handleUpgradeToReseller = async () => {
-      if(!selectedUser) return;
-      if(window.confirm(`Upgrade ${selectedUser.name} to Reseller? This will generate an API Key for them.`)) {
+  const handleUpgradeToReseller = async (u: User) => {
+      if(window.confirm(`Upgrade ${u.name} to Reseller? This will generate an API Key for them.`)) {
           try {
-              const updated = await MockDB.upgradeUserToReseller(selectedUser.id);
+              const updated = await MockDB.upgradeUserToReseller(u.id);
+              // Ensure immediate UI update
               setSelectedUser(updated);
               await loadUsers();
               alert(`User upgraded to Reseller! API Key generated.`);
           } catch (e: any) {
+              alert(e.message);
+          }
+      }
+  };
+
+  const handleRejectRequest = async (u: User) => {
+      if(window.confirm(`Reject reseller application for ${u.name}?`)) {
+          try {
+              const updated = await MockDB.rejectResellerUpgrade(u.id);
+              await loadUsers();
+              alert("Application rejected.");
+          } catch(e: any) {
               alert(e.message);
           }
       }
@@ -119,10 +134,14 @@ export const AdminUsers: React.FC = () => {
           paymentMethod: 'Admin Adjustment'
       });
 
-      await loadUsers();
+      const updatedUserList = await MockDB.getUsers();
+      const updatedUser = updatedUserList.find(u => u.id === selectedUser.id);
+      if (updatedUser) setSelectedUser(updatedUser);
+      setUsers(updatedUserList);
+
       alert(`User ${fundType === 'credit' ? 'Credited' : 'Debited'} Successfully`);
-      setViewMode('list');
       setFundAmount('');
+      setViewMode('details');
   };
 
   const filteredUsers = users.filter(u => 
@@ -131,24 +150,91 @@ export const AdminUsers: React.FC = () => {
     u.phone.includes(searchTerm)
   );
 
+  const pendingRequests = users.filter(u => u.resellerRequestStatus === 'PENDING');
+
   return (
     <div className="space-y-6 animate-fade-in">
-      {viewMode === 'list' && (
-        <>
-            <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-white dark:bg-gray-800 p-4 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm transition-colors">
-                <h2 className="text-xl font-bold text-gray-800 dark:text-white">User Management</h2>
-                <div className="relative w-full md:w-64">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                    <input 
-                        type="text" 
-                        placeholder="Search name, email, phone..." 
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-9 pr-4 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 outline-none transition-colors placeholder-gray-400 dark:placeholder-gray-500"
-                    />
-                </div>
-            </div>
+      
+      {/* Main Header */}
+      <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-white dark:bg-gray-800 p-4 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm transition-colors">
+          <div className="flex items-center gap-4">
+              <h2 className="text-xl font-bold text-gray-800 dark:text-white">User Management</h2>
+              <div className="flex bg-gray-100 dark:bg-gray-700 p-1 rounded-lg">
+                  <button 
+                      onClick={() => setViewMode('list')} 
+                      className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${viewMode !== 'requests' ? 'bg-white dark:bg-gray-600 shadow text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}
+                  >
+                      All Users
+                  </button>
+                  <button 
+                      onClick={() => setViewMode('requests')} 
+                      className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-2 ${viewMode === 'requests' ? 'bg-white dark:bg-gray-600 shadow text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}
+                  >
+                      Requests
+                      {pendingRequests.length > 0 && (
+                          <span className="w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-[10px]">{pendingRequests.length}</span>
+                      )}
+                  </button>
+              </div>
+          </div>
+          
+          {viewMode === 'list' && (
+              <div className="relative w-full md:w-64">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                  <input 
+                      type="text" 
+                      placeholder="Search name, email, phone..." 
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full pl-9 pr-4 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 outline-none transition-colors placeholder-gray-400 dark:placeholder-gray-500"
+                  />
+              </div>
+          )}
+      </div>
 
+      {/* VIEW: REQUESTS */}
+      {viewMode === 'requests' && (
+          <div className="space-y-4">
+              {pendingRequests.length === 0 ? (
+                  <div className="p-12 text-center bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700">
+                      <UserCheck size={48} className="mx-auto mb-4 text-gray-300 dark:text-gray-600"/>
+                      <p className="text-gray-500 dark:text-gray-400 font-medium">No pending upgrade requests.</p>
+                  </div>
+              ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {pendingRequests.map(u => (
+                          <div key={u.id} className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex justify-between items-center">
+                              <div>
+                                  <div className="flex items-center gap-2 mb-1">
+                                      <h3 className="font-bold text-lg text-gray-900 dark:text-white">{u.name}</h3>
+                                      <span className="px-2 py-0.5 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400 text-[10px] font-bold rounded uppercase">Pending</span>
+                                  </div>
+                                  <p className="text-sm text-gray-500 dark:text-gray-400">{u.email}</p>
+                                  <p className="text-sm font-mono text-gray-500 dark:text-gray-400 mt-1">Bal: ₦{u.balance.toLocaleString()}</p>
+                              </div>
+                              <div className="flex gap-2">
+                                  <button 
+                                      onClick={() => handleRejectRequest(u)}
+                                      className="px-4 py-2 border border-red-200 dark:border-red-900 text-red-600 dark:text-red-400 rounded-xl font-bold text-xs hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                                  >
+                                      Reject
+                                  </button>
+                                  <button 
+                                      onClick={() => handleUpgradeToReseller(u)}
+                                      className="px-4 py-2 bg-green-600 text-white rounded-xl font-bold text-xs hover:bg-green-700 transition-colors shadow-lg shadow-green-200 dark:shadow-none"
+                                  >
+                                      Approve
+                                  </button>
+                              </div>
+                          </div>
+                      ))}
+                  </div>
+              )}
+          </div>
+      )}
+
+      {/* VIEW: LIST */}
+      {viewMode === 'list' && (
             <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden transition-colors">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm text-gray-700 dark:text-gray-300">
@@ -169,7 +255,10 @@ export const AdminUsers: React.FC = () => {
                                         <div className="flex items-center gap-3">
                                             <img src={`https://ui-avatars.com/api/?name=${user.name}&background=random`} className="w-8 h-8 rounded-full" alt="" />
                                             <div>
-                                                <p className="font-bold text-gray-900 dark:text-white">{user.name}</p>
+                                                <p className="font-bold text-gray-900 dark:text-white flex items-center gap-1">
+                                                    {user.name}
+                                                    {user.resellerRequestStatus === 'PENDING' && <span className="w-2 h-2 bg-yellow-500 rounded-full" title="Request Pending"></span>}
+                                                </p>
                                                 <p className="text-xs text-gray-500 dark:text-gray-400">{user.email}</p>
                                             </div>
                                         </div>
@@ -203,9 +292,9 @@ export const AdminUsers: React.FC = () => {
                     </table>
                 </div>
             </div>
-        </>
       )}
 
+      {/* VIEW: DETAILS */}
       {viewMode === 'details' && selectedUser && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-1 space-y-6">
@@ -222,6 +311,15 @@ export const AdminUsers: React.FC = () => {
                                    {selectedUser.status}
                                </span>
                           </div>
+                          {selectedUser.resellerRequestStatus === 'PENDING' && (
+                              <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-100 dark:border-yellow-800 rounded-xl text-xs">
+                                  <p className="font-bold text-yellow-800 dark:text-yellow-300">Reseller Application Pending</p>
+                                  <div className="flex gap-2 mt-2 justify-center">
+                                      <button onClick={() => handleRejectRequest(selectedUser)} className="text-red-600 font-bold hover:underline">Reject</button>
+                                      <button onClick={() => handleUpgradeToReseller(selectedUser)} className="text-green-600 font-bold hover:underline">Approve</button>
+                                  </div>
+                              </div>
+                          )}
                       </div>
                       
                       <div className="mt-6 pt-6 border-t border-gray-100 dark:border-gray-700 grid grid-cols-2 gap-4 text-left">
@@ -286,7 +384,7 @@ export const AdminUsers: React.FC = () => {
 
                           {selectedUser.role !== UserRole.RESELLER && selectedUser.role !== UserRole.ADMIN && (
                               <button 
-                                onClick={handleUpgradeToReseller}
+                                onClick={() => handleUpgradeToReseller(selectedUser)}
                                 className="w-full py-2 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 rounded-xl text-sm font-bold border border-purple-100 dark:border-purple-900/50 hover:bg-purple-100 dark:hover:bg-purple-900/30 flex items-center justify-center gap-2"
                               >
                                   <Code2 size={16}/> Upgrade to API User
