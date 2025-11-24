@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { User, UserRole } from '../types';
-import { Home, History, LogOut, Briefcase, User as UserIcon, LayoutDashboard, Settings, Users, MessageSquare, Lock, Megaphone, CreditCard, LifeBuoy, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Home, History, LogOut, Briefcase, User as UserIcon, LayoutDashboard, Settings, Users, MessageSquare, Lock, Megaphone, CreditCard, LifeBuoy, ChevronLeft, ChevronRight, ShieldAlert } from 'lucide-react';
 import { SettingsService } from '../services/settingsService';
 
 interface LayoutProps {
@@ -89,6 +90,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, activeTab, onTab
                     <NavItem id="admin-support" icon={MessageSquare} label="Tickets" />
                     <NavItem id="admin-communication" icon={Megaphone} label="Comm." />
                     <NavItem id="admin-staff" icon={Lock} label="Staff" />
+                    <NavItem id="admin-access" icon={ShieldAlert} label="Access" />
                     <NavItem id="admin-settings" icon={Settings} label="Settings" />
                 </>
             ) : (

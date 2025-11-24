@@ -1,20 +1,37 @@
 
 import React, { useEffect, useState } from 'react';
-import { Transaction, User } from '../types';
+import { Transaction, User, Staff } from '../types';
 import { MockDB } from '../services/mockDb';
 import { PieChart, Pie, Cell, Legend, Tooltip, ResponsiveContainer } from 'recharts';
-import { Download, Users, TrendingUp, DollarSign, Wallet } from 'lucide-react';
+import { Download, Users, TrendingUp, DollarSign, Wallet, UserX, UserMinus, Shield, Calendar } from 'lucide-react';
 
 export const AdminDashboard: React.FC = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [recentUsers, setRecentUsers] = useState<User[]>([]);
+  const [staffCount, setStaffCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  
+  // Specific Stats
+  const [todaySales, setTodaySales] = useState({ count: 0, amount: 0 });
+  const [inactiveCount, setInactiveCount] = useState(0);
+  const [suspendedCount, setSuspendedCount] = useState(0);
 
   useEffect(() => {
     const load = async () => {
       try {
         setTransactions(await MockDB.getAllTransactionsAdmin());
         setUsers(await MockDB.getUsers());
+        
+        // New Stats Fetching
+        const staff = await MockDB.getStaff();
+        setStaffCount(staff.length);
+        
+        setTodaySales(await MockDB.getTodaySales());
+        setInactiveCount(await MockDB.getInactiveUsersCount());
+        setSuspendedCount(await MockDB.getSuspendedUsersCount());
+        setRecentUsers(await MockDB.getRecentSignups());
+        
       } catch (e) {
         console.error("Dashboard load failed", e);
       } finally {
@@ -23,15 +40,6 @@ export const AdminDashboard: React.FC = () => {
     };
     load();
   }, []);
-
-  // Compute Stats
-  const validTransactions = transactions.filter(t => t.status === 'SUCCESS' && t.type !== 'WALLET_FUND' && t.type !== 'ADMIN_CREDIT' && t.type !== 'ADMIN_DEBIT');
-  
-  const totalRevenue = validTransactions.reduce((sum, t) => sum + t.amount, 0);
-  const totalCost = validTransactions.reduce((sum, t) => sum + (t.costPrice || 0), 0);
-  const totalProfit = validTransactions.reduce((sum, t) => sum + (t.profit || 0), 0);
-  
-  const totalUsers = users.length;
   
   // Chart Data preparation
   const providerData = [
@@ -68,41 +76,57 @@ export const AdminDashboard: React.FC = () => {
         </button>
       </div>
 
-      {/* Stats Cards Row 1 */}
+      {/* Stats Cards Row */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm transition-colors">
-            <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-lg"><TrendingUp size={20} /></div>
-                <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium">Total Sales</h3>
+        {/* Today's Sales */}
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm transition-colors relative overflow-hidden group">
+            <div className="absolute right-0 top-0 w-24 h-24 bg-green-500/10 rounded-full blur-2xl -mr-10 -mt-10 group-hover:bg-green-500/20 transition-colors"></div>
+            <div className="flex items-center gap-3 mb-2 relative z-10">
+                <div className="p-2 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-lg"><DollarSign size={20} /></div>
+                <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium">Today's Sales</h3>
             </div>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">₦{totalRevenue.toLocaleString()}</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white relative z-10">₦{todaySales.amount.toLocaleString()}</p>
+            <p className="text-xs text-green-600 dark:text-green-400 mt-1 font-medium">{todaySales.count} Transactions</p>
         </div>
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm transition-colors">
-             <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg"><Wallet size={20} /></div>
-                <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium">Total Cost</h3>
+
+        {/* Inactive Users */}
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm transition-colors relative overflow-hidden group">
+             <div className="absolute right-0 top-0 w-24 h-24 bg-gray-500/10 rounded-full blur-2xl -mr-10 -mt-10 group-hover:bg-gray-500/20 transition-colors"></div>
+             <div className="flex items-center gap-3 mb-2 relative z-10">
+                <div className="p-2 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg"><UserMinus size={20} /></div>
+                <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium">Inactive Users</h3>
             </div>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">₦{totalCost.toLocaleString()}</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white relative z-10">{inactiveCount}</p>
+             <p className="text-xs text-gray-400 mt-1">No login for 30+ days</p>
         </div>
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm transition-colors">
-             <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-lg"><DollarSign size={20} /></div>
-                <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium">Gross Profit</h3>
+
+        {/* Total Staff */}
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm transition-colors relative overflow-hidden group">
+             <div className="absolute right-0 top-0 w-24 h-24 bg-purple-500/10 rounded-full blur-2xl -mr-10 -mt-10 group-hover:bg-purple-500/20 transition-colors"></div>
+             <div className="flex items-center gap-3 mb-2 relative z-10">
+                <div className="p-2 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 rounded-lg"><Shield size={20} /></div>
+                <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium">Total Staff</h3>
             </div>
-            <p className="text-2xl font-bold text-blue-700 dark:text-blue-400">₦{totalProfit.toLocaleString()}</p>
+            <p className="text-2xl font-bold text-purple-700 dark:text-purple-400 relative z-10">{staffCount}</p>
+            <p className="text-xs text-purple-600/70 dark:text-purple-400/70 mt-1">Active Personnel</p>
         </div>
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm transition-colors">
-             <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 rounded-lg"><Users size={20} /></div>
-                <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium">Active Users</h3>
+
+        {/* Suspended Users */}
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm transition-colors relative overflow-hidden group">
+             <div className="absolute right-0 top-0 w-24 h-24 bg-red-500/10 rounded-full blur-2xl -mr-10 -mt-10 group-hover:bg-red-500/20 transition-colors"></div>
+             <div className="flex items-center gap-3 mb-2 relative z-10">
+                <div className="p-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg"><UserX size={20} /></div>
+                <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium">Suspended Users</h3>
             </div>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">{totalUsers}</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white relative z-10">{suspendedCount}</p>
+            <p className="text-xs text-red-500 mt-1">Restricted Access</p>
         </div>
       </div>
 
-      {/* Charts */}
+      {/* Main Content Area */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-         {/* Chart Container - Fixed Height to prevent Recharts crash */}
+         
+         {/* Chart Section */}
          <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col h-[400px] transition-colors">
             <h3 className="font-bold text-gray-700 dark:text-gray-200 mb-4 h-6 shrink-0">Transaction Volume by Provider</h3>
             <div className="w-full flex-1 min-h-0 relative">
@@ -134,31 +158,37 @@ export const AdminDashboard: React.FC = () => {
             </div>
          </div>
          
+         {/* Recent Users List */}
          <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 h-[400px] flex flex-col transition-colors">
-             <h3 className="font-bold text-gray-700 dark:text-gray-200 mb-4 shrink-0">Recent Transactions</h3>
+             <div className="flex justify-between items-center mb-4 shrink-0">
+                 <h3 className="font-bold text-gray-700 dark:text-gray-200">Recent Signups</h3>
+             </div>
              <div className="overflow-y-auto flex-1">
                  <table className="w-full text-xs text-left text-gray-600 dark:text-gray-300">
                     <thead className="text-gray-400 dark:text-gray-300 bg-gray-50 dark:bg-gray-700 uppercase font-semibold sticky top-0">
                         <tr>
-                            <th className="px-2 py-2">User</th>
-                            <th className="px-2 py-2">Type</th>
-                            <th className="px-2 py-2 text-right">Profit</th>
-                            <th className="px-2 py-2 text-right">Amount</th>
+                            <th className="px-3 py-3">User</th>
+                            <th className="px-3 py-3">Email</th>
+                            <th className="px-3 py-3 text-right">Joined</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                        {transactions.slice(0, 15).map(t => (
-                            <tr key={t.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                                <td className="px-2 py-2 font-medium truncate max-w-[80px]" title={t.userId}>{t.userId}</td>
-                                <td className="px-2 py-2">{t.type}</td>
-                                <td className="px-2 py-2 text-right text-green-600 dark:text-green-400">
-                                    {t.profit ? `+₦${t.profit}` : '-'}
+                        {recentUsers.map(u => (
+                            <tr key={u.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                                <td className="px-3 py-3 font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                                    <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center text-green-700 dark:text-green-400 text-[10px]">
+                                        {u.name.charAt(0)}
+                                    </div>
+                                    {u.name}
                                 </td>
-                                <td className="px-2 py-2 text-right text-gray-900 dark:text-white">₦{t.amount.toLocaleString()}</td>
+                                <td className="px-3 py-3 text-gray-500 dark:text-gray-400">{u.email}</td>
+                                <td className="px-3 py-3 text-right text-gray-400">
+                                    {u.joinedDate ? new Date(u.joinedDate).toLocaleDateString() : 'N/A'}
+                                </td>
                             </tr>
                         ))}
-                        {transactions.length === 0 && (
-                            <tr><td colSpan={4} className="p-4 text-center text-gray-400 dark:text-gray-500">No transactions yet</td></tr>
+                        {recentUsers.length === 0 && (
+                            <tr><td colSpan={3} className="p-4 text-center text-gray-400">No recent signups</td></tr>
                         )}
                     </tbody>
                  </table>

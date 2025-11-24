@@ -12,6 +12,7 @@ import { AdminSupport } from './components/AdminSupport';
 import { AdminStaff } from './components/AdminStaff';
 import { AdminCommunication } from './components/AdminCommunication';
 import { AdminPayments } from './components/AdminPayments';
+import { AdminAccessControl } from './components/AdminAccessControl';
 import { ResellerZone } from './components/ResellerZone';
 import { LandingPage } from './components/LandingPage';
 import { UserProfile } from './components/UserProfile';
@@ -175,6 +176,8 @@ export default function App() {
          return <AdminCommunication />;
       case 'admin-staff':
          return <AdminStaff />;
+      case 'admin-access':
+         return <AdminAccessControl />;
       case 'admin-settings':
          return <AdminSettings />;
       case 'reseller':

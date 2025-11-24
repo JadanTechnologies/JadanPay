@@ -75,6 +75,7 @@ export interface User {
   ipAddress?: string;
   os?: string;
   lastLogin?: string;
+  joinedDate?: string; // Added for Recent Signups
 }
 
 export interface Bundle {
@@ -187,4 +188,13 @@ export interface AppNotification {
   date: string;
   isRead: boolean;
   type: 'info' | 'success' | 'error';
+}
+
+export interface AccessRule {
+    id: string;
+    type: 'ip' | 'country' | 'device' | 'os' | 'region';
+    value: string;
+    reason: string;
+    dateAdded: string;
+    isActive: boolean;
 }

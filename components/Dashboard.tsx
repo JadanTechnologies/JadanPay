@@ -6,7 +6,7 @@ import { fundWallet } from '../services/topupService';
 import { MockDB } from '../services/mockDb';
 import { SettingsService, AppSettings } from '../services/settingsService';
 import { playNotification } from '../utils/audio';
-import { Wallet, TrendingUp, Plus, ArrowRight, Bell, X, AlertTriangle, Smartphone, Copy, Upload, CreditCard, Landmark, CheckCircle, Gift, Share2, Loader2, Lock } from 'lucide-react';
+import { Wallet, TrendingUp, Plus, ArrowRight, Bell, X, AlertTriangle, Smartphone, Copy, Upload, CreditCard, Landmark, CheckCircle, Gift, Share2, Loader2, Lock, Speaker } from 'lucide-react';
 
 interface DashboardProps {
   user: User;
@@ -191,55 +191,60 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
     <div className="space-y-6 md:space-y-8 animate-fade-in relative">
       
       {/* Top Bar with Notifications */}
-      <div className="flex justify-end relative">
-          <button onClick={markNotificationsRead} className="relative p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-              <Bell size={24} className="text-gray-600 dark:text-gray-300"/>
-              {unreadCount > 0 && (
-                  <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-white dark:border-gray-900"></span>
-              )}
-          </button>
-          
-          {showNotifications && (
-              <div className="absolute right-0 top-12 w-80 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 z-50 overflow-hidden">
-                  <div className="p-3 border-b border-gray-100 dark:border-gray-700 font-bold text-sm text-gray-700 dark:text-gray-200">Notifications</div>
-                  <div className="max-h-64 overflow-y-auto">
-                      {notifications.length === 0 ? (
-                          <div className="p-4 text-center text-xs text-gray-400">No new notifications</div>
-                      ) : (
-                          notifications.map(n => (
-                              <div key={n.id} className={`p-3 border-b border-gray-50 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 ${!n.isRead ? 'bg-green-50/30 dark:bg-green-900/10' : ''}`}>
-                                  <p className="text-xs font-bold text-gray-800 dark:text-white">{n.title}</p>
-                                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{n.message}</p>
-                                  <p className="text-[9px] text-gray-300 dark:text-gray-500 mt-1 text-right">{new Date(n.date).toLocaleDateString()}</p>
-                              </div>
-                          ))
-                      )}
+      <div className="flex justify-between items-center relative">
+          <div>
+               <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium">{new Date().toDateString()}</h3>
+          </div>
+          <div className="relative">
+              <button onClick={markNotificationsRead} className="relative p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                  <Bell size={24} className="text-gray-600 dark:text-gray-300"/>
+                  {unreadCount > 0 && (
+                      <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-white dark:border-gray-900 animate-pulse"></span>
+                  )}
+              </button>
+              
+              {showNotifications && (
+                  <div className="absolute right-0 top-12 w-80 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 z-50 overflow-hidden animate-fade-in-up">
+                      <div className="p-3 border-b border-gray-100 dark:border-gray-700 font-bold text-sm text-gray-700 dark:text-gray-200">Notifications</div>
+                      <div className="max-h-64 overflow-y-auto">
+                          {notifications.length === 0 ? (
+                              <div className="p-4 text-center text-xs text-gray-400">No new notifications</div>
+                          ) : (
+                              notifications.map(n => (
+                                  <div key={n.id} className={`p-3 border-b border-gray-50 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 ${!n.isRead ? 'bg-green-50/30 dark:bg-green-900/10' : ''}`}>
+                                      <p className="text-xs font-bold text-gray-800 dark:text-white">{n.title}</p>
+                                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{n.message}</p>
+                                      <p className="text-[9px] text-gray-300 dark:text-gray-500 mt-1 text-right">{new Date(n.date).toLocaleDateString()}</p>
+                                  </div>
+                              ))
+                          )}
+                      </div>
                   </div>
-              </div>
-          )}
+              )}
+          </div>
       </div>
 
-      {/* Announcements Section */}
+      {/* Announcements Section - Ensure this is visible */}
       {visibleAnnouncements.length > 0 && (
-          <div className="space-y-2">
+          <div className="space-y-3">
               {visibleAnnouncements.map(ann => (
                   <div 
                     key={ann.id} 
-                    className={`p-4 rounded-xl border flex items-start gap-3 relative ${
+                    className={`p-4 rounded-xl border flex items-start gap-3 relative shadow-sm animate-in slide-in-from-top-4 ${
                         ann.type === 'info' ? 'bg-blue-50 border-blue-100 text-blue-800 dark:bg-blue-900/20 dark:border-blue-900 dark:text-blue-300' :
                         ann.type === 'warning' ? 'bg-yellow-50 border-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:border-yellow-900 dark:text-yellow-300' :
                         ann.type === 'success' ? 'bg-green-50 border-green-100 text-green-800 dark:bg-green-900/20 dark:border-green-900 dark:text-green-300' :
                         'bg-purple-50 border-purple-100 text-purple-800 dark:bg-purple-900/20 dark:border-purple-900 dark:text-purple-300'
                     }`}
                   >
-                      <Bell size={20} className="shrink-0 mt-0.5" />
+                      <Speaker size={20} className="shrink-0 mt-0.5" />
                       <div className="flex-1 pr-6">
-                          <h4 className="font-bold text-sm">{ann.title}</h4>
-                          <p className="text-xs opacity-90 mt-1">{ann.message}</p>
+                          <h4 className="font-bold text-sm uppercase tracking-wide mb-1">{ann.title}</h4>
+                          <p className="text-sm opacity-90 leading-relaxed">{ann.message}</p>
                       </div>
                       <button 
                         onClick={() => handleDismiss(ann.id)}
-                        className="absolute top-3 right-3 text-current opacity-50 hover:opacity-100"
+                        className="absolute top-3 right-3 text-current opacity-50 hover:opacity-100 hover:bg-black/5 p-1 rounded transition-all"
                       >
                           <X size={16} />
                       </button>

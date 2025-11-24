@@ -1,5 +1,5 @@
 
-import { User, Transaction, TransactionType, TransactionStatus, UserRole, Provider, Ticket, UserStatus, Staff, Role, Announcement, CommunicationTemplate, Bundle, AppNotification } from '../types';
+import { User, Transaction, TransactionType, TransactionStatus, UserRole, Provider, Ticket, UserStatus, Staff, Role, Announcement, CommunicationTemplate, Bundle, AppNotification, AccessRule } from '../types';
 import { MOCK_USERS_DATA, SAMPLE_BUNDLES } from '../constants';
 import { SettingsService, AppSettings } from './settingsService';
 import { NotificationService } from './notificationService';
@@ -18,6 +18,7 @@ interface DatabaseSchema {
     templates: CommunicationTemplate[];
     notifications: AppNotification[];
     settings: AppSettings | null;
+    accessRules: AccessRule[];
 }
 
 // Default Data
@@ -27,7 +28,8 @@ const DEFAULT_USERS: User[] = MOCK_USERS_DATA.map(u => ({
     walletNumber: u.id === 'u1' ? '2039485712' : u.id === 'u2' ? '2058392011' : '0000000000',
     referralCode: u.name.substring(0,3).toUpperCase() + Math.floor(Math.random() * 1000),
     referralCount: 0,
-    bonusBalance: 0
+    bonusBalance: 0,
+    joinedDate: new Date().toISOString()
 })) as User[];
 
 // In-Memory State
@@ -41,11 +43,11 @@ let db: DatabaseSchema = {
     announcements: [],
     templates: [],
     notifications: [],
-    settings: null
+    settings: null,
+    accessRules: []
 };
 
 // --- DATA SANITIZATION ---
-// This ensures that even if local storage has old data formats, the app won't crash
 const sanitizeUser = (u: any): User => {
     if (!u) return DEFAULT_USERS[0];
     
@@ -73,7 +75,8 @@ const sanitizeUser = (u: any): User => {
         status: u.status || UserStatus.ACTIVE,
         ipAddress: u.ipAddress || '127.0.0.1',
         os: u.os || 'Unknown',
-        lastLogin: u.lastLogin || new Date().toISOString()
+        lastLogin: u.lastLogin || new Date().toISOString(),
+        joinedDate: u.joinedDate || new Date().toISOString()
     };
 };
 
@@ -94,7 +97,8 @@ const loadDatabase = () => {
                 announcements: Array.isArray(parsed.announcements) ? parsed.announcements : [],
                 templates: Array.isArray(parsed.templates) ? parsed.templates : [],
                 notifications: Array.isArray(parsed.notifications) ? parsed.notifications : [],
-                settings: parsed.settings || null 
+                settings: parsed.settings || null,
+                accessRules: Array.isArray(parsed.accessRules) ? parsed.accessRules : []
             };
             
             console.log("Database loaded and sanitized.");
@@ -173,6 +177,28 @@ export const MockDB = {
     return [...db.users];
   },
   
+  getRecentSignups: async (limit: number = 5) => {
+      await delay(200);
+      return db.users
+        .sort((a, b) => new Date(b.joinedDate || 0).getTime() - new Date(a.joinedDate || 0).getTime())
+        .slice(0, limit);
+  },
+
+  getInactiveUsersCount: async () => {
+      await delay(100);
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      
+      return db.users.filter(u => {
+          const lastLogin = new Date(u.lastLogin || 0);
+          return lastLogin < thirtyDaysAgo;
+      }).length;
+  },
+
+  getSuspendedUsersCount: async () => {
+      return db.users.filter(u => u.status === UserStatus.SUSPENDED).length;
+  },
+  
   getTopReferrers: async (limit: number = 10) => {
       await delay(300);
       return db.users
@@ -242,7 +268,8 @@ export const MockDB = {
           status: UserStatus.ACTIVE,
           ipAddress: '127.0.0.1',
           os: 'Web Browser',
-          lastLogin: new Date().toISOString()
+          lastLogin: new Date().toISOString(),
+          joinedDate: new Date().toISOString()
       };
 
       db.users.push(newUser);
@@ -362,6 +389,19 @@ export const MockDB = {
   getPendingTransactions: async () => {
       await delay(200);
       return db.transactions.filter(t => t.status === TransactionStatus.PENDING && t.type === TransactionType.WALLET_FUND);
+  },
+
+  getTodaySales: async () => {
+      const today = new Date().toDateString();
+      const txs = db.transactions.filter(t => 
+          new Date(t.date).toDateString() === today && 
+          t.status === TransactionStatus.SUCCESS &&
+          (t.type === TransactionType.AIRTIME || t.type === TransactionType.DATA || t.type === TransactionType.CABLE || t.type === TransactionType.ELECTRICITY)
+      );
+      
+      const count = txs.length;
+      const amount = txs.reduce((sum, t) => sum + t.amount, 0);
+      return { count, amount };
   },
 
   approveTransaction: async (txId: string) => {
@@ -569,6 +609,21 @@ export const MockDB = {
   },
   deleteBundle: async (id: string) => {
       db.bundles = db.bundles.filter(b => b.id !== id);
+      saveDatabase();
+  },
+
+  // --- ACCESS CONTROL ---
+  getAccessRules: async () => {
+      await delay(200);
+      return [...db.accessRules];
+  },
+  addAccessRule: async (rule: AccessRule) => {
+      db.accessRules.unshift(rule);
+      saveDatabase();
+      return rule;
+  },
+  deleteAccessRule: async (id: string) => {
+      db.accessRules = db.accessRules.filter(r => r.id !== id);
       saveDatabase();
   }
 };
