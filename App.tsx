@@ -62,6 +62,7 @@ export default function App() {
               console.error("Critical session error", e);
               // Fail safe: Clear storage if corrupt
               localStorage.removeItem('JADANPAY_CURRENT_USER_ID');
+              setUser(null);
           }
       };
       

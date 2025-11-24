@@ -2,6 +2,7 @@
 import { Transaction, TransactionType, TransactionStatus, Provider, Bundle, User, BillProvider } from '../types';
 import { MockDB } from './mockDb';
 import { ApiService } from './apiService';
+import { NotificationService } from './notificationService';
 
 // Helper to generate IDs
 const generateId = () => Math.random().toString(36).substr(2, 9);
@@ -77,6 +78,13 @@ export const processAirtimePurchase = async (
   };
 
   await MockDB.addTransaction(tx);
+
+  // Send SMS
+  await NotificationService.sendSms(
+      user.phone, 
+      `JadanPay: Airtime recharge of N${amount} to ${phone} Successful. New Bal: N${updatedUser.balance.toFixed(2)}`
+  );
+
   return tx;
 };
 
@@ -155,6 +163,13 @@ export const processDataPurchase = async (
   };
 
   await MockDB.addTransaction(tx);
+
+  // Send SMS
+  await NotificationService.sendSms(
+      user.phone, 
+      `JadanPay: Data sub (${bundle.name}) to ${phone} Successful. New Bal: N${updatedUser.balance.toFixed(2)}`
+  );
+
   return tx;
 };
 
@@ -205,12 +220,20 @@ export const processBillPayment = async (
     };
 
     await MockDB.addTransaction(tx);
+
+    // Send SMS
+    await NotificationService.sendSms(
+      user.phone, 
+      `JadanPay: Bill Payment (${provider} - ${number}) Successful. Amount: N${amount}. New Bal: N${updatedUser.balance.toFixed(2)}`
+    );
+
     return tx;
 };
 
 export const fundWallet = async (user: User, amount: number): Promise<Transaction> => {
   // Mock Payment Gateway Success
   const updatedUser = await MockDB.updateUserBalance(user.id, amount);
+  const ref = generateRef();
 
   const tx: Transaction = {
     id: generateId(),
@@ -219,12 +242,19 @@ export const fundWallet = async (user: User, amount: number): Promise<Transactio
     amount,
     status: TransactionStatus.SUCCESS,
     date: new Date().toISOString(),
-    reference: generateRef(),
+    reference: ref,
     previousBalance: user.balance,
     newBalance: updatedUser.balance,
     paymentMethod: 'Bank Transfer' // Added default payment method for manual funding
   };
 
   await MockDB.addTransaction(tx);
+
+  // Send SMS
+  await NotificationService.sendSms(
+      user.phone, 
+      `JadanPay: Wallet funded with N${amount} Successfully. New Bal: N${updatedUser.balance.toFixed(2)}. Ref: ${ref}`
+  );
+
   return tx;
 };

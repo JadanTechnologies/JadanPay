@@ -2,6 +2,7 @@
 import { User, Transaction, TransactionType, TransactionStatus, UserRole, Provider, Ticket, UserStatus, Staff, Role, Announcement, CommunicationTemplate, Bundle, AppNotification } from '../types';
 import { MOCK_USERS_DATA, SAMPLE_BUNDLES } from '../constants';
 import { SettingsService, AppSettings } from './settingsService';
+import { NotificationService } from './notificationService';
 
 const DB_STORAGE_KEY = 'JADANPAY_DB_V1';
 
@@ -47,12 +48,19 @@ let db: DatabaseSchema = {
 // This ensures that even if local storage has old data formats, the app won't crash
 const sanitizeUser = (u: any): User => {
     if (!u) return DEFAULT_USERS[0];
+    
+    // Ensure Role is valid
+    let role = UserRole.USER;
+    if (Object.values(UserRole).includes(u.role)) {
+        role = u.role;
+    }
+
     return {
         id: u.id || Math.random().toString(36),
         name: u.name || 'Unknown User',
         email: u.email || 'missing@email.com',
         phone: u.phone || '',
-        role: u.role || UserRole.USER,
+        role: role,
         balance: typeof u.balance === 'number' ? u.balance : 0,
         savings: typeof u.savings === 'number' ? u.savings : 0,
         bonusBalance: typeof u.bonusBalance === 'number' ? u.bonusBalance : 0,
@@ -86,7 +94,7 @@ const loadDatabase = () => {
                 announcements: Array.isArray(parsed.announcements) ? parsed.announcements : [],
                 templates: Array.isArray(parsed.templates) ? parsed.templates : [],
                 notifications: Array.isArray(parsed.notifications) ? parsed.notifications : [],
-                settings: parsed.settings || null // Settings handled by SettingsService mostly
+                settings: parsed.settings || null 
             };
             
             console.log("Database loaded and sanitized.");
@@ -101,6 +109,8 @@ const loadDatabase = () => {
         // Fallback to defaults to prevent crash
         db.users = DEFAULT_USERS;
         db.bundles = DEFAULT_BUNDLES;
+        // Clear corrupt data
+        localStorage.removeItem(DB_STORAGE_KEY);
         saveDatabase();
     }
 };
@@ -118,8 +128,12 @@ export const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, 
 const generateWalletNumber = () => '2' + Math.random().toString().slice(2, 11);
 const generateReferralCode = (name: string) => name.substring(0,3).toUpperCase() + Math.floor(1000 + Math.random() * 9000);
 
-// Initialize immediately
-loadDatabase();
+// Initialize immediately in a safe block
+try {
+    loadDatabase();
+} catch(e) {
+    console.error("Fatal MockDB Init Error", e);
+}
 
 
 export const MockDB = {
@@ -370,6 +384,12 @@ export const MockDB = {
             message: `Your manual funding of ₦${tx.amount.toLocaleString()} has been approved.`,
             type: 'success'
           });
+
+          // SEND SMS
+          await NotificationService.sendSms(
+              user.phone,
+              `JadanPay Alert: Credit of N${tx.amount.toLocaleString()} was successful. New Bal: N${user.balance.toLocaleString()}. Ref: ${tx.reference}`
+          );
       }
 
       saveDatabase();

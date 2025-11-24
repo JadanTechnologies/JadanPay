@@ -1,4 +1,4 @@
-import React, { Component, ReactNode } from 'react';
+import React, { ReactNode } from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 
@@ -12,7 +12,7 @@ interface ErrorBoundaryState {
 }
 
 // Simple Error Boundary to catch crashes and prevent white screen
-class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
   public state: ErrorBoundaryState = { hasError: false, error: null };
 
   constructor(props: ErrorBoundaryProps) {
@@ -89,25 +89,36 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
 }
 
 const renderApp = () => {
-    const rootElement = document.getElementById('root');
-    let rootNode = rootElement;
-
-    if (!rootElement) {
-        // Create root if missing
-        rootNode = document.createElement('div');
-        rootNode.id = 'root';
-        document.body.appendChild(rootNode);
-    }
-
-    if (rootNode) {
-        const root = ReactDOM.createRoot(rootNode);
-        root.render(
-            <React.StrictMode>
-            <ErrorBoundary>
-                <App />
-            </ErrorBoundary>
-            </React.StrictMode>
-        );
+    try {
+        const rootElement = document.getElementById('root');
+        if (!rootElement) {
+            console.error("Root element not found! Retrying...");
+            // Create root if missing (failsafe)
+            const rootNode = document.createElement('div');
+            rootNode.id = 'root';
+            document.body.appendChild(rootNode);
+            
+            const root = ReactDOM.createRoot(rootNode);
+            root.render(
+                <React.StrictMode>
+                    <ErrorBoundary>
+                        <App />
+                    </ErrorBoundary>
+                </React.StrictMode>
+            );
+        } else {
+            const root = ReactDOM.createRoot(rootElement);
+            root.render(
+                <React.StrictMode>
+                    <ErrorBoundary>
+                        <App />
+                    </ErrorBoundary>
+                </React.StrictMode>
+            );
+        }
+    } catch (e) {
+        console.error("Failed to render app root:", e);
+        document.body.innerHTML = '<div style="padding:20px">Critical Error: Failed to start application. check console.</div>';
     }
 };
 
