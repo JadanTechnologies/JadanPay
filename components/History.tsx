@@ -232,45 +232,70 @@ export const History: React.FC<HistoryProps> = ({ user, highlightId }) => {
                       </div>
 
                       {/* Transaction Details */}
-                      <div className="space-y-4 text-sm bg-gray-50 dark:bg-gray-700/50 p-6 rounded-2xl border border-gray-100 dark:border-gray-700">
-                         <div className="flex justify-between items-center pb-3 border-b border-dashed border-gray-200 dark:border-gray-600">
-                             <span className="text-gray-500 dark:text-gray-400 font-medium">Reference</span>
-                             <div className="flex items-center gap-2">
-                                  <span className="font-mono font-bold text-gray-900 dark:text-white text-xs tracking-tight">{selectedTx.reference}</span>
-                                  <button onClick={() => handleCopyRef(selectedTx.reference)} className="text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors"><Copy size={12}/></button>
+                      <div className="bg-gray-50 dark:bg-gray-700/30 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
+                         {/* Date & Ref Header */}
+                         <div className="p-4 border-b border-gray-200 dark:border-gray-600 flex justify-between items-center bg-gray-100/50 dark:bg-gray-800/50">
+                             <div className="flex flex-col text-left">
+                                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Reference</span>
+                                 <div className="flex items-center gap-1">
+                                     <span className="font-mono font-bold text-gray-700 dark:text-gray-200 text-xs tracking-tight">{selectedTx.reference}</span>
+                                     <button onClick={() => handleCopyRef(selectedTx.reference)} className="text-gray-400 hover:text-green-600 transition-colors"><Copy size={10}/></button>
+                                 </div>
                              </div>
-                         </div>
-                         
-                         <div className="flex justify-between items-center pb-3 border-b border-dashed border-gray-200 dark:border-gray-600">
-                             <span className="text-gray-500 dark:text-gray-400 font-medium">Service</span>
-                             <span className="font-bold text-gray-900 dark:text-white capitalize">{selectedTx.type.replace(/_/g, ' ').toLowerCase()}</span>
-                         </div>
-
-                         <div className="flex justify-between items-center pb-3 border-b border-dashed border-gray-200 dark:border-gray-600">
-                             <span className="text-gray-500 dark:text-gray-400 font-medium">Provider</span>
-                             <div className="flex items-center gap-2">
-                                 {selectedTx.provider && (getProviderLogo(selectedTx.provider) as any) && (
-                                     <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${getProviderColor(selectedTx.provider)} shadow-sm`}>
-                                         {getProviderLogo(selectedTx.provider).charAt(0)}
-                                     </span>
-                                 )}
-                                 <span className="font-bold text-gray-900 dark:text-white">
-                                     {selectedTx.provider ? getProviderLogo(selectedTx.provider) : 'Wallet'}
-                                 </span>
+                             <div className="flex flex-col text-right">
+                                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Time</span>
+                                 <span className="font-bold text-gray-700 dark:text-gray-200 text-xs">{new Date(selectedTx.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                              </div>
                          </div>
 
-                         <div className="flex justify-between items-center">
-                             <span className="text-gray-500 dark:text-gray-400 font-medium">Beneficiary</span>
-                             <span className="font-bold text-gray-900 dark:text-white font-mono">{selectedTx.destinationNumber || selectedTx.userId}</span>
-                         </div>
-                         
-                         {selectedTx.meterToken && (
-                             <div className="pt-3 mt-3 border-t border-dashed border-gray-200 dark:border-gray-600 bg-green-50 dark:bg-green-900/30 -mx-6 px-6 py-4">
-                                 <span className="block text-gray-500 dark:text-gray-400 font-medium text-xs uppercase mb-1 text-left">Electricity Token</span>
+                         <div className="p-4 space-y-3">
+                             {/* Service Type */}
+                             <div className="flex justify-between items-center">
+                                 <span className="text-sm text-gray-500 dark:text-gray-400">Service</span>
+                                 <span className="font-bold text-gray-900 dark:text-white capitalize">{selectedTx.type.replace(/_/g, ' ').toLowerCase()}</span>
+                             </div>
+
+                             {/* Provider Row with Logo */}
+                             <div className="flex justify-between items-center">
+                                 <span className="text-sm text-gray-500 dark:text-gray-400">Provider</span>
+                                 <div className="flex items-center gap-2 bg-white dark:bg-gray-800 px-2 py-1 rounded-lg border border-gray-100 dark:border-gray-700 shadow-sm">
+                                     {selectedTx.provider ? (
+                                         <>
+                                            <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${getProviderColor(selectedTx.provider)}`}>
+                                                {getProviderLogo(selectedTx.provider).charAt(0)}
+                                            </span>
+                                            <span className="font-bold text-sm text-gray-800 dark:text-gray-200">
+                                                {getProviderLogo(selectedTx.provider)}
+                                            </span>
+                                         </>
+                                     ) : (
+                                         <span className="font-bold text-sm text-gray-800 dark:text-gray-200">Wallet</span>
+                                     )}
+                                 </div>
+                             </div>
+
+                             {/* Beneficiary */}
+                             <div className="flex justify-between items-center">
+                                 <span className="text-sm text-gray-500 dark:text-gray-400">Beneficiary</span>
+                                 <span className="font-mono font-bold text-gray-900 dark:text-white text-sm tracking-wide">{selectedTx.destinationNumber || selectedTx.userId}</span>
+                             </div>
+                             
+                             {/* Description / Plan Name if available */}
+                             {selectedTx.bundleName && (
                                  <div className="flex justify-between items-center">
-                                     <span className="font-mono font-black text-lg text-gray-900 dark:text-white tracking-widest">{selectedTx.meterToken}</span>
-                                     <button onClick={() => handleCopyToken(selectedTx.meterToken!)} className="text-green-600 hover:text-green-700 dark:text-green-400"><Copy size={16}/></button>
+                                     <span className="text-sm text-gray-500 dark:text-gray-400">Plan</span>
+                                     <span className="font-medium text-gray-900 dark:text-white text-sm text-right max-w-[180px] truncate" title={selectedTx.bundleName}>{selectedTx.bundleName}</span>
+                                 </div>
+                             )}
+                         </div>
+                         
+                         {/* Token Section */}
+                         {selectedTx.meterToken && (
+                             <div className="border-t border-dashed border-gray-200 dark:border-gray-600 bg-green-50/50 dark:bg-green-900/10 p-4">
+                                 <span className="block text-green-700 dark:text-green-400 font-bold text-[10px] uppercase mb-1 text-left">Electricity Token</span>
+                                 <div className="flex justify-between items-center bg-white dark:bg-gray-800 p-2 rounded-lg border border-green-100 dark:border-green-800 border-dashed">
+                                     <span className="font-mono font-black text-lg text-gray-900 dark:text-white tracking-[0.2em]">{selectedTx.meterToken}</span>
+                                     <button onClick={() => handleCopyToken(selectedTx.meterToken!)} className="text-green-600 hover:text-green-700 dark:text-green-400 p-1"><Copy size={16}/></button>
                                  </div>
                              </div>
                          )}
@@ -318,3 +343,4 @@ export const History: React.FC<HistoryProps> = ({ user, highlightId }) => {
     </div>
   );
 };
+    
