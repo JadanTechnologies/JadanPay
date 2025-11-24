@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { User, Ticket } from '../types';
 import { MockDB } from '../services/mockDb';
-import { MessageSquare, Send, Plus, X, LifeBuoy, Zap, ShieldAlert } from 'lucide-react';
+import { MessageSquare, Send, Plus, X, LifeBuoy, Zap, ShieldAlert, Paperclip, FileText } from 'lucide-react';
 import { playNotification } from '../utils/audio';
 
 interface SupportProps {
@@ -21,9 +21,11 @@ export const Support: React.FC<SupportProps> = ({ user }) => {
   const [newPriority, setNewPriority] = useState<'low' | 'medium' | 'high'>('medium');
   const [isSuperTicket, setIsSuperTicket] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [newAttachment, setNewAttachment] = useState<File | null>(null);
 
   // Reply State
   const [replyText, setReplyText] = useState('');
+  const [replyAttachment, setReplyAttachment] = useState<File | null>(null);
 
   useEffect(() => {
     if (user?.id) {
@@ -54,7 +56,14 @@ export const Support: React.FC<SupportProps> = ({ user }) => {
         const finalSubject = isSuperTicket ? `[SUPER] ${newSubject}` : newSubject;
         const finalPriority = isSuperTicket ? 'high' : newPriority;
 
-        const ticket = await MockDB.createTicket(user.id, finalSubject, newMessage, finalPriority);
+        let attachUrl = undefined;
+        let attachName = undefined;
+        if (newAttachment) {
+            attachUrl = URL.createObjectURL(newAttachment);
+            attachName = newAttachment.name;
+        }
+
+        const ticket = await MockDB.createTicket(user.id, finalSubject, newMessage, finalPriority, attachUrl, attachName);
         
         if (isSuperTicket) {
             playNotification("Super Ticket created! An agent will be with you shortly.");
@@ -65,6 +74,7 @@ export const Support: React.FC<SupportProps> = ({ user }) => {
         setShowCreateModal(false);
         setNewSubject('');
         setNewMessage('');
+        setNewAttachment(null);
         setIsSuperTicket(false);
         setNewPriority('medium');
         
@@ -83,8 +93,16 @@ export const Support: React.FC<SupportProps> = ({ user }) => {
     if (!selectedTicket || !replyText) return;
 
     try {
-        await MockDB.replyTicket(selectedTicket.id, replyText, false);
+        let attachUrl = undefined;
+        let attachName = undefined;
+        if (replyAttachment) {
+            attachUrl = URL.createObjectURL(replyAttachment);
+            attachName = replyAttachment.name;
+        }
+
+        await MockDB.replyTicket(selectedTicket.id, replyText, false, attachUrl, attachName);
         setReplyText('');
+        setReplyAttachment(null);
         
         // Refresh local data
         const updated = await MockDB.getTickets(user.id);
@@ -95,6 +113,16 @@ export const Support: React.FC<SupportProps> = ({ user }) => {
     } catch (error) {
         alert("Failed to send reply");
     }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, isReply: boolean) => {
+      if (e.target.files && e.target.files[0]) {
+          if (isReply) {
+              setReplyAttachment(e.target.files[0]);
+          } else {
+              setNewAttachment(e.target.files[0]);
+          }
+      }
   };
 
   // Helper to safely get last message with defensive check
@@ -210,6 +238,14 @@ export const Support: React.FC<SupportProps> = ({ user }) => {
                                     : 'bg-white dark:bg-gray-700 text-gray-800 dark:text-white border border-gray-200 dark:border-gray-600 rounded-bl-none'
                                 }`}>
                                     <p className="leading-relaxed whitespace-pre-wrap">{msg.text}</p>
+                                    {msg.attachmentUrl && (
+                                        <div className="mt-2 p-2 bg-black/10 dark:bg-black/20 rounded flex items-center gap-2 text-xs">
+                                            <Paperclip size={14}/>
+                                            <a href={msg.attachmentUrl} target="_blank" rel="noopener noreferrer" className="underline truncate max-w-[150px] text-white">
+                                                {msg.attachmentName || 'Attachment'}
+                                            </a>
+                                        </div>
+                                    )}
                                     <p className={`text-[9px] mt-1 text-right ${!msg.isAdmin ? 'text-green-200' : 'text-gray-400 dark:text-gray-300'}`}>
                                         {new Date(msg.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                                     </p>
@@ -221,7 +257,20 @@ export const Support: React.FC<SupportProps> = ({ user }) => {
                     {/* Reply Box */}
                     {selectedTicket.status !== 'closed' ? (
                         <form onSubmit={handleReply} className="p-4 border-t border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800">
+                            {replyAttachment && (
+                                <div className="mb-2 p-2 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-between text-xs">
+                                    <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+                                        <FileText size={14}/>
+                                        <span className="truncate max-w-[200px]">{replyAttachment.name}</span>
+                                    </div>
+                                    <button type="button" onClick={() => setReplyAttachment(null)}><X size={14} className="text-gray-400"/></button>
+                                </div>
+                            )}
                             <div className="flex gap-2">
+                                <label className="p-3 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 cursor-pointer transition-colors">
+                                    <Paperclip size={20}/>
+                                    <input type="file" className="hidden" onChange={(e) => handleFileChange(e, true)}/>
+                                </label>
                                 <input 
                                     type="text" 
                                     value={replyText}
@@ -326,6 +375,15 @@ export const Support: React.FC<SupportProps> = ({ user }) => {
                                 placeholder="Describe your issue in detail so we can help you faster..."
                                 required
                             />
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Attachment (Optional)</label>
+                            <label className="flex items-center gap-2 p-3 bg-gray-50 dark:bg-gray-900 border border-dashed border-gray-300 dark:border-gray-700 rounded-xl cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                <Paperclip size={18} className="text-gray-400"/>
+                                <span className="text-sm text-gray-500 dark:text-gray-400 flex-1 truncate">{newAttachment ? newAttachment.name : "Choose a file..."}</span>
+                                <input type="file" className="hidden" onChange={(e) => handleFileChange(e, false)}/>
+                            </label>
                         </div>
 
                         <div className="flex gap-3 pt-2">

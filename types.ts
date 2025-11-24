@@ -127,6 +127,8 @@ export interface TicketMessage {
   text: string;
   date: string;
   isAdmin: boolean;
+  attachmentUrl?: string;
+  attachmentName?: string;
 }
 
 export interface Ticket {

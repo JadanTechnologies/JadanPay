@@ -211,12 +211,13 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
       // --- DYNAMIC AUDIO NOTIFICATION START ---
       let successMessage = "Transaction successful.";
       const provName = PROVIDER_LOGOS[provider as Provider] || provider;
-      const targetPhone = phone.split('').join(' '); // Split for clearer TTS
+      // Split phone for clearer TTS pronunciation
+      const targetPhone = phone.split('').join(' '); 
 
       if (type === TransactionType.DATA && selectedBundle) {
-          successMessage = `${provName} data bundle ${selectedBundle.dataAmount} has been sent to ${phone} successfully.`;
+          successMessage = `${provName} data worth of ${selectedBundle.dataAmount} has been sent to ${targetPhone} successfully.`;
       } else if (type === TransactionType.AIRTIME) {
-          successMessage = `${provName} airtime worth ${amount} Naira has been sent to ${phone} successfully.`;
+          successMessage = `${provName} airtime worth of ${amount} Naira has been sent to ${targetPhone} successfully.`;
       } else {
           successMessage = `${type} payment for ${provName} was successful.`;
       }
@@ -228,11 +229,8 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
       setResultState('error');
       
       // --- ERROR AUDIO NOTIFICATION START ---
+      // User specific wording: "transaction failed due to insufficient balance or network issue"
       let errorMsg = "Transaction failed due to insufficient balance or network issue.";
-      if (err.message && (err.message.includes('balance') || err.message.includes('network'))) {
-          // If the error message is specific enough, we can use it, but user requested specific wording
-          // Using standard error message as requested
-      }
       playNotification(errorMsg, 'error');
       // --- ERROR AUDIO NOTIFICATION END ---
 

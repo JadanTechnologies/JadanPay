@@ -450,7 +450,7 @@ export const MockDB = {
     return db.tickets.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   },
   
-  createTicket: async (userId: string, subject: string, message: string, priority: 'low' | 'medium' | 'high') => {
+  createTicket: async (userId: string, subject: string, message: string, priority: 'low' | 'medium' | 'high', attachmentUrl?: string, attachmentName?: string) => {
     await delay(400);
     const newTicket: Ticket = {
         id: Math.random().toString(36).substr(2, 9),
@@ -465,7 +465,9 @@ export const MockDB = {
                 senderId: userId,
                 text: message,
                 date: new Date().toISOString(),
-                isAdmin: false
+                isAdmin: false,
+                attachmentUrl,
+                attachmentName
             }
         ]
     };
@@ -474,7 +476,7 @@ export const MockDB = {
     return newTicket;
   },
 
-  replyTicket: async (ticketId: string, text: string, isAdmin: boolean) => {
+  replyTicket: async (ticketId: string, text: string, isAdmin: boolean, attachmentUrl?: string, attachmentName?: string) => {
     await delay(300);
     const ticket = db.tickets.find(t => t.id === ticketId);
     if (ticket) {
@@ -483,7 +485,9 @@ export const MockDB = {
             senderId: isAdmin ? 'admin' : ticket.userId,
             text,
             date: new Date().toISOString(),
-            isAdmin
+            isAdmin,
+            attachmentUrl,
+            attachmentName
         });
         saveDatabase();
     }
