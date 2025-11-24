@@ -95,11 +95,9 @@ export const processAirtimePurchase = async (
 
   await MockDB.addTransaction(tx);
 
-  // Send SMS
-  await NotificationService.sendSms(
-      user.phone, 
-      `JadanPay: Airtime recharge of N${amount} to ${phone} Successful. New Bal: N${updatedUser.balance.toFixed(2)}`
-  );
+  // Send SMS Notification
+  const smsMsg = `JadanPay: ${provider} Airtime of N${amount} to ${phone} Successful. New Bal: N${updatedUser.balance.toFixed(2)}. Ref: ${tx.reference}`;
+  await NotificationService.sendSms(user.phone, smsMsg);
 
   return tx;
 };
@@ -186,11 +184,9 @@ export const processDataPurchase = async (
 
   await MockDB.addTransaction(tx);
 
-  // Send SMS
-  await NotificationService.sendSms(
-      user.phone, 
-      `JadanPay: Data sub (${bundle.name}) to ${phone} Successful. New Bal: N${updatedUser.balance.toFixed(2)}`
-  );
+  // Send SMS Notification
+  const smsMsg = `JadanPay: ${bundle.dataAmount} Data sent to ${phone}. Plan: ${bundle.name}. New Bal: N${updatedUser.balance.toFixed(2)}.`;
+  await NotificationService.sendSms(user.phone, smsMsg);
 
   return tx;
 };
@@ -243,11 +239,9 @@ export const processBillPayment = async (
 
     await MockDB.addTransaction(tx);
 
-    // Send SMS
-    await NotificationService.sendSms(
-      user.phone, 
-      `JadanPay: Bill Payment (${provider} - ${number}) Successful. Amount: N${amount}. New Bal: N${updatedUser.balance.toFixed(2)}`
-    );
+    // Send SMS Notification
+    const smsMsg = `JadanPay: Bill Payment (${provider}) for ${number} Successful. Amount: N${amount}. New Bal: N${updatedUser.balance.toFixed(2)}`;
+    await NotificationService.sendSms(user.phone, smsMsg);
 
     return tx;
 };
@@ -272,11 +266,9 @@ export const fundWallet = async (user: User, amount: number): Promise<Transactio
 
   await MockDB.addTransaction(tx);
 
-  // Send SMS
-  await NotificationService.sendSms(
-      user.phone, 
-      `JadanPay: Wallet funded with N${amount} Successfully. New Bal: N${updatedUser.balance.toFixed(2)}. Ref: ${ref}`
-  );
+  // Send SMS Notification
+  const smsMsg = `JadanPay: Wallet funded with N${amount} Successfully. New Bal: N${updatedUser.balance.toFixed(2)}. Ref: ${ref}`;
+  await NotificationService.sendSms(user.phone, smsMsg);
 
   return tx;
 };

@@ -6,7 +6,7 @@ import { processAirtimePurchase, processDataPurchase, processBillPayment } from 
 import { SettingsService } from '../services/settingsService';
 import { MockDB } from '../services/mockDb';
 import { playNotification } from '../utils/audio';
-import { Smartphone, Wifi, PiggyBank, Loader2, Sparkles, Star, Check, AlertTriangle, Info, Share2, Ban, Activity, ChevronDown, Tv, Zap, User as UserIcon, Phone, RefreshCw, X, Receipt, QrCode, BarChart3 } from 'lucide-react';
+import { Smartphone, Wifi, PiggyBank, Loader2, Sparkles, Star, Check, AlertTriangle, Info, Share2, Ban, Activity, ChevronDown, Tv, Zap, User as UserIcon, Phone, RefreshCw, X, Receipt, QrCode, BarChart3, Lock, Key } from 'lucide-react';
 
 interface TopUpFormProps {
   user: User;
@@ -69,6 +69,13 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
   const [error, setError] = useState<string | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
   const [lastTx, setLastTx] = useState<Transaction | null>(null);
+  
+  // PIN States
+  const [showPinModal, setShowPinModal] = useState(false);
+  const [pinInput, setPinInput] = useState('');
+  const [pinError, setPinError] = useState<string | null>(null);
+  const [pinMode, setPinMode] = useState<'verify' | 'create'>('verify');
+  const [confirmPinInput, setConfirmPinInput] = useState(''); // For creation
   
   // Dynamic Settings
   const [providerStatus, setProviderStatus] = useState<Record<string, boolean>>({});
@@ -207,7 +214,62 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
         return;
     }
 
+    // Check if User needs to create a PIN first
+    if (!user.transactionPin) {
+        setPinMode('create');
+        setShowPinModal(true);
+        setPinInput('');
+        setConfirmPinInput('');
+        setPinError(null);
+        return;
+    }
+
     setShowConfirm(true);
+  };
+
+  const initiatePinVerification = () => {
+      setShowConfirm(false);
+      setPinMode('verify');
+      setShowPinModal(true);
+      setPinInput('');
+      setPinError(null);
+  };
+
+  const handlePinSubmit = async () => {
+      setPinError(null);
+
+      if (pinMode === 'create') {
+          if (pinInput.length !== 4) {
+              setPinError("PIN must be 4 digits.");
+              return;
+          }
+          if (pinInput !== confirmPinInput) {
+              setPinError("PINs do not match.");
+              return;
+          }
+          
+          // Create PIN
+          try {
+              const updatedUser = await MockDB.updateUser({ ...user, transactionPin: pinInput });
+              // Update local user prop roughly (better to use the callback in real app, but user prop is readonly)
+              user.transactionPin = pinInput; 
+              setPinMode('verify');
+              setShowPinModal(false);
+              alert("PIN Created Successfully! Please proceed with your transaction.");
+              setShowConfirm(true); // Re-open confirm modal to proceed
+          } catch(e) {
+              setPinError("Failed to save PIN.");
+          }
+          return;
+      }
+
+      // Verify Mode
+      if (pinInput === user.transactionPin) {
+          setShowPinModal(false);
+          executeTransaction();
+      } else {
+          setPinError("Incorrect PIN.");
+      }
   };
 
   const executeTransaction = async () => {
@@ -719,10 +781,78 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
             </div>
             <div className="flex gap-3">
                  <button onClick={() => setShowConfirm(false)} className="flex-1 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-white rounded-xl font-medium hover:bg-gray-200 dark:hover:bg-gray-600">Cancel</button>
-                 <button onClick={executeTransaction} className="flex-1 py-3 bg-green-700 text-white rounded-xl font-bold hover:bg-green-800">Confirm</button>
+                 <button 
+                    onClick={initiatePinVerification} 
+                    className="flex-1 py-3 bg-green-700 text-white rounded-xl font-bold hover:bg-green-800 flex items-center justify-center gap-2"
+                 >
+                    <Lock size={16}/> Authorize
+                 </button>
             </div>
           </div>
         </div>
+      )}
+
+      {/* PIN Modal (Create / Verify) */}
+      {showPinModal && (
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+              <div className="bg-white dark:bg-gray-800 w-full max-w-xs rounded-3xl p-6 shadow-2xl animate-fade-in-up border border-gray-100 dark:border-gray-700">
+                  <div className="text-center mb-6">
+                      <div className="w-14 h-14 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center mx-auto mb-3">
+                          <Key size={24} />
+                      </div>
+                      <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                          {pinMode === 'create' ? 'Create Transaction PIN' : 'Enter PIN'}
+                      </h3>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          {pinMode === 'create' ? 'Secure your wallet with a 4-digit PIN.' : 'Verify your identity to proceed.'}
+                      </p>
+                  </div>
+
+                  <div className="space-y-4">
+                      <div>
+                          <input 
+                              type="password" 
+                              maxLength={4}
+                              value={pinInput}
+                              onChange={(e) => setPinInput(e.target.value.replace(/\D/g, ''))}
+                              className="w-full p-3 text-center font-mono text-2xl bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl outline-none focus:ring-2 focus:ring-green-500 tracking-widest text-gray-900 dark:text-white"
+                              placeholder="••••"
+                              autoFocus
+                          />
+                      </div>
+
+                      {pinMode === 'create' && (
+                          <div>
+                              <input 
+                                  type="password" 
+                                  maxLength={4}
+                                  value={confirmPinInput}
+                                  onChange={(e) => setConfirmPinInput(e.target.value.replace(/\D/g, ''))}
+                                  className="w-full p-3 text-center font-mono text-2xl bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl outline-none focus:ring-2 focus:ring-green-500 tracking-widest text-gray-900 dark:text-white"
+                                  placeholder="Confirm"
+                              />
+                          </div>
+                      )}
+
+                      {pinError && <p className="text-center text-red-500 text-xs font-bold">{pinError}</p>}
+
+                      <div className="flex gap-3">
+                          <button 
+                              onClick={() => { setShowPinModal(false); if(pinMode === 'create') setShowConfirm(false); }}
+                              className="flex-1 py-3 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300 rounded-xl font-bold text-xs"
+                          >
+                              Cancel
+                          </button>
+                          <button 
+                              onClick={handlePinSubmit}
+                              className="flex-1 py-3 bg-green-700 text-white rounded-xl font-bold text-xs"
+                          >
+                              {pinMode === 'create' ? 'Set PIN' : 'Submit'}
+                          </button>
+                      </div>
+                  </div>
+              </div>
+          </div>
       )}
     </div>
   );

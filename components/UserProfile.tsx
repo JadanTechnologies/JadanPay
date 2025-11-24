@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { User } from '../types';
 import { MockDB } from '../services/mockDb';
-import { Save, User as UserIcon, Phone, Mail, Shield, CheckCircle } from 'lucide-react';
+import { Save, User as UserIcon, Phone, Mail, Shield, CheckCircle, Lock, Key } from 'lucide-react';
 
 interface UserProfileProps {
   user: User;
@@ -16,6 +16,11 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdate }) => {
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+
+  // PIN State
+  const [pinData, setPinData] = useState({ oldPin: '', newPin: '' });
+  const [pinLoading, setPinLoading] = useState(false);
+  const [pinMessage, setPinMessage] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,6 +38,35 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdate }) => {
     } finally {
         setLoading(false);
     }
+  };
+
+  const handlePinChange = async (e: React.FormEvent) => {
+      e.preventDefault();
+      setPinMessage('');
+      
+      if (pinData.newPin.length !== 4) {
+          setPinMessage("New PIN must be 4 digits.");
+          return;
+      }
+
+      // If user has an existing PIN, old pin is required
+      if (user.transactionPin && pinData.oldPin !== user.transactionPin) {
+          setPinMessage("Incorrect Old PIN.");
+          return;
+      }
+
+      setPinLoading(true);
+      try {
+          await MockDB.updateUser({ ...user, transactionPin: pinData.newPin });
+          onUpdate(); // Sync parent
+          user.transactionPin = pinData.newPin; // Local sync hack
+          setPinMessage("PIN updated successfully!");
+          setPinData({ oldPin: '', newPin: '' });
+      } catch (e) {
+          setPinMessage("Failed to update PIN.");
+      } finally {
+          setPinLoading(false);
+      }
   };
 
   return (
@@ -58,6 +92,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdate }) => {
             </div>
         </div>
 
+        {/* Personal Info */}
         <div className="bg-white dark:bg-gray-800 p-8 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm transition-colors">
             <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2">
                 <UserIcon size={20} className="text-green-600 dark:text-green-400"/> Edit Profile
@@ -120,6 +155,65 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdate }) => {
                         {loading ? 'Saving...' : <><Save size={18}/> Save Changes</>}
                     </button>
                 </div>
+            </form>
+        </div>
+
+        {/* Security Section */}
+        <div className="bg-white dark:bg-gray-800 p-8 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm transition-colors">
+            <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2">
+                <Lock size={20} className="text-orange-600 dark:text-orange-400"/> Security
+            </h3>
+
+            <form onSubmit={handlePinChange} className="space-y-6">
+                {user.transactionPin ? (
+                    <div>
+                        <label className="block text-sm font-bold text-gray-500 dark:text-gray-400 mb-2">Old PIN</label>
+                        <div className="relative">
+                            <Key className="absolute left-3 top-3.5 text-gray-400" size={18}/>
+                            <input 
+                                type="password" 
+                                value={pinData.oldPin}
+                                onChange={e => setPinData({...pinData, oldPin: e.target.value.replace(/\D/g,'')})}
+                                maxLength={4}
+                                className="w-full pl-10 p-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none transition-all text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600"
+                                placeholder="••••"
+                            />
+                        </div>
+                    </div>
+                ) : (
+                    <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400 rounded-xl text-sm mb-4">
+                        You have not set a transaction PIN yet. Create one below.
+                    </div>
+                )}
+
+                <div>
+                    <label className="block text-sm font-bold text-gray-500 dark:text-gray-400 mb-2">New PIN (4 Digits)</label>
+                    <div className="relative">
+                        <Lock className="absolute left-3 top-3.5 text-gray-400" size={18}/>
+                        <input 
+                            type="password" 
+                            value={pinData.newPin}
+                            onChange={e => setPinData({...pinData, newPin: e.target.value.replace(/\D/g,'')})}
+                            maxLength={4}
+                            className="w-full pl-10 p-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none transition-all text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600"
+                            placeholder="••••"
+                        />
+                    </div>
+                </div>
+
+                {pinMessage && (
+                    <div className={`p-3 rounded-xl text-sm font-bold ${pinMessage.includes('success') ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                        {pinMessage}
+                    </div>
+                )}
+
+                <button 
+                    type="submit" 
+                    disabled={pinLoading}
+                    className="w-full py-4 bg-orange-600 text-white rounded-xl font-bold shadow-lg shadow-orange-200 dark:shadow-orange-900/20 hover:bg-orange-700 transition-all flex items-center justify-center gap-2"
+                >
+                    {pinLoading ? 'Updating...' : <><Key size={18}/> {user.transactionPin ? 'Change PIN' : 'Create PIN'}</>}
+                </button>
             </form>
         </div>
     </div>

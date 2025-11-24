@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { User, UserStatus, Transaction, TransactionType, TransactionStatus } from '../types';
 import { MockDB } from '../services/mockDb';
-import { Search, Ban, CheckCircle, MoreVertical, DollarSign, History, Shield, Smartphone, Globe, RotateCcw, AlertTriangle, Monitor, Trash2, Edit2, Save, X } from 'lucide-react';
+import { Search, Ban, CheckCircle, MoreVertical, DollarSign, History, Shield, Smartphone, Globe, RotateCcw, AlertTriangle, Monitor, Trash2, Edit2, Save, X, Key } from 'lucide-react';
 
 export const AdminUsers: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -74,6 +74,14 @@ export const AdminUsers: React.FC = () => {
       await loadUsers();
       setSelectedUser(updatedUser as User);
       setShowEditModal(false);
+  };
+
+  const handleResetPin = async () => {
+      if(!selectedUser) return;
+      if(window.confirm(`Reset PIN for ${selectedUser.name}? They will be prompted to create a new one on next transaction.`)) {
+          await MockDB.resetUserPin(selectedUser.id);
+          alert("User PIN reset successfully.");
+      }
   };
 
   const handleFundUser = async () => {
@@ -248,6 +256,13 @@ export const AdminUsers: React.FC = () => {
                                     <DollarSign size={16}/> Debit
                                 </button>
                           </div>
+
+                          <button 
+                            onClick={handleResetPin}
+                            className="w-full py-2 bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 rounded-xl text-sm font-bold border border-orange-100 dark:border-orange-900/50 hover:bg-orange-100 dark:hover:bg-orange-900/30 flex items-center justify-center gap-2"
+                          >
+                              <Key size={16}/> Reset PIN
+                          </button>
 
                           <div className="h-px bg-gray-100 dark:bg-gray-700 my-2"></div>
                           

@@ -32,6 +32,7 @@ const DEFAULT_USERS: User[] = MOCK_USERS_DATA.map(u => ({
     joinedDate: new Date().toISOString(),
     dataTotal: u.id === 'u1' ? 10.5 : 50, // GB
     dataUsed: u.id === 'u1' ? 4.2 : 12.5, // GB
+    transactionPin: u.id === 'u1' ? '1234' : undefined // u1 has pin, u2 needs to create
 })) as User[];
 
 // In-Memory State
@@ -81,6 +82,7 @@ const sanitizeUser = (u: any): User => {
         joinedDate: u.joinedDate || new Date().toISOString(),
         dataTotal: typeof u.dataTotal === 'number' ? u.dataTotal : 1,
         dataUsed: typeof u.dataUsed === 'number' ? u.dataUsed : 0,
+        transactionPin: u.transactionPin
     };
 };
 
@@ -275,7 +277,8 @@ export const MockDB = {
           lastLogin: new Date().toISOString(),
           joinedDate: new Date().toISOString(),
           dataTotal: 0,
-          dataUsed: 0
+          dataUsed: 0,
+          // transactionPin is undefined by default, user must create
       };
 
       db.users.push(newUser);
@@ -284,7 +287,7 @@ export const MockDB = {
           id: Math.random().toString(36),
           userId: newUser.id,
           title: 'Welcome to JadanPay!',
-          message: 'We are glad to have you onboard. Fund your wallet to get started.',
+          message: 'We are glad to have you onboard. Set up your Transaction PIN to get started.',
           date: new Date().toISOString(),
           isRead: false,
           type: 'success'
@@ -292,6 +295,25 @@ export const MockDB = {
 
       saveDatabase();
       return newUser;
+  },
+
+  resetUserPin: async (userId: string) => {
+      await delay(300);
+      const user = db.users.find(u => u.id === userId);
+      if (user) {
+          user.transactionPin = undefined; // Clear PIN
+          
+          MockDB.addNotification({
+              userId: userId,
+              title: 'Security Alert: PIN Reset',
+              message: 'Your transaction PIN has been reset by an administrator. Please create a new one.',
+              type: 'error'
+          });
+          
+          saveDatabase();
+          return { ...user };
+      }
+      throw new Error("User not found");
   },
 
   updateUserBalance: async (userId: string, amount: number) => {

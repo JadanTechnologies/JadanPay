@@ -78,6 +78,7 @@ export interface User {
   joinedDate?: string; // Added for Recent Signups
   dataTotal: number; // In GB
   dataUsed: number; // In GB
+  transactionPin?: string; // Secure 4-digit PIN
 }
 
 export interface Bundle {
