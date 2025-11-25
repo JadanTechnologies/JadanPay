@@ -525,34 +525,33 @@ export const AdminSettings: React.FC = () => {
                                           <th className="p-3">Plan ID</th>
                                           <th className="p-3">Provider</th>
                                           <th className="p-3">Name</th>
-                                          <th className="p-3">Type</th>
-                                          <th className="p-3">Price</th>
+                                          <th className="p-3">Cost (API)</th>
+                                          <th className="p-3">User Price</th>
                                           <th className="p-3">Reseller</th>
-                                          <th className="p-3">Status</th>
+                                          <th className="p-3">Profit (User)</th>
                                           <th className="p-3 text-right">Action</th>
                                       </tr>
                                   </thead>
                                   <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                                      {bundles.map(b => (
+                                      {bundles.map(b => {
+                                          const profit = b.price - b.costPrice;
+                                          return (
                                           <tr key={b.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                                              <td className="p-3 font-mono text-xs">{b.planId}</td>
-                                              <td className="p-3">{PROVIDER_LOGOS[b.provider]}</td>
+                                              <td className="p-3 font-mono text-xs text-gray-500">{b.planId}</td>
+                                              <td className="p-3 font-bold">{PROVIDER_LOGOS[b.provider]}</td>
                                               <td className="p-3 font-medium">{b.name}</td>
-                                              <td className="p-3 text-xs uppercase">{b.type}</td>
-                                              <td className="p-3">₦{b.price}</td>
-                                              <td className="p-3 font-bold text-purple-600 dark:text-purple-400">₦{b.resellerPrice || b.price}</td>
-                                              <td className="p-3">
-                                                  {b.isAvailable !== false ? 
-                                                      <Check size={16} className="text-green-500"/> : 
-                                                      <X size={16} className="text-red-500"/>
-                                                  }
+                                              <td className="p-3 font-mono text-red-600 dark:text-red-400">₦{b.costPrice}</td>
+                                              <td className="p-3 font-mono">₦{b.price}</td>
+                                              <td className="p-3 font-mono font-bold text-purple-600 dark:text-purple-400">₦{b.resellerPrice || b.price}</td>
+                                              <td className="p-3 font-mono font-bold text-green-600 dark:text-green-400">
+                                                  +₦{profit}
                                               </td>
                                               <td className="p-3 text-right flex justify-end gap-2">
                                                   <button onClick={() => { setEditingBundle(b); setShowBundleModal(true); }} className="text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 p-1 rounded"><Edit2 size={16}/></button>
                                                   <button onClick={() => handleBundleDelete(b.id)} className="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 p-1 rounded"><Trash2 size={16}/></button>
                                               </td>
                                           </tr>
-                                      ))}
+                                      )})}
                                   </tbody>
                               </table>
                           </div>
@@ -642,34 +641,50 @@ export const AdminSettings: React.FC = () => {
                           </div>
                       </div>
 
-                      <div className="grid grid-cols-3 gap-4">
-                          <div>
-                              <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">User Price</label>
-                              <input 
-                                  type="number"
-                                  className="w-full p-3 border dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white"
-                                  value={editingBundle.price || ''}
-                                  onChange={e => setEditingBundle({...editingBundle, price: Number(e.target.value)})}
-                              />
+                      <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 space-y-3">
+                          <h4 className="text-xs font-bold text-gray-500 uppercase mb-2">Pricing Structure</h4>
+                          <div className="grid grid-cols-3 gap-4">
+                              <div>
+                                  <label className="block text-xs font-bold text-red-500 dark:text-red-400 uppercase mb-1">API Cost (Buying)</label>
+                                  <input 
+                                      type="number"
+                                      className="w-full p-2 border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                                      value={editingBundle.costPrice || ''}
+                                      onChange={e => setEditingBundle({...editingBundle, costPrice: Number(e.target.value)})}
+                                  />
+                              </div>
+                              <div>
+                                  <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">User Selling Price</label>
+                                  <input 
+                                      type="number"
+                                      className="w-full p-2 border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                                      value={editingBundle.price || ''}
+                                      onChange={e => setEditingBundle({...editingBundle, price: Number(e.target.value)})}
+                                  />
+                              </div>
+                              <div>
+                                  <label className="block text-xs font-bold text-purple-600 dark:text-purple-400 uppercase mb-1">Reseller Price</label>
+                                  <input 
+                                      type="number"
+                                      className="w-full p-2 border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white font-bold"
+                                      value={editingBundle.resellerPrice || ''}
+                                      onChange={e => setEditingBundle({...editingBundle, resellerPrice: Number(e.target.value)})}
+                                  />
+                              </div>
                           </div>
-                          <div>
-                              <label className="block text-xs font-bold text-green-600 dark:text-green-400 uppercase mb-1">Reseller Price</label>
-                              <input 
-                                  type="number"
-                                  className="w-full p-3 border border-green-200 dark:border-green-900 rounded-xl bg-green-50 dark:bg-green-900/20 text-gray-900 dark:text-white font-bold"
-                                  value={editingBundle.resellerPrice || ''}
-                                  onChange={e => setEditingBundle({...editingBundle, resellerPrice: Number(e.target.value)})}
-                              />
-                          </div>
-                          <div>
-                              <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">API Plan ID</label>
-                              <input 
-                                  className="w-full p-3 border dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white"
-                                  placeholder="ID from API" 
-                                  value={editingBundle.planId || ''}
-                                  onChange={e => setEditingBundle({...editingBundle, planId: e.target.value})}
-                              />
-                          </div>
+                          <p className="text-xs text-gray-400 text-center mt-2">
+                              Estimated Profit: <span className="text-green-600 font-bold">₦{(editingBundle.price || 0) - (editingBundle.costPrice || 0)}</span> per sale.
+                          </p>
+                      </div>
+
+                      <div>
+                          <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">API Plan ID</label>
+                          <input 
+                              className="w-full p-3 border dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white font-mono"
+                              placeholder="ID from API Provider" 
+                              value={editingBundle.planId || ''}
+                              onChange={e => setEditingBundle({...editingBundle, planId: e.target.value})}
+                          />
                       </div>
 
                       <div className="flex gap-4">

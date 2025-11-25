@@ -158,7 +158,7 @@ export default function App() {
 
     switch (activeTab) {
       case 'dashboard':
-        return user.role === UserRole.ADMIN ? <AdminDashboard /> : <Dashboard user={user} refreshUser={handleRefreshUser} onViewReceipt={handleViewReceipt} />;
+        return user.role === UserRole.ADMIN ? <AdminDashboard onNavigate={handleTabChange} /> : <Dashboard user={user} refreshUser={handleRefreshUser} onViewReceipt={handleViewReceipt} />;
       case 'history':
         return <History user={user} highlightId={selectedTxId} />;
       case 'profile':
@@ -166,7 +166,7 @@ export default function App() {
       case 'support':
         return <Support user={user} />;
       case 'admin':
-         return <AdminDashboard />;
+         return <AdminDashboard onNavigate={handleTabChange} />;
       case 'admin-users':
          return <AdminUsers />;
       case 'admin-payments':
@@ -186,7 +186,7 @@ export default function App() {
       case 'api-docs':
          return (user.role === UserRole.RESELLER || user.apiKey) ? <DeveloperApi user={user} /> : <div className="p-10 text-center dark:text-white">Unauthorized</div>;
       default:
-        if (user.role === UserRole.ADMIN) return <AdminDashboard />;
+        if (user.role === UserRole.ADMIN) return <AdminDashboard onNavigate={handleTabChange} />;
         return <Dashboard user={user} refreshUser={handleRefreshUser} onViewReceipt={handleViewReceipt} />;
     }
   };
