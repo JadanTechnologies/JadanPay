@@ -1,9 +1,9 @@
 
 import React, { useEffect, useState } from 'react';
-import { Transaction, User } from '../types';
+import { Transaction, User, UserRole, UserStatus } from '../types';
 import { MockDB } from '../services/mockDb';
 import { PieChart, Pie, Cell, Legend, Tooltip, ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid } from 'recharts';
-import { Download, TrendingUp, DollarSign, UserX, UserMinus, Shield, Users, CheckCircle, UserPlus, Wallet } from 'lucide-react';
+import { Download, TrendingUp, DollarSign, UserX, UserMinus, Shield, Users, CheckCircle, UserPlus, Wallet, Activity } from 'lucide-react';
 
 interface AdminDashboardProps {
     onNavigate: (tab: string) => void;
@@ -26,7 +26,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
         const allTxs = await MockDB.getAllTransactionsAdmin();
         setTransactions(allTxs);
         
-        // New Stats Fetching
         const staff = await MockDB.getStaff();
         setStaffCount(staff.length);
         
@@ -34,7 +33,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
         setAdvancedStats(await MockDB.getDashboardStatsDetailed());
         setRecentUsers(await MockDB.getRecentSignups());
 
-        // Calculate P&L
         const validSales = allTxs.filter(t => t.status === 'SUCCESS' && ['AIRTIME', 'DATA', 'CABLE', 'ELECTRICITY'].includes(t.type));
         const revenue = validSales.reduce((acc, t) => acc + t.amount, 0);
         const cost = validSales.reduce((acc, t) => acc + (t.costPrice || 0), 0);
@@ -53,7 +51,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
     load();
   }, []);
   
-  // Chart Data preparation
   const providerData = [
     { name: 'MTN', value: transactions.filter(t => t.provider === 'MTN').length },
     { name: 'Glo', value: transactions.filter(t => t.provider === 'GLO').length },
@@ -61,7 +58,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
     { name: '9mobile', value: transactions.filter(t => t.provider === '9MOBILE').length },
   ].filter(d => d.value > 0);
 
-  // Prepare Chart Data for P&L (Mocking time series for demo based on aggregate)
   const pnlChartData = [
       { name: 'Mon', revenue: profitLoss.revenue * 0.1, cost: profitLoss.cost * 0.1 },
       { name: 'Tue', revenue: profitLoss.revenue * 0.15, cost: profitLoss.cost * 0.15 },
@@ -119,11 +115,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
               <div className="flex justify-between items-center mb-4">
                   <h3 className="font-bold text-gray-800 dark:text-white">Profit & Loss Overview</h3>
                   <div className="flex gap-4 text-xs">
-                      <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500"></span> Revenue</div>
-                      <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-500"></span> Cost (API)</div>
+                      <div className="flex items-center gap-1 text-gray-600 dark:text-gray-300"><span className="w-2 h-2 rounded-full bg-green-500"></span> Revenue</div>
+                      <div className="flex items-center gap-1 text-gray-600 dark:text-gray-300"><span className="w-2 h-2 rounded-full bg-red-500"></span> Cost (API)</div>
                   </div>
               </div>
-              <div className="h-[120px] w-full">
+              <div className="h-[200px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
                       <AreaChart data={pnlChartData}>
                           <defs>
@@ -200,7 +196,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
         </div>
       </div>
 
-      {/* Secondary Breakdown Stats - Clickable */}
+      {/* Secondary Breakdown Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div onClick={() => onNavigate('admin-users')} className="p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 flex flex-col justify-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
               <div className="flex items-center gap-2 mb-1">
@@ -235,10 +231,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
       {/* Main Content Area */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
          
-         {/* Chart Section */}
+         {/* Chart Section - Fixed Height for Recharts */}
          <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col h-[400px] transition-colors">
             <h3 className="font-bold text-gray-700 dark:text-gray-200 mb-4 h-6 shrink-0">Transaction Volume by Provider</h3>
-            <div className="w-full flex-1 min-h-0 relative">
+            {/* FIXED: Added fixed height to container */}
+            <div className="w-full flex-1 min-h-0 relative h-[300px]">
                 {providerData.length > 0 ? (
                     <ResponsiveContainer width="100%" height="100%">
                         <PieChart>

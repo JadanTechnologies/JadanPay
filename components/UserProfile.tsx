@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { User, UserRole } from '../types';
 import { MockDB } from '../services/mockDb';
-import { Save, User as UserIcon, Phone, Mail, Shield, CheckCircle, Lock, Key, Briefcase, Clock, AlertCircle } from 'lucide-react';
+import { Save, User as UserIcon, Phone, Mail, Shield, CheckCircle, Lock, Key, Briefcase, Clock, AlertCircle, Camera } from 'lucide-react';
 
 interface UserProfileProps {
   user: User;
@@ -61,8 +61,8 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdate }) => {
       setPinLoading(true);
       try {
           await MockDB.updateUser({ ...user, transactionPin: pinData.newPin });
-          onUpdate(); // Sync parent
-          user.transactionPin = pinData.newPin; // Local sync hack
+          onUpdate(); 
+          user.transactionPin = pinData.newPin; 
           setPinMessage("PIN updated successfully!");
           setPinData({ oldPin: '', newPin: '' });
       } catch (e) {
@@ -86,15 +86,32 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdate }) => {
       }
   };
 
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (e.target.files && e.target.files[0]) {
+          const file = e.target.files[0];
+          const reader = new FileReader();
+          reader.onloadend = async () => {
+              const base64 = reader.result as string;
+              await MockDB.updateUser({ ...user, avatarUrl: base64 });
+              onUpdate();
+          };
+          reader.readAsDataURL(file);
+      }
+  };
+
   return (
     <div className="max-w-2xl mx-auto space-y-6 animate-fade-in pb-20">
         {/* Header Card */}
         <div className="bg-white dark:bg-gray-800 p-8 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm relative overflow-hidden transition-colors">
             <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-r from-green-600 to-teal-600"></div>
             
-            <div className="relative z-10 mt-16 flex flex-col items-center">
-                <div className="w-32 h-32 rounded-full border-4 border-white dark:border-gray-800 shadow-xl bg-gray-100 dark:bg-gray-700 overflow-hidden mb-4">
-                    <img src={`https://ui-avatars.com/api/?name=${user.name}&background=random&size=128`} className="w-full h-full object-cover" alt="" />
+            <div className="relative z-10 mt-16 flex flex-col items-center group">
+                <div className="w-32 h-32 rounded-full border-4 border-white dark:border-gray-800 shadow-xl bg-gray-100 dark:bg-gray-700 overflow-hidden mb-4 relative">
+                    <img src={user.avatarUrl || `https://ui-avatars.com/api/?name=${user.name}&background=random&size=128`} className="w-full h-full object-cover" alt="" />
+                    <label className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                        <Camera className="text-white"/>
+                        <input type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
+                    </label>
                 </div>
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{user.name}</h2>
                 <p className="text-gray-500 dark:text-gray-400">{user.email}</p>
@@ -103,8 +120,8 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdate }) => {
                     <span className={`px-3 py-1 rounded-full text-xs font-bold capitalize flex items-center gap-1 ${user.role === UserRole.RESELLER ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-300' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}`}>
                         <Shield size={12}/> {user.role}
                     </span>
-                    <span className="px-3 py-1 bg-green-100 dark:bg-green-900/30 rounded-full text-xs font-bold text-green-700 dark:text-green-400 flex items-center gap-1">
-                        <CheckCircle size={12}/> Verified
+                    <span className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 ${user.isVerified ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400'}`}>
+                        <CheckCircle size={12}/> {user.isVerified ? 'Verified' : 'Unverified'}
                     </span>
                 </div>
             </div>
@@ -120,7 +137,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdate }) => {
                         <h3 className="font-bold text-lg">Business Upgrade</h3>
                     </div>
                     <p className="text-purple-200 text-sm mb-6 max-w-md">
-                        Become a reseller to access cheaper rates, API documentation, and bulk transaction tools. Start your own VTU business today.
+                        Become a reseller to access cheaper rates, API documentation, and bulk transaction tools.
                     </p>
 
                     {user.resellerRequestStatus === 'PENDING' ? (
