@@ -1,8 +1,9 @@
 
 import React, { useState, useRef } from 'react';
-import { Camera, Upload, X, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
+import { Camera, Upload, X, CheckCircle, Loader2, AlertCircle, FileText } from 'lucide-react';
 import { User } from '../types';
 import { MockDB } from '../services/mockDb';
+import { playNotification } from '../utils/audio';
 
 interface VerificationModalProps {
     user: User;
@@ -13,6 +14,7 @@ interface VerificationModalProps {
 export const VerificationModal: React.FC<VerificationModalProps> = ({ user, onClose, onSuccess }) => {
     const [step, setStep] = useState<1 | 2 | 3>(1);
     const [docType, setDocType] = useState('NIN');
+    const [docNumber, setDocNumber] = useState('');
     const [docFile, setDocFile] = useState<File | null>(null);
     const [faceImage, setFaceImage] = useState<string | null>(null);
     const [isCameraOpen, setIsCameraOpen] = useState(false);
@@ -55,17 +57,26 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({ user, onCl
 
     const handleSubmit = async () => {
         if (!docFile || !faceImage) return;
+        if ((docType === 'NIN' || docType === 'BVN') && !docNumber) {
+            alert(`Please enter your ${docType} number.`);
+            return;
+        }
+
         setIsSubmitting(true);
         try {
             // Simulate uploads
             await new Promise(r => setTimeout(r, 1500));
             const docUrl = URL.createObjectURL(docFile);
             
-            await MockDB.submitKyc(user.id, docType, docUrl, faceImage);
+            await MockDB.submitKyc(user.id, docType, docUrl, faceImage, docNumber);
+            
+            playNotification("Verification is pending is successful.");
+            
             onSuccess();
             alert("Verification submitted successfully! Admin will review shortly.");
             onClose();
         } catch (e) {
+            playNotification("Verification failed please try again.", "error");
             alert("Submission failed.");
         } finally {
             setIsSubmitting(false);
@@ -101,13 +112,27 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({ user, onCl
                                     onChange={(e) => setDocType(e.target.value)}
                                     className="w-full p-3 border dark:border-gray-700 rounded-xl bg-white dark:bg-gray-950 text-gray-900 dark:text-white outline-none focus:border-green-500"
                                 >
-                                    <option value="NIN">NIN Slip</option>
-                                    <option value="BVN">BVN Printout</option>
+                                    <option value="NIN">NIN (National ID)</option>
+                                    <option value="BVN">BVN (Bank Verification)</option>
                                     <option value="PVC">Voter's Card</option>
                                     <option value="DL">Driver's License</option>
                                     <option value="IP">International Passport</option>
                                 </select>
                             </div>
+
+                            {(docType === 'NIN' || docType === 'BVN') && (
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">Enter {docType} Number</label>
+                                    <input 
+                                        type="text"
+                                        value={docNumber}
+                                        onChange={(e) => setDocNumber(e.target.value.replace(/\D/g,''))}
+                                        placeholder={`Enter 11-digit ${docType}`}
+                                        className="w-full p-3 border dark:border-gray-700 rounded-xl bg-white dark:bg-gray-950 text-gray-900 dark:text-white outline-none focus:border-green-500 font-mono tracking-wider"
+                                        maxLength={11}
+                                    />
+                                </div>
+                            )}
                             
                             <div className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl p-8 text-center bg-gray-50 dark:bg-gray-800 relative hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors">
                                 <input type="file" accept="image/*" onChange={handleFileChange} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"/>
@@ -119,14 +144,24 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({ user, onCl
                                 ) : (
                                     <div className="text-gray-400 flex flex-col items-center">
                                         <Upload size={32} className="mb-2"/>
-                                        <p className="text-sm font-medium">Upload Document Image</p>
+                                        <p className="text-sm font-medium">Upload Supporting Document</p>
+                                        <p className="text-[10px] mt-1 opacity-70">Image / Slip / Card</p>
                                     </div>
                                 )}
                             </div>
 
                             <button 
-                                onClick={() => setStep(2)} 
-                                disabled={!docFile}
+                                onClick={() => {
+                                    if((docType === 'NIN' || docType === 'BVN') && docNumber.length < 11) {
+                                        alert(`Please enter a valid ${docType} number`);
+                                        return;
+                                    }
+                                    if(!docFile) {
+                                        alert("Please upload a document image");
+                                        return;
+                                    }
+                                    setStep(2);
+                                }} 
                                 className="w-full py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 Next Step
@@ -174,13 +209,18 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({ user, onCl
                                 <CheckCircle size={32}/>
                             </div>
                             <h4 className="font-bold text-gray-800 dark:text-white text-xl">Ready to Submit</h4>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">Your documents are ready for review.</p>
                             
                             <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl border dark:border-gray-700 text-left text-sm space-y-2">
                                 <div className="flex justify-between">
-                                    <span className="text-gray-500 dark:text-gray-400">Document:</span>
+                                    <span className="text-gray-500 dark:text-gray-400">Type:</span>
                                     <span className="font-bold text-gray-900 dark:text-white">{docType}</span>
                                 </div>
+                                {docNumber && (
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-500 dark:text-gray-400">Number:</span>
+                                        <span className="font-mono font-bold text-gray-900 dark:text-white">{docNumber}</span>
+                                    </div>
+                                )}
                                 <div className="flex justify-between">
                                     <span className="text-gray-500 dark:text-gray-400">Face Capture:</span>
                                     <span className="font-bold text-green-600 dark:text-green-400">Completed</span>

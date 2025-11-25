@@ -242,6 +242,13 @@ export const AdminUsers: React.FC = () => {
                                   </div>
                               </div>
                               
+                              {u.kycDocNumber && (
+                                  <div className="mb-2 p-2 bg-gray-50 dark:bg-gray-900 rounded-lg border dark:border-gray-700">
+                                      <span className="text-[10px] text-gray-400 uppercase font-bold">Document Number</span>
+                                      <p className="font-mono font-bold text-gray-800 dark:text-gray-200">{u.kycDocNumber}</p>
+                                  </div>
+                              )}
+
                               <div className="mb-4 h-40 bg-gray-100 dark:bg-gray-900 rounded-xl overflow-hidden relative group">
                                   {u.kycDocUrl && <img src={u.kycDocUrl} className="w-full h-full object-contain" />}
                                   <a href={u.kycDocUrl} target="_blank" className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-white font-bold text-xs"><ExternalLink size={16} className="mr-1"/> View Full</a>

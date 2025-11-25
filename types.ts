@@ -93,6 +93,7 @@ export interface User {
   // KYC Data
   kycStatus?: KycStatus;
   kycDocType?: string; // BVN, NIN, PVC, PASSPORT
+  kycDocNumber?: string; // Added Document Number
   kycDocUrl?: string;
   kycFaceUrl?: string;
 }

@@ -101,6 +101,7 @@ const sanitizeUser = (u: any): User => {
         resellerRequestStatus: u.resellerRequestStatus || 'NONE',
         kycStatus: u.kycStatus || (u.isVerified ? KycStatus.VERIFIED : KycStatus.NONE),
         kycDocType: u.kycDocType,
+        kycDocNumber: u.kycDocNumber,
         kycDocUrl: u.kycDocUrl,
         kycFaceUrl: u.kycFaceUrl
     };
@@ -377,12 +378,13 @@ export const MockDB = {
   },
 
   // --- KYC & VERIFICATION ---
-  submitKyc: async (userId: string, docType: string, docUrl: string, faceUrl: string) => {
+  submitKyc: async (userId: string, docType: string, docUrl: string, faceUrl: string, docNumber?: string) => {
       await delay(1000);
       const user = db.users.find(u => u.id === userId);
       if (user) {
           user.kycStatus = KycStatus.PENDING;
           user.kycDocType = docType;
+          user.kycDocNumber = docNumber;
           user.kycDocUrl = docUrl;
           user.kycFaceUrl = faceUrl;
           saveDatabase();

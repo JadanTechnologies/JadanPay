@@ -327,7 +327,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
                     <h1 className="text-4xl md:text-5xl font-bold font-mono tracking-tight">₦{user.balance.toLocaleString()}</h1>
                 </div>
                 
-                {/* Wallet ID Display - Hidden if not verified */}
+                {/* Wallet ID Display / Verify Prompt */}
                 {user.isVerified ? (
                     <div className="inline-flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-lg border border-white/20 backdrop-blur-md">
                         <span className="text-xs text-green-200 uppercase tracking-widest font-bold">Wallet ID:</span>
@@ -335,9 +335,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
                         <button onClick={handleCopyWallet} className="ml-2 text-white hover:text-green-300"><Copy size={12}/></button>
                     </div>
                 ) : (
-                    <div className="inline-flex items-center gap-2 bg-orange-500/20 px-3 py-1.5 rounded-lg border border-orange-500/30 backdrop-blur-md text-orange-200 text-xs">
-                        <Lock size={12} /> Complete KYC to reveal Wallet ID
-                    </div>
+                    <button 
+                        onClick={() => setShowVerifyModal(true)}
+                        className="inline-flex items-center gap-2 bg-orange-500/20 hover:bg-orange-500/30 transition-colors px-3 py-1.5 rounded-lg border border-orange-500/30 backdrop-blur-md text-orange-200 text-xs cursor-pointer"
+                    >
+                        <Lock size={12} /> Click to Complete KYC & Get Wallet ID
+                    </button>
                 )}
             </div>
 
