@@ -1,35 +1,31 @@
 
 import React, { useEffect, useState } from 'react';
-import { Transaction, User, Staff } from '../types';
+import { Transaction, User } from '../types';
 import { MockDB } from '../services/mockDb';
 import { PieChart, Pie, Cell, Legend, Tooltip, ResponsiveContainer } from 'recharts';
-import { Download, Users, TrendingUp, DollarSign, Wallet, UserX, UserMinus, Shield, Calendar } from 'lucide-react';
+import { Download, TrendingUp, DollarSign, UserX, UserMinus, Shield, Users, CheckCircle, UserPlus } from 'lucide-react';
 
 export const AdminDashboard: React.FC = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
   const [recentUsers, setRecentUsers] = useState<User[]>([]);
   const [staffCount, setStaffCount] = useState(0);
   const [loading, setLoading] = useState(true);
   
   // Specific Stats
   const [todaySales, setTodaySales] = useState({ count: 0, amount: 0 });
-  const [inactiveCount, setInactiveCount] = useState(0);
-  const [suspendedCount, setSuspendedCount] = useState(0);
+  const [advancedStats, setAdvancedStats] = useState<any>({});
 
   useEffect(() => {
     const load = async () => {
       try {
         setTransactions(await MockDB.getAllTransactionsAdmin());
-        setUsers(await MockDB.getUsers());
         
         // New Stats Fetching
         const staff = await MockDB.getStaff();
         setStaffCount(staff.length);
         
         setTodaySales(await MockDB.getTodaySales());
-        setInactiveCount(await MockDB.getInactiveUsersCount());
-        setSuspendedCount(await MockDB.getSuspendedUsersCount());
+        setAdvancedStats(await MockDB.getDashboardStatsDetailed());
         setRecentUsers(await MockDB.getRecentSignups());
         
       } catch (e) {
@@ -76,51 +72,76 @@ export const AdminDashboard: React.FC = () => {
         </button>
       </div>
 
-      {/* Stats Cards Row */}
+      {/* Primary Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {/* Today's Sales */}
         <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm transition-colors relative overflow-hidden group">
             <div className="absolute right-0 top-0 w-24 h-24 bg-green-500/10 rounded-full blur-2xl -mr-10 -mt-10 group-hover:bg-green-500/20 transition-colors"></div>
             <div className="flex items-center gap-3 mb-2 relative z-10">
                 <div className="p-2 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-lg"><DollarSign size={20} /></div>
-                <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium">Today's Sales</h3>
+                <h3 className="text-gray-500 dark:text-gray-300 text-sm font-medium">Today's Sales</h3>
             </div>
             <p className="text-2xl font-bold text-gray-900 dark:text-white relative z-10">₦{todaySales.amount.toLocaleString()}</p>
             <p className="text-xs text-green-600 dark:text-green-400 mt-1 font-medium">{todaySales.count} Transactions</p>
         </div>
 
-        {/* Inactive Users */}
         <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm transition-colors relative overflow-hidden group">
-             <div className="absolute right-0 top-0 w-24 h-24 bg-gray-500/10 rounded-full blur-2xl -mr-10 -mt-10 group-hover:bg-gray-500/20 transition-colors"></div>
              <div className="flex items-center gap-3 mb-2 relative z-10">
-                <div className="p-2 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg"><UserMinus size={20} /></div>
-                <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium">Inactive Users</h3>
+                <div className="p-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-lg"><Users size={20} /></div>
+                <h3 className="text-gray-500 dark:text-gray-300 text-sm font-medium">Total Users</h3>
             </div>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white relative z-10">{inactiveCount}</p>
-             <p className="text-xs text-gray-400 mt-1">No login for 30+ days</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white relative z-10">{advancedStats.totalUsers}</p>
+             <p className="text-xs text-gray-400 mt-1">{advancedStats.activeUsers} Active</p>
         </div>
 
-        {/* Total Staff */}
         <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm transition-colors relative overflow-hidden group">
-             <div className="absolute right-0 top-0 w-24 h-24 bg-purple-500/10 rounded-full blur-2xl -mr-10 -mt-10 group-hover:bg-purple-500/20 transition-colors"></div>
              <div className="flex items-center gap-3 mb-2 relative z-10">
                 <div className="p-2 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 rounded-lg"><Shield size={20} /></div>
-                <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium">Total Staff</h3>
+                <h3 className="text-gray-500 dark:text-gray-300 text-sm font-medium">Total Staff</h3>
             </div>
             <p className="text-2xl font-bold text-purple-700 dark:text-purple-400 relative z-10">{staffCount}</p>
             <p className="text-xs text-purple-600/70 dark:text-purple-400/70 mt-1">Active Personnel</p>
         </div>
 
-        {/* Suspended Users */}
         <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm transition-colors relative overflow-hidden group">
-             <div className="absolute right-0 top-0 w-24 h-24 bg-red-500/10 rounded-full blur-2xl -mr-10 -mt-10 group-hover:bg-red-500/20 transition-colors"></div>
              <div className="flex items-center gap-3 mb-2 relative z-10">
                 <div className="p-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg"><UserX size={20} /></div>
-                <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium">Suspended Users</h3>
+                <h3 className="text-gray-500 dark:text-gray-300 text-sm font-medium">Suspended</h3>
             </div>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white relative z-10">{suspendedCount}</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white relative z-10">{advancedStats.suspendedUsers}</p>
             <p className="text-xs text-red-500 mt-1">Restricted Access</p>
         </div>
+      </div>
+
+      {/* Secondary Breakdown Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 flex flex-col justify-center">
+              <div className="flex items-center gap-2 mb-1">
+                  <UserPlus size={16} className="text-indigo-500"/>
+                  <span className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Total Resellers</span>
+              </div>
+              <span className="text-xl font-black text-gray-900 dark:text-white">{advancedStats.totalResellers}</span>
+          </div>
+          <div className="p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 flex flex-col justify-center">
+              <div className="flex items-center gap-2 mb-1">
+                  <CheckCircle size={16} className="text-emerald-500"/>
+                  <span className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Active Resellers</span>
+              </div>
+              <span className="text-xl font-black text-gray-900 dark:text-white">{advancedStats.activeResellers}</span>
+          </div>
+          <div className="p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 flex flex-col justify-center">
+              <div className="flex items-center gap-2 mb-1">
+                  <UserMinus size={16} className="text-orange-500"/>
+                  <span className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Inactive Resellers</span>
+              </div>
+              <span className="text-xl font-black text-gray-900 dark:text-white">{advancedStats.inactiveResellers}</span>
+          </div>
+          <div className="p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 flex flex-col justify-center">
+              <div className="flex items-center gap-2 mb-1">
+                  <TrendingUp size={16} className="text-blue-500"/>
+                  <span className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Active Users</span>
+              </div>
+              <span className="text-xl font-black text-gray-900 dark:text-white">{advancedStats.activeUsers}</span>
+          </div>
       </div>
 
       {/* Main Content Area */}

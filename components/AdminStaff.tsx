@@ -171,20 +171,20 @@ export const AdminStaff: React.FC = () => {
                     </div>
                     <div className="space-y-4">
                         <input 
-                            className="w-full p-3 border dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/20"
+                            className="w-full p-3 border dark:border-gray-600 rounded-xl bg-white dark:bg-gray-950 text-gray-900 dark:text-white outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/20"
                             placeholder="Full Name" 
                             value={newStaff.name || ''}
                             onChange={e => setNewStaff({...newStaff, name: e.target.value})}
                         />
                         <input 
                             type="email"
-                            className="w-full p-3 border dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/20"
+                            className="w-full p-3 border dark:border-gray-600 rounded-xl bg-white dark:bg-gray-950 text-gray-900 dark:text-white outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/20"
                             placeholder="Email Address" 
                             value={newStaff.email || ''}
                             onChange={e => setNewStaff({...newStaff, email: e.target.value})}
                         />
                         <select 
-                            className="w-full p-3 border dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/20"
+                            className="w-full p-3 border dark:border-gray-600 rounded-xl bg-white dark:bg-gray-950 text-gray-900 dark:text-white outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/20"
                             value={newStaff.roleId || ''}
                             onChange={e => setNewStaff({...newStaff, roleId: e.target.value})}
                         >
@@ -210,7 +210,7 @@ export const AdminStaff: React.FC = () => {
                     </div>
                     <div className="space-y-4">
                         <input 
-                            className="w-full p-3 border dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/20"
+                            className="w-full p-3 border dark:border-gray-600 rounded-xl bg-white dark:bg-gray-950 text-gray-900 dark:text-white outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/20"
                             placeholder="Role Name (e.g., Auditor)" 
                             value={newRole.name || ''}
                             onChange={e => setNewRole({...newRole, name: e.target.value})}

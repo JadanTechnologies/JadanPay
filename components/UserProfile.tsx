@@ -160,42 +160,42 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdate }) => {
             
             <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
-                    <label className="block text-sm font-bold text-gray-500 dark:text-gray-400 mb-2">Full Name</label>
+                    <label className="block text-sm font-bold text-gray-500 dark:text-gray-300 mb-2">Full Name</label>
                     <div className="relative">
                         <UserIcon className="absolute left-3 top-3.5 text-gray-400" size={18}/>
                         <input 
                             type="text" 
                             value={formData.name}
                             onChange={e => setFormData({...formData, name: e.target.value})}
-                            className="w-full pl-10 p-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-green-500 outline-none transition-all text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600"
+                            className="w-full pl-10 p-3 bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-green-500 outline-none transition-all text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600"
                             required
                         />
                     </div>
                 </div>
 
                 <div>
-                    <label className="block text-sm font-bold text-gray-500 dark:text-gray-400 mb-2">Phone Number</label>
+                    <label className="block text-sm font-bold text-gray-500 dark:text-gray-300 mb-2">Phone Number</label>
                     <div className="relative">
                         <Phone className="absolute left-3 top-3.5 text-gray-400" size={18}/>
                         <input 
                             type="tel" 
                             value={formData.phone}
                             onChange={e => setFormData({...formData, phone: e.target.value})}
-                            className="w-full pl-10 p-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-green-500 outline-none transition-all text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600"
+                            className="w-full pl-10 p-3 bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-green-500 outline-none transition-all text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600"
                             required
                         />
                     </div>
                 </div>
 
                 <div>
-                    <label className="block text-sm font-bold text-gray-500 dark:text-gray-400 mb-2">Email Address (Read Only)</label>
+                    <label className="block text-sm font-bold text-gray-500 dark:text-gray-300 mb-2">Email Address (Read Only)</label>
                     <div className="relative">
                         <Mail className="absolute left-3 top-3.5 text-gray-400" size={18}/>
                         <input 
                             type="email" 
                             value={user.email}
                             readOnly
-                            className="w-full pl-10 p-3 bg-gray-100 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-xl cursor-not-allowed text-gray-500 dark:text-gray-400"
+                            className="w-full pl-10 p-3 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl cursor-not-allowed text-gray-500 dark:text-gray-400"
                         />
                     </div>
                 </div>
@@ -227,7 +227,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdate }) => {
             <form onSubmit={handlePinChange} className="space-y-6">
                 {user.transactionPin ? (
                     <div>
-                        <label className="block text-sm font-bold text-gray-500 dark:text-gray-400 mb-2">Old PIN</label>
+                        <label className="block text-sm font-bold text-gray-500 dark:text-gray-300 mb-2">Old PIN</label>
                         <div className="relative">
                             <Key className="absolute left-3 top-3.5 text-gray-400" size={18}/>
                             <input 
@@ -235,7 +235,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdate }) => {
                                 value={pinData.oldPin}
                                 onChange={e => setPinData({...pinData, oldPin: e.target.value.replace(/\D/g,'')})}
                                 maxLength={4}
-                                className="w-full pl-10 p-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none transition-all text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600"
+                                className="w-full pl-10 p-3 bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none transition-all text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600"
                                 placeholder="••••"
                             />
                         </div>
@@ -247,7 +247,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdate }) => {
                 )}
 
                 <div>
-                    <label className="block text-sm font-bold text-gray-500 dark:text-gray-400 mb-2">New PIN (4 Digits)</label>
+                    <label className="block text-sm font-bold text-gray-500 dark:text-gray-300 mb-2">New PIN (4 Digits)</label>
                     <div className="relative">
                         <Lock className="absolute left-3 top-3.5 text-gray-400" size={18}/>
                         <input 
@@ -255,7 +255,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdate }) => {
                             value={pinData.newPin}
                             onChange={e => setPinData({...pinData, newPin: e.target.value.replace(/\D/g,'')})}
                             maxLength={4}
-                            className="w-full pl-10 p-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none transition-all text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600"
+                            className="w-full pl-10 p-3 bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none transition-all text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600"
                             placeholder="••••"
                         />
                     </div>

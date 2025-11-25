@@ -186,7 +186,7 @@ export const AdminUsers: React.FC = () => {
                       placeholder="Search name, email, phone..." 
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full pl-9 pr-4 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 outline-none transition-colors placeholder-gray-400 dark:placeholder-gray-500"
+                      className="w-full pl-9 pr-4 py-2 bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 outline-none transition-colors placeholder-gray-400 dark:placeholder-gray-500"
                   />
               </div>
           )}
@@ -495,7 +495,7 @@ export const AdminUsers: React.FC = () => {
                         type="number" 
                         value={fundAmount}
                         onChange={(e) => setFundAmount(e.target.value)}
-                        className="w-full p-3 border dark:border-gray-700 rounded-xl font-mono text-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 outline-none placeholder-gray-400 dark:placeholder-gray-500"
+                        className="w-full p-3 border dark:border-gray-600 rounded-xl font-mono text-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 outline-none placeholder-gray-400 dark:placeholder-gray-500"
                         placeholder="0.00"
                         autoFocus
                       />
@@ -535,7 +535,7 @@ export const AdminUsers: React.FC = () => {
                                 type="text" 
                                 value={editFormData.name || ''}
                                 onChange={e => setEditFormData({...editFormData, name: e.target.value})}
-                                className="w-full p-3 border dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white outline-none"
+                                className="w-full p-3 border dark:border-gray-600 rounded-xl bg-white dark:bg-gray-950 text-gray-900 dark:text-white outline-none focus:border-green-500"
                             />
                         </div>
                          <div>
@@ -544,7 +544,7 @@ export const AdminUsers: React.FC = () => {
                                 type="email" 
                                 value={editFormData.email || ''}
                                 onChange={e => setEditFormData({...editFormData, email: e.target.value})}
-                                className="w-full p-3 border dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white outline-none"
+                                className="w-full p-3 border dark:border-gray-600 rounded-xl bg-white dark:bg-gray-950 text-gray-900 dark:text-white outline-none focus:border-green-500"
                             />
                         </div>
                          <div>
@@ -553,7 +553,7 @@ export const AdminUsers: React.FC = () => {
                                 type="text" 
                                 value={editFormData.phone || ''}
                                 onChange={e => setEditFormData({...editFormData, phone: e.target.value})}
-                                className="w-full p-3 border dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white outline-none"
+                                className="w-full p-3 border dark:border-gray-600 rounded-xl bg-white dark:bg-gray-950 text-gray-900 dark:text-white outline-none focus:border-green-500"
                             />
                         </div>
                         <div>
@@ -561,7 +561,7 @@ export const AdminUsers: React.FC = () => {
                             <select 
                                 value={editFormData.role}
                                 onChange={e => setEditFormData({...editFormData, role: e.target.value as any})}
-                                className="w-full p-3 border dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white outline-none"
+                                className="w-full p-3 border dark:border-gray-600 rounded-xl bg-white dark:bg-gray-950 text-gray-900 dark:text-white outline-none focus:border-green-500"
                             >
                                 <option value="user">User</option>
                                 <option value="reseller">Reseller (API Access)</option>

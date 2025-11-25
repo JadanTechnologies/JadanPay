@@ -1,10 +1,10 @@
 
-import { User, Transaction, TransactionType, TransactionStatus, UserRole, Provider, Ticket, UserStatus, Staff, Role, Announcement, CommunicationTemplate, Bundle, AppNotification, AccessRule } from '../types';
+import { User, Transaction, TransactionType, TransactionStatus, UserRole, Provider, Ticket, UserStatus, Staff, Role, Announcement, CommunicationTemplate, Bundle, AppNotification, AccessRule, KycStatus, CronJob } from '../types';
 import { MOCK_USERS_DATA, SAMPLE_BUNDLES } from '../constants';
 import { SettingsService, AppSettings } from './settingsService';
 import { NotificationService } from './notificationService';
 
-const DB_STORAGE_KEY = 'JADANPAY_DB_V1';
+const DB_STORAGE_KEY = 'JADANPAY_DB_V2';
 
 // Database Schema Interface
 interface DatabaseSchema {
@@ -19,13 +19,15 @@ interface DatabaseSchema {
     notifications: AppNotification[];
     settings: AppSettings | null;
     accessRules: AccessRule[];
+    cronJobs: CronJob[];
 }
 
 // Default Data
-const DEFAULT_BUNDLES: Bundle[] = SAMPLE_BUNDLES.map(b => ({...b, planId: b.id}));
+const DEFAULT_BUNDLES: Bundle[] = SAMPLE_BUNDLES.map(b => ({...b, planId: b.id, resellerPrice: b.price * 0.95}));
 const DEFAULT_USERS: User[] = MOCK_USERS_DATA.map(u => ({
     ...u,
     walletNumber: u.id === 'u1' ? '2039485712' : u.id === 'u2' ? '2058392011' : '0000000000',
+    accountNumber: '9' + Math.floor(Math.random() * 1000000000), // Virtual Account
     referralCode: u.name.substring(0,3).toUpperCase() + Math.floor(Math.random() * 1000),
     referralCount: 0,
     bonusBalance: 0,
@@ -34,8 +36,16 @@ const DEFAULT_USERS: User[] = MOCK_USERS_DATA.map(u => ({
     dataUsed: u.id === 'u1' ? 4.2 : 12.5, // GB
     transactionPin: u.id === 'u1' ? '1234' : undefined, // u1 has pin, u2 needs to create
     apiKey: u.role === UserRole.RESELLER ? 'jp_live_' + Math.random().toString(36).substr(2, 30) : undefined,
-    resellerRequestStatus: 'NONE'
+    resellerRequestStatus: 'NONE',
+    kycStatus: u.isVerified ? KycStatus.VERIFIED : KycStatus.NONE
 })) as User[];
+
+const DEFAULT_CRON_JOBS: CronJob[] = [
+    { id: '1', name: 'Daily Sales Report', schedule: 'Every Day at 12:00 AM', status: 'active', lastRun: new Date().toISOString(), nextRun: 'Tomorrow, 12:00 AM', description: 'Generates and emails sales report to admin.' },
+    { id: '2', name: 'Retry Failed Transactions', schedule: 'Every 10 Minutes', status: 'active', lastRun: new Date().toISOString(), nextRun: 'In 5 minutes', description: 'Attempts to re-process failed API calls.' },
+    { id: '3', name: 'Low Balance Alert', schedule: 'Every Hour', status: 'active', lastRun: new Date().toISOString(), nextRun: 'In 30 minutes', description: 'Checks API wallet balance and notifies admin if low.' },
+    { id: '4', name: 'Database Backup', schedule: 'Every Week', status: 'inactive', lastRun: '-', nextRun: '-', description: 'Auto-backup system data to cloud.' },
+];
 
 // In-Memory State
 let db: DatabaseSchema = {
@@ -49,7 +59,8 @@ let db: DatabaseSchema = {
     templates: [],
     notifications: [],
     settings: null,
-    accessRules: []
+    accessRules: [],
+    cronJobs: []
 };
 
 // --- DATA SANITIZATION ---
@@ -72,6 +83,7 @@ const sanitizeUser = (u: any): User => {
         savings: typeof u.savings === 'number' ? u.savings : 0,
         bonusBalance: typeof u.bonusBalance === 'number' ? u.bonusBalance : 0,
         walletNumber: u.walletNumber || '0000000000',
+        accountNumber: u.accountNumber || '9000000000',
         referralCode: u.referralCode || 'REF000',
         referredBy: u.referredBy,
         referralCount: typeof u.referralCount === 'number' ? u.referralCount : 0,
@@ -86,7 +98,11 @@ const sanitizeUser = (u: any): User => {
         dataUsed: typeof u.dataUsed === 'number' ? u.dataUsed : 0,
         transactionPin: u.transactionPin,
         apiKey: u.apiKey,
-        resellerRequestStatus: u.resellerRequestStatus || 'NONE'
+        resellerRequestStatus: u.resellerRequestStatus || 'NONE',
+        kycStatus: u.kycStatus || (u.isVerified ? KycStatus.VERIFIED : KycStatus.NONE),
+        kycDocType: u.kycDocType,
+        kycDocUrl: u.kycDocUrl,
+        kycFaceUrl: u.kycFaceUrl
     };
 };
 
@@ -108,7 +124,8 @@ const loadDatabase = () => {
                 templates: Array.isArray(parsed.templates) ? parsed.templates : [],
                 notifications: Array.isArray(parsed.notifications) ? parsed.notifications : [],
                 settings: parsed.settings || null,
-                accessRules: Array.isArray(parsed.accessRules) ? parsed.accessRules : []
+                accessRules: Array.isArray(parsed.accessRules) ? parsed.accessRules : [],
+                cronJobs: Array.isArray(parsed.cronJobs) ? parsed.cronJobs : DEFAULT_CRON_JOBS
             };
             
             console.log("Database loaded and sanitized.");
@@ -116,6 +133,7 @@ const loadDatabase = () => {
             console.log("Initializing new Database");
             db.users = DEFAULT_USERS;
             db.bundles = DEFAULT_BUNDLES;
+            db.cronJobs = DEFAULT_CRON_JOBS;
             saveDatabase();
         }
     } catch (e) {
@@ -123,6 +141,7 @@ const loadDatabase = () => {
         // Fallback to defaults to prevent crash
         db.users = DEFAULT_USERS;
         db.bundles = DEFAULT_BUNDLES;
+        db.cronJobs = DEFAULT_CRON_JOBS;
         // Clear corrupt data
         localStorage.removeItem(DB_STORAGE_KEY);
         saveDatabase();
@@ -157,7 +176,7 @@ export const MockDB = {
       const currentSettings = await SettingsService.getSettings();
       db.settings = currentSettings;
       return {
-          version: '1.0',
+          version: '2.0',
           timestamp: new Date().toISOString(),
           data: db
       };
@@ -194,6 +213,37 @@ export const MockDB = {
         .sort((a, b) => new Date(b.joinedDate || 0).getTime() - new Date(a.joinedDate || 0).getTime())
         .slice(0, limit)
         .map(u => ({...u}));
+  },
+
+  // --- ADVANCED STATS ---
+  getDashboardStatsDetailed: async () => {
+      await delay(200);
+      
+      const totalUsers = db.users.length;
+      const activeUsers = db.users.filter(u => u.status === UserStatus.ACTIVE).length;
+      const inactiveUsers = db.users.filter(u => u.status !== UserStatus.ACTIVE).length; // Suspended or Banned
+      
+      const totalResellers = db.users.filter(u => u.role === UserRole.RESELLER).length;
+      const activeResellers = db.users.filter(u => u.role === UserRole.RESELLER && u.status === UserStatus.ACTIVE).length;
+      const inactiveResellers = db.users.filter(u => u.role === UserRole.RESELLER && u.status !== UserStatus.ACTIVE).length;
+
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      const dormantUsers = db.users.filter(u => {
+          const lastLogin = new Date(u.lastLogin || 0);
+          return lastLogin < thirtyDaysAgo;
+      }).length;
+
+      return {
+          totalUsers,
+          activeUsers,
+          inactiveUsers,
+          dormantUsers,
+          totalResellers,
+          activeResellers,
+          inactiveResellers,
+          suspendedUsers: db.users.filter(u => u.status === UserStatus.SUSPENDED).length
+      };
   },
 
   getInactiveUsersCount: async () => {
@@ -275,10 +325,11 @@ export const MockDB = {
           savings: 0,
           bonusBalance: 0,
           walletNumber: generateWalletNumber(),
+          accountNumber: '9' + Math.floor(Math.random() * 1000000000),
           referralCode: generateReferralCode(name),
           referredBy: referrerId,
           referralCount: 0,
-          isVerified: true,
+          isVerified: false,
           status: UserStatus.ACTIVE,
           ipAddress: '127.0.0.1',
           os: 'Web Browser',
@@ -286,7 +337,8 @@ export const MockDB = {
           joinedDate: new Date().toISOString(),
           dataTotal: 0,
           dataUsed: 0,
-          resellerRequestStatus: 'NONE'
+          resellerRequestStatus: 'NONE',
+          kycStatus: KycStatus.NONE
       };
 
       db.users.push(newUser);
@@ -295,7 +347,7 @@ export const MockDB = {
           id: Math.random().toString(36),
           userId: newUser.id,
           title: 'Welcome to JadanPay!',
-          message: 'We are glad to have you onboard. Set up your Transaction PIN to get started.',
+          message: 'We are glad to have you onboard. Please verify your account to unlock all features.',
           date: new Date().toISOString(),
           isRead: false,
           type: 'success'
@@ -318,6 +370,59 @@ export const MockDB = {
               type: 'error'
           });
           
+          saveDatabase();
+          return { ...user };
+      }
+      throw new Error("User not found");
+  },
+
+  // --- KYC & VERIFICATION ---
+  submitKyc: async (userId: string, docType: string, docUrl: string, faceUrl: string) => {
+      await delay(1000);
+      const user = db.users.find(u => u.id === userId);
+      if (user) {
+          user.kycStatus = KycStatus.PENDING;
+          user.kycDocType = docType;
+          user.kycDocUrl = docUrl;
+          user.kycFaceUrl = faceUrl;
+          saveDatabase();
+          return { ...user };
+      }
+      throw new Error("User not found");
+  },
+
+  approveKyc: async (userId: string) => {
+      await delay(300);
+      const user = db.users.find(u => u.id === userId);
+      if (user) {
+          user.kycStatus = KycStatus.VERIFIED;
+          user.isVerified = true;
+          
+          MockDB.addNotification({
+              userId: userId,
+              title: 'Verification Successful!',
+              message: 'Your account has been verified. You now have unlimited access and a dedicated Virtual Account Number.',
+              type: 'success'
+          });
+          saveDatabase();
+          return { ...user };
+      }
+      throw new Error("User not found");
+  },
+
+  rejectKyc: async (userId: string) => {
+      await delay(300);
+      const user = db.users.find(u => u.id === userId);
+      if (user) {
+          user.kycStatus = KycStatus.REJECTED;
+          user.isVerified = false;
+          
+          MockDB.addNotification({
+              userId: userId,
+              title: 'Verification Rejected',
+              message: 'Your verification documents were rejected. Please try again with clear images.',
+              type: 'error'
+          });
           saveDatabase();
           return { ...user };
       }
@@ -728,5 +833,18 @@ export const MockDB = {
   deleteAccessRule: async (id: string) => {
       db.accessRules = db.accessRules.filter(r => r.id !== id);
       saveDatabase();
+  },
+
+  // --- CRON JOBS ---
+  getCronJobs: async () => {
+      await delay(100);
+      return [...db.cronJobs];
+  },
+  toggleCronJob: async (id: string) => {
+      const job = db.cronJobs.find(j => j.id === id);
+      if (job) {
+          job.status = job.status === 'active' ? 'inactive' : 'active';
+          saveDatabase();
+      }
   }
 };
