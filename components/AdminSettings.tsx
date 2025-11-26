@@ -1,17 +1,18 @@
 
 import React, { useState, useEffect } from 'react';
-import { Save, Globe, Server, CreditCard, Database, Plus, Trash2, Edit2, Check, X, Upload, Mail, Phone, AlertTriangle, Key, Users, Trophy, Gift, MessageSquare, Bell, Send, Smartphone, Activity, Link as LinkIcon, Download, Wifi } from 'lucide-react';
-import { Provider, Bundle, PlanType, User } from '../types';
+import { Save, Globe, Server, CreditCard, Database, Plus, Trash2, Edit2, Check, X, Upload, Mail, Phone, AlertTriangle, Key, Users, Trophy, Gift, MessageSquare, Bell, Send, Smartphone, Activity, Link as LinkIcon, Download, Wifi, Clock, Play, Pause, Lock } from 'lucide-react';
+import { Provider, Bundle, PlanType, User, CronJob } from '../types';
 import { PROVIDER_LOGOS } from '../constants';
 import { SettingsService, AppSettings, ApiVendor, EmailProvider, PushProvider } from '../services/settingsService';
 import { MockDB } from '../services/mockDb';
 import { NotificationService } from '../services/notificationService';
 
 export const AdminSettings: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'general' | 'services' | 'payment' | 'backup' | 'api' | 'referrals' | 'app' | 'health'>('general');
+  const [activeTab, setActiveTab] = useState<'general' | 'services' | 'api' | 'payment' | 'referrals' | 'backup' | 'app' | 'health' | 'automation'>('general');
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [bundles, setBundles] = useState<Bundle[]>([]);
   const [topReferrers, setTopReferrers] = useState<User[]>([]);
+  const [cronJobs, setCronJobs] = useState<CronJob[]>([]);
   const [isSaving, setIsSaving] = useState(false);
 
   // Bundle Modal State
@@ -22,6 +23,7 @@ export const AdminSettings: React.FC = () => {
   useEffect(() => {
     loadSettings();
     loadBundles();
+    loadCronJobs();
   }, []);
 
   useEffect(() => {
@@ -43,6 +45,11 @@ export const AdminSettings: React.FC = () => {
   const loadTopReferrers = async () => {
       const data = await MockDB.getTopReferrers();
       setTopReferrers(data);
+  };
+
+  const loadCronJobs = async () => {
+      const data = await MockDB.getCronJobs();
+      setCronJobs(data);
   };
 
   const handleSave = async () => {
@@ -83,15 +90,19 @@ export const AdminSettings: React.FC = () => {
         }
     };
 
-  const toggleProvider = (key: string) => {
-      if(!settings) return;
-      setSettings({
-          ...settings,
-          providerStatus: {
-              ...settings.providerStatus,
-              [key]: !settings.providerStatus[key]
-          }
-      });
+  const toggleCron = async (id: string) => {
+      await MockDB.toggleCronJob(id);
+      loadCronJobs();
+  };
+
+  const toggleProvider = (provider: string) => {
+      if (!settings) return;
+      const newStatus = { ...settings.providerStatus };
+      // Default is active if undefined or not strictly false
+      const isActive = newStatus[provider] !== false;
+      newStatus[provider] = !isActive;
+      
+      setSettings({ ...settings, providerStatus: newStatus });
   };
 
   const handleBundleSave = async () => {
@@ -115,6 +126,7 @@ export const AdminSettings: React.FC = () => {
           type: editingBundle.type as PlanType,
           name: editingBundle.name,
           price: Number(editingBundle.price),
+          resellerPrice: Number(editingBundle.resellerPrice) || Number(editingBundle.price),
           costPrice: Number(editingBundle.costPrice) || Number(editingBundle.price) * 0.9,
           dataAmount: editingBundle.dataAmount || '0GB',
           validity: editingBundle.validity || '30 Days',
@@ -201,15 +213,16 @@ export const AdminSettings: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-fade-in pb-20">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white dark:bg-gray-900 p-4 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white dark:bg-gray-800 p-4 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm">
         <h2 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
             Settings
         </h2>
-        <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-lg overflow-x-auto max-w-full no-scrollbar">
+        <div className="flex bg-gray-100 dark:bg-gray-700 p-1 rounded-lg overflow-x-auto max-w-full no-scrollbar">
             {[
                 { id: 'general', label: 'General', icon: Globe },
                 { id: 'app', label: 'Mobile App', icon: Smartphone },
                 { id: 'health', label: 'Health', icon: Activity },
+                { id: 'automation', label: 'Automation', icon: Clock },
                 { id: 'services', label: 'Services', icon: Server },
                 { id: 'api', label: 'Integrations', icon: Key },
                 { id: 'payment', label: 'Payments', icon: CreditCard },
@@ -221,8 +234,8 @@ export const AdminSettings: React.FC = () => {
                     onClick={() => setActiveTab(tab.id as any)}
                     className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${
                         activeTab === tab.id 
-                        ? 'bg-white dark:bg-gray-700 shadow text-green-700 dark:text-green-400' 
-                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                        ? 'bg-white dark:bg-gray-600 shadow text-green-700 dark:text-green-300' 
+                        : 'text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-100'
                     }`}
                 >
                     <tab.icon size={16}/> {tab.label}
@@ -429,282 +442,217 @@ export const AdminSettings: React.FC = () => {
                   </div>
               )}
 
-              {/* --- API INTEGRATIONS --- */}
-              {activeTab === 'api' && (
+              {/* --- AUTOMATION (CRON) --- */}
+              {activeTab === 'automation' && (
                   <div className="bg-white dark:bg-gray-900 p-6 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm space-y-6">
-                      
-                      {/* Gateway Selection */}
-                      <section>
-                          <h3 className="font-bold text-gray-800 dark:text-white mb-4 border-b dark:border-gray-800 pb-2">VTU API Gateways</h3>
-                          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Configure which provider is active for airtime/data transactions.</p>
+                      <h3 className="font-bold text-gray-800 dark:text-white mb-4 border-b dark:border-gray-800 pb-2 flex items-center gap-2">
+                          <Clock className="text-blue-500" /> Automation & Cron Jobs
+                      </h3>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Manage automated background tasks.</p>
 
-                          <div className="mb-6">
-                              <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Active Gateway</label>
-                              <select 
-                                className="w-full p-3 border dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white font-bold"
-                                value={settings.activeApiVendor}
-                                onChange={(e) => setSettings({...settings, activeApiVendor: e.target.value as ApiVendor})}
-                              >
-                                  <option value="BILALSADA">BilalSadaSub (Default)</option>
-                                  <option value="MASKAWA">Maskawa Sub</option>
-                                  <option value="ALRAHUZ">Alrahuz Data</option>
-                                  <option value="ABBAPHANTAMI">Abba Phantami Data</option>
-                                  <option value="SIMHOST">SimHost NG</option>
-                              </select>
-                          </div>
-
-                          <div className="space-y-4">
-                              {Object.keys(settings.apiKeys).map((vendor) => (
-                                  <div key={vendor} className="p-4 border dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800">
-                                      <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">{vendor} API Key</label>
-                                      <div className="relative">
-                                        <Key className="absolute left-3 top-3 text-gray-400" size={18} />
-                                        <input 
-                                            type="password"
-                                            placeholder={`Enter ${vendor} Token/Key`}
-                                            value={(settings.apiKeys as any)[vendor]}
-                                            onChange={e => setSettings({
-                                                ...settings, 
-                                                apiKeys: { ...settings.apiKeys, [vendor]: e.target.value }
-                                            })}
-                                            className="w-full pl-10 p-3 border dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 outline-none"
-                                        />
+                      <div className="space-y-4">
+                          {cronJobs.map(job => (
+                              <div key={job.id} className="p-4 border dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 flex flex-col md:flex-row justify-between items-center gap-4">
+                                  <div className="flex-1">
+                                      <div className="flex items-center gap-2">
+                                          <h4 className="font-bold text-gray-800 dark:text-white">{job.name}</h4>
+                                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${job.status === 'active' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400'}`}>
+                                              {job.status}
+                                          </span>
+                                      </div>
+                                      <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">{job.description}</p>
+                                      <div className="flex gap-4 mt-2 text-xs text-gray-400 font-mono">
+                                          <span>Schedule: {job.schedule}</span>
+                                          <span>Last Run: {new Date(job.lastRun).toLocaleString()}</span>
                                       </div>
                                   </div>
-                              ))}
-                          </div>
-                      </section>
+                                  
+                                  <div className="flex gap-2">
+                                      <button className="px-3 py-1.5 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg text-xs font-bold border border-blue-100 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/40">
+                                          Logs
+                                      </button>
+                                      <button 
+                                          onClick={() => toggleCron(job.id)}
+                                          className={`px-4 py-1.5 rounded-lg text-xs font-bold text-white flex items-center gap-1 ${job.status === 'active' ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'}`}
+                                      >
+                                          {job.status === 'active' ? <><Pause size={12}/> Disable</> : <><Play size={12}/> Enable</>}
+                                      </button>
+                                  </div>
+                              </div>
+                          ))}
+                      </div>
+                  </div>
+              )}
 
-                      {/* Messaging: SMS */}
+              {/* --- API INTEGRATIONS (Full Implementation) --- */}
+              {activeTab === 'api' && (
+                  <div className="bg-white dark:bg-gray-900 p-6 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm space-y-8">
+                      
+                      {/* VTU Gateway */}
                       <section>
-                          <h3 className="font-bold text-gray-800 dark:text-white mb-4 border-b dark:border-gray-800 pb-2 pt-4 flex items-center gap-2"><MessageSquare size={18}/> SMS Configuration (Twilio)</h3>
-                          
-                          <div className="p-4 border dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 mb-4">
-                               <div className="flex items-center gap-4 mb-4">
-                                    <label className="flex items-center gap-2 cursor-pointer">
-                                        <div className="relative">
-                                            <input 
-                                                type="checkbox" 
-                                                checked={settings.enableTwilio}
-                                                onChange={e => setSettings({...settings, enableTwilio: e.target.checked})}
-                                                className="sr-only peer"
-                                            />
-                                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                                        </div>
-                                        <span className="font-bold text-gray-700 dark:text-gray-300">Enable Twilio SMS</span>
-                                    </label>
-                               </div>
-
-                               {settings.enableTwilio && (
-                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in">
-                                        <div>
-                                            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Account SID</label>
-                                            <input 
-                                                type="password"
-                                                value={settings.twilioAccountSid}
-                                                onChange={e => setSettings({...settings, twilioAccountSid: e.target.value})}
-                                                className="w-full p-3 border dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                                                placeholder="AC..."
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Auth Token</label>
-                                            <input 
-                                                type="password"
-                                                value={settings.twilioAuthToken}
-                                                onChange={e => setSettings({...settings, twilioAuthToken: e.target.value})}
-                                                className="w-full p-3 border dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                                                placeholder="Auth Token"
-                                            />
-                                        </div>
-                                        <div className="md:col-span-2">
-                                            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Sender ID / Phone Number</label>
-                                            <input 
-                                                value={settings.twilioSenderId}
-                                                onChange={e => setSettings({...settings, twilioSenderId: e.target.value})}
-                                                className="w-full p-3 border dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                                                placeholder="+1234567890 or Brand Name"
-                                            />
-                                        </div>
-                                   </div>
-                               )}
+                          <h3 className="font-bold text-gray-800 dark:text-white mb-4 border-b dark:border-gray-800 pb-2">VTU API Gateways</h3>
+                          <div className="grid grid-cols-1 gap-4">
+                              <div>
+                                  <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Active Vendor</label>
+                                  <select 
+                                      className="w-full p-3 border dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white"
+                                      value={settings.activeApiVendor}
+                                      onChange={e => setSettings({...settings, activeApiVendor: e.target.value as ApiVendor})}
+                                  >
+                                      <option value="BILALSADA">BilalSadaSub</option>
+                                      <option value="MASKAWA">MaskawaSub</option>
+                                      <option value="ALRAHUZ">AlrahuzData</option>
+                                      <option value="ABBAPHANTAMI">AbbaPhantami</option>
+                                      <option value="SIMHOST">SimHosting</option>
+                                  </select>
+                              </div>
+                              <div>
+                                  <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">API Key ({settings.activeApiVendor})</label>
+                                  <input 
+                                      type="password"
+                                      className="w-full p-3 border dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white"
+                                      value={settings.apiKeys[settings.activeApiVendor]}
+                                      onChange={e => setSettings({...settings, apiKeys: { ...settings.apiKeys, [settings.activeApiVendor]: e.target.value }})}
+                                      placeholder="Enter your API Token"
+                                  />
+                              </div>
                           </div>
                       </section>
 
-                      {/* Messaging: Email */}
+                      {/* Payment Gateways */}
                       <section>
-                          <h3 className="font-bold text-gray-800 dark:text-white mb-4 border-b dark:border-gray-800 pb-2 pt-4 flex items-center gap-2"><Mail size={18}/> Email Configuration</h3>
+                          <h3 className="font-bold text-gray-800 dark:text-white mb-4 border-b dark:border-gray-800 pb-2">Payment Gateways</h3>
                           
-                          <div className="p-4 border dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 mb-4">
-                               <div className="mb-4">
-                                    <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Email Provider</label>
-                                    <select 
-                                        className="w-full p-3 border dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white font-medium"
-                                        value={settings.emailProvider}
-                                        onChange={(e) => setSettings({...settings, emailProvider: e.target.value as EmailProvider})}
-                                    >
-                                        <option value="SMTP">SMTP (Standard)</option>
-                                        <option value="RESEND">Resend.com (API)</option>
-                                    </select>
-                               </div>
+                          <div className="space-y-6">
+                              {/* Paystack */}
+                              <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl border dark:border-gray-700">
+                                  <label className="flex items-center justify-between mb-4 cursor-pointer">
+                                      <span className="font-bold text-blue-600 dark:text-blue-400">Paystack</span>
+                                      <input type="checkbox" checked={settings.enablePaystack} onChange={e => setSettings({...settings, enablePaystack: e.target.checked})} className="w-5 h-5 accent-blue-600"/>
+                                  </label>
+                                  {settings.enablePaystack && (
+                                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                          <input placeholder="Public Key" className="p-2 border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white" value={settings.paystackPublicKey} onChange={e => setSettings({...settings, paystackPublicKey: e.target.value})} />
+                                          <input placeholder="Secret Key" type="password" className="p-2 border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white" value={settings.paystackSecretKey} onChange={e => setSettings({...settings, paystackSecretKey: e.target.value})} />
+                                      </div>
+                                  )}
+                              </div>
 
-                               {settings.emailProvider === 'SMTP' ? (
-                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in">
-                                        <div>
-                                            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">SMTP Host</label>
-                                            <input 
-                                                value={settings.smtpHost}
-                                                onChange={e => setSettings({...settings, smtpHost: e.target.value})}
-                                                className="w-full p-3 border dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                                                placeholder="smtp.gmail.com"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">SMTP Port</label>
-                                            <input 
-                                                type="number"
-                                                value={settings.smtpPort}
-                                                onChange={e => setSettings({...settings, smtpPort: Number(e.target.value)})}
-                                                className="w-full p-3 border dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                                                placeholder="587"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">SMTP Username</label>
-                                            <input 
-                                                value={settings.smtpUser}
-                                                onChange={e => setSettings({...settings, smtpUser: e.target.value})}
-                                                className="w-full p-3 border dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                                                placeholder="email@example.com"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">SMTP Password</label>
-                                            <input 
-                                                type="password"
-                                                value={settings.smtpPass}
-                                                onChange={e => setSettings({...settings, smtpPass: e.target.value})}
-                                                className="w-full p-3 border dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                                                placeholder="********"
-                                            />
-                                        </div>
-                                         <div className="md:col-span-2">
-                                            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">From Email Address</label>
-                                            <input 
-                                                value={settings.emailFrom}
-                                                onChange={e => setSettings({...settings, emailFrom: e.target.value})}
-                                                className="w-full p-3 border dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                                                placeholder="noreply@yourdomain.com"
-                                            />
-                                        </div>
-                                   </div>
-                               ) : (
-                                   <div className="animate-fade-in">
-                                       <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Resend API Key</label>
-                                       <div className="relative">
-                                           <Key className="absolute left-3 top-3 text-gray-400" size={18}/>
-                                           <input 
-                                               type="password"
-                                               value={settings.resendApiKey}
-                                               onChange={e => setSettings({...settings, resendApiKey: e.target.value})}
-                                               className="w-full pl-10 p-3 border dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                                               placeholder="re_..."
-                                           />
-                                       </div>
-                                       <div className="mt-4">
-                                            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">From Email Address</label>
-                                            <input 
-                                                value={settings.emailFrom}
-                                                onChange={e => setSettings({...settings, emailFrom: e.target.value})}
-                                                className="w-full p-3 border dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                                                placeholder="onboarding@resend.dev"
-                                            />
-                                        </div>
-                                   </div>
-                               )}
+                              {/* Flutterwave */}
+                              <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl border dark:border-gray-700">
+                                  <label className="flex items-center justify-between mb-4 cursor-pointer">
+                                      <span className="font-bold text-orange-600 dark:text-orange-400">Flutterwave</span>
+                                      <input type="checkbox" checked={settings.enableFlutterwave} onChange={e => setSettings({...settings, enableFlutterwave: e.target.checked})} className="w-5 h-5 accent-orange-600"/>
+                                  </label>
+                                  {settings.enableFlutterwave && (
+                                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                          <input placeholder="Public Key" className="p-2 border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white" value={settings.flutterwavePublicKey} onChange={e => setSettings({...settings, flutterwavePublicKey: e.target.value})} />
+                                          <input placeholder="Secret Key" type="password" className="p-2 border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white" value={settings.flutterwaveSecretKey} onChange={e => setSettings({...settings, flutterwaveSecretKey: e.target.value})} />
+                                      </div>
+                                  )}
+                              </div>
+
+                              {/* Monnify */}
+                              <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl border dark:border-gray-700">
+                                  <label className="flex items-center justify-between mb-4 cursor-pointer">
+                                      <span className="font-bold text-indigo-600 dark:text-indigo-400">Monnify</span>
+                                      <input type="checkbox" checked={settings.enableMonnify} onChange={e => setSettings({...settings, enableMonnify: e.target.checked})} className="w-5 h-5 accent-indigo-600"/>
+                                  </label>
+                                  {settings.enableMonnify && (
+                                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                          <input placeholder="API Key" className="p-2 border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white" value={settings.monnifyApiKey} onChange={e => setSettings({...settings, monnifyApiKey: e.target.value})} />
+                                          <input placeholder="Secret Key" type="password" className="p-2 border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white" value={settings.monnifySecretKey} onChange={e => setSettings({...settings, monnifySecretKey: e.target.value})} />
+                                          <input placeholder="Contract Code" className="p-2 border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white" value={settings.monnifyContractCode} onChange={e => setSettings({...settings, monnifyContractCode: e.target.value})} />
+                                      </div>
+                                  )}
+                              </div>
                           </div>
                       </section>
 
-                      {/* Messaging: Push Notifications */}
+                      {/* Notifications */}
                       <section>
-                          <div className="flex justify-between items-center mb-4 border-b dark:border-gray-800 pb-2 pt-4">
-                                <h3 className="font-bold text-gray-800 dark:text-white flex items-center gap-2">
-                                    <Bell size={18}/> Push Notifications
-                                </h3>
-                                {settings.pushProvider !== 'NONE' && (
-                                    <button onClick={handleTestPush} className="text-xs flex items-center gap-1 text-green-600 dark:text-green-400 font-bold hover:underline">
-                                        <Send size={12} /> Test Config
-                                    </button>
-                                )}
-                          </div>
-                          
-                          <div className="p-4 border dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 mb-4">
-                               <div className="mb-4">
-                                    <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Push Provider</label>
-                                    <select 
-                                        className="w-full p-3 border dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white font-medium"
-                                        value={settings.pushProvider}
-                                        onChange={(e) => setSettings({...settings, pushProvider: e.target.value as PushProvider})}
-                                    >
-                                        <option value="NONE">Disabled</option>
-                                        <option value="FIREBASE">Firebase Cloud Messaging (FCM)</option>
-                                        <option value="ONESIGNAL">OneSignal</option>
-                                    </select>
-                               </div>
+                          <h3 className="font-bold text-gray-800 dark:text-white mb-4 border-b dark:border-gray-800 pb-2">Notifications (SMS, Email, Push)</h3>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                              {/* SMS - Twilio */}
+                              <div className="p-4 bg-white dark:bg-gray-900 border dark:border-gray-700 rounded-xl">
+                                  <label className="flex items-center gap-2 mb-4 cursor-pointer">
+                                      <input type="checkbox" checked={settings.enableTwilio} onChange={e => setSettings({...settings, enableTwilio: e.target.checked})} className="w-4 h-4"/>
+                                      <span className="font-bold text-sm text-gray-800 dark:text-white">Twilio SMS</span>
+                                  </label>
+                                  {settings.enableTwilio && (
+                                      <div className="space-y-3">
+                                          <input placeholder="Account SID" className="w-full p-2 border dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white text-xs" value={settings.twilioAccountSid} onChange={e => setSettings({...settings, twilioAccountSid: e.target.value})} />
+                                          <input placeholder="Auth Token" type="password" className="w-full p-2 border dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white text-xs" value={settings.twilioAuthToken} onChange={e => setSettings({...settings, twilioAuthToken: e.target.value})} />
+                                          <input placeholder="Sender ID" className="w-full p-2 border dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white text-xs" value={settings.twilioSenderId} onChange={e => setSettings({...settings, twilioSenderId: e.target.value})} />
+                                      </div>
+                                  )}
+                              </div>
 
-                               {settings.pushProvider === 'FIREBASE' && (
-                                   <div className="grid grid-cols-1 gap-4 animate-fade-in">
-                                        <div>
-                                            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Firebase Project ID</label>
-                                            <input 
-                                                value={settings.firebaseProjectId}
-                                                onChange={e => setSettings({...settings, firebaseProjectId: e.target.value})}
-                                                className="w-full p-3 border dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                                                placeholder="my-project-id"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Server Key (Legacy) / Service Account</label>
-                                            <input 
-                                                type="password"
-                                                value={settings.firebaseServerKey}
-                                                onChange={e => setSettings({...settings, firebaseServerKey: e.target.value})}
-                                                className="w-full p-3 border dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                                                placeholder="AAAA..."
-                                            />
-                                        </div>
-                                   </div>
-                               )}
-
-                               {settings.pushProvider === 'ONESIGNAL' && (
-                                   <div className="grid grid-cols-1 gap-4 animate-fade-in">
-                                        <div>
-                                            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">OneSignal App ID</label>
-                                            <input 
-                                                value={settings.oneSignalAppId}
-                                                onChange={e => setSettings({...settings, oneSignalAppId: e.target.value})}
-                                                className="w-full p-3 border dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                                                placeholder="uuid-format..."
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">REST API Key</label>
-                                            <input 
-                                                type="password"
-                                                value={settings.oneSignalRestApiKey}
-                                                onChange={e => setSettings({...settings, oneSignalRestApiKey: e.target.value})}
-                                                className="w-full p-3 border dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                                                placeholder="Token..."
-                                            />
-                                        </div>
-                                   </div>
-                               )}
+                              {/* Push Notifications */}
+                              <div className="p-4 bg-white dark:bg-gray-900 border dark:border-gray-700 rounded-xl">
+                                  <div className="flex justify-between mb-4">
+                                      <span className="font-bold text-sm text-gray-800 dark:text-white">Push Notifications</span>
+                                      <select className="text-xs bg-gray-100 dark:bg-gray-800 border dark:border-gray-600 rounded p-1 text-gray-900 dark:text-white" value={settings.pushProvider} onChange={e => setSettings({...settings, pushProvider: e.target.value as PushProvider})}>
+                                          <option value="NONE">Disabled</option>
+                                          <option value="FIREBASE">Firebase</option>
+                                          <option value="ONESIGNAL">OneSignal</option>
+                                      </select>
+                                  </div>
+                                  
+                                  {settings.pushProvider === 'FIREBASE' && (
+                                      <div className="space-y-3">
+                                          <input placeholder="Server Key" type="password" className="w-full p-2 border dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white text-xs" value={settings.firebaseServerKey} onChange={e => setSettings({...settings, firebaseServerKey: e.target.value})} />
+                                          <input placeholder="Project ID" className="w-full p-2 border dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white text-xs" value={settings.firebaseProjectId} onChange={e => setSettings({...settings, firebaseProjectId: e.target.value})} />
+                                      </div>
+                                  )}
+                                  {settings.pushProvider === 'ONESIGNAL' && (
+                                      <div className="space-y-3">
+                                          <input placeholder="App ID" className="w-full p-2 border dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white text-xs" value={settings.oneSignalAppId} onChange={e => setSettings({...settings, oneSignalAppId: e.target.value})} />
+                                          <input placeholder="REST API Key" type="password" className="w-full p-2 border dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white text-xs" value={settings.oneSignalRestApiKey} onChange={e => setSettings({...settings, oneSignalRestApiKey: e.target.value})} />
+                                      </div>
+                                  )}
+                                  {settings.pushProvider !== 'NONE' && (
+                                      <button onClick={handleTestPush} disabled={isSaving} className="mt-2 w-full py-2 bg-blue-600 text-white text-xs font-bold rounded hover:bg-blue-700">Test Configuration</button>
+                                  )}
+                              </div>
                           </div>
                       </section>
 
-                      <button onClick={handleSave} disabled={isSaving} className="px-6 py-3 bg-green-700 text-white rounded-xl font-bold hover:bg-green-800 mt-4">
-                          {isSaving ? 'Saving...' : 'Update Integrations'}
-                      </button>
+                      <button onClick={handleSave} disabled={isSaving} className="px-6 py-3 bg-green-700 text-white rounded-xl font-bold hover:bg-green-800 w-full">Save API Settings</button>
+                  </div>
+              )}
+
+              {/* --- PAYMENT SETTINGS (Manual) --- */}
+              {activeTab === 'payment' && (
+                  <div className="bg-white dark:bg-gray-900 p-6 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm space-y-6">
+                      <h3 className="font-bold text-gray-800 dark:text-white mb-4 border-b dark:border-gray-800 pb-2">Manual Funding (Bank Transfer)</h3>
+                      <div className="grid grid-cols-1 gap-4">
+                          <div>
+                              <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Bank Name</label>
+                              <input 
+                                  className="w-full p-3 border dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white"
+                                  value={settings.bankName}
+                                  onChange={e => setSettings({...settings, bankName: e.target.value})}
+                              />
+                          </div>
+                          <div>
+                              <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Account Number</label>
+                              <input 
+                                  className="w-full p-3 border dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white font-mono"
+                                  value={settings.accountNumber}
+                                  onChange={e => setSettings({...settings, accountNumber: e.target.value})}
+                              />
+                          </div>
+                          <div>
+                              <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Account Name</label>
+                              <input 
+                                  className="w-full p-3 border dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white"
+                                  value={settings.accountName}
+                                  onChange={e => setSettings({...settings, accountName: e.target.value})}
+                              />
+                          </div>
+                      </div>
+                      <button onClick={handleSave} className="px-6 py-3 bg-green-700 text-white rounded-xl font-bold hover:bg-green-800">Save Bank Details</button>
                   </div>
               )}
 
@@ -712,92 +660,30 @@ export const AdminSettings: React.FC = () => {
               {activeTab === 'services' && (
                   <div className="space-y-6">
                       {/* Network Visualizer Section */}
-                      <div className="bg-white dark:bg-gray-900 p-6 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm">
-                          <div className="flex justify-between items-center mb-6 border-b dark:border-gray-800 pb-4">
-                              <div>
-                                  <h3 className="font-bold text-gray-800 dark:text-white text-lg flex items-center gap-2">
-                                      <Activity className="text-blue-500" /> Network Connectivity Center
-                                  </h3>
-                                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Real-time gateway latency and success rates.</p>
-                              </div>
-                              <div className="flex gap-2">
-                                  <div className="flex items-center gap-1 text-xs font-bold text-green-600 bg-green-50 dark:bg-green-900/20 px-3 py-1 rounded-full">
-                                      <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> Live
-                                  </div>
-                              </div>
-                          </div>
-
+                      <div className="bg-white dark:bg-gray-900 p-6 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm mb-6">
+                          <h3 className="font-bold text-gray-800 dark:text-white mb-4">Network Connectivity Center</h3>
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                              {Object.entries(settings.providerStatus).map(([key, isActive]) => {
-                                  const stats = settings.providerStats[key] || 98;
-                                  const isDegraded = stats < 90;
-                                  const latency = Math.floor(Math.random() * (150 - 20) + 20); // Mock latency
-                                  const sparkData = Array.from({ length: 20 }, () => Math.floor(Math.random() * 100));
-
+                              {Object.values(Provider).map(p => {
+                                  const isOnline = settings.providerStatus[p] !== false;
+                                  const stats = settings.providerStats[p] || 90;
                                   return (
-                                      <div 
-                                          key={key} 
-                                          className={`relative overflow-hidden rounded-xl border transition-all duration-300 group ${
-                                              isActive 
-                                                  ? 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-md' 
-                                                  : 'bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-800 opacity-75 grayscale'
-                                          }`}
-                                      >
-                                          {/* Header */}
-                                          <div className="p-4 flex justify-between items-start relative z-10">
-                                              <div className="flex items-center gap-3">
-                                                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold text-sm shadow-sm ${
-                                                      isActive ? 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white' : 'bg-gray-200 dark:bg-gray-800 text-gray-500'
-                                                  }`}>
-                                                      {PROVIDER_LOGOS[key as Provider]?.slice(0,1) || key.slice(0,1)}
-                                                  </div>
-                                                  <div>
-                                                      <h4 className="font-bold text-gray-800 dark:text-white">{PROVIDER_LOGOS[key as Provider] || key}</h4>
-                                                      <div className="flex items-center gap-1 text-[10px] font-mono text-gray-500">
-                                                          {isActive ? <Wifi size={10} className="text-green-500"/> : <Wifi size={10} className="text-gray-400"/>}
-                                                          {isActive ? 'CONNECTED' : 'DISCONNECTED'}
-                                                      </div>
-                                                  </div>
-                                              </div>
-                                              <div className="relative">
-                                                  <label className="relative inline-flex items-center cursor-pointer">
-                                                      <input type="checkbox" className="sr-only peer" checked={isActive} onChange={() => toggleProvider(key)} />
-                                                      <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-green-600"></div>
-                                                  </label>
-                                              </div>
+                                      <div key={p} className={`p-4 rounded-xl border transition-all ${isOnline ? 'border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-800' : 'border-red-200 bg-red-50 dark:bg-red-900/20 dark:border-red-800 grayscale'}`}>
+                                          <div className="flex justify-between items-center mb-2">
+                                              <span className="font-bold text-gray-800 dark:text-white">{PROVIDER_LOGOS[p]}</span>
+                                              <label className="relative inline-flex items-center cursor-pointer">
+                                                  <input type="checkbox" className="sr-only peer" checked={isOnline} onChange={() => toggleProvider(p)}/>
+                                                  <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-600"></div>
+                                              </label>
                                           </div>
-
-                                          {/* Stats Visualization */}
-                                          {isActive && (
-                                              <div className="px-4 pb-4 relative z-10">
-                                                  <div className="flex justify-between items-end mb-2">
-                                                      <div>
-                                                          <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Success Rate</p>
-                                                          <p className={`text-2xl font-mono font-bold ${isDegraded ? 'text-yellow-500' : 'text-green-500'}`}>
-                                                              {stats}%
-                                                          </p>
-                                                      </div>
-                                                      <div className="text-right">
-                                                          <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Latency</p>
-                                                          <p className="text-sm font-mono font-bold text-gray-600 dark:text-gray-300">{latency}ms</p>
-                                                      </div>
-                                                  </div>
-                                                  
-                                                  {/* Sparkline SVG */}
-                                                  <div className="h-10 flex items-end gap-[2px] opacity-50">
-                                                      {sparkData.map((val, i) => (
-                                                          <div 
-                                                              key={i} 
-                                                              className={`w-full rounded-t-sm transition-all duration-500 ${isDegraded ? 'bg-yellow-400' : 'bg-blue-400'}`}
-                                                              style={{ height: `${val}%` }}
-                                                          ></div>
-                                                      ))}
-                                                  </div>
-                                              </div>
-                                          )}
-                                          
-                                          {/* Background Pattern for decoration */}
-                                          <div className="absolute -bottom-6 -right-6 w-24 h-24 bg-gradient-to-tl from-gray-100 to-transparent dark:from-gray-800 rounded-full opacity-50 z-0"></div>
+                                          <div className="flex items-end gap-2 h-8">
+                                              {[1,2,3,4,5,6,7,8].map(i => (
+                                                  <div key={i} className={`flex-1 rounded-sm ${i/8 * 100 <= stats ? 'bg-green-500' : 'bg-gray-200 dark:bg-gray-700'}`} style={{height: `${Math.random() * 100}%`}}></div>
+                                              ))}
+                                          </div>
+                                          <div className="flex justify-between mt-2 text-xs font-mono">
+                                              <span className={isOnline ? 'text-green-600 dark:text-green-400' : 'text-red-500'}>{isOnline ? 'ONLINE' : 'OFFLINE'}</span>
+                                              <span>{stats}% Success</span>
+                                          </div>
                                       </div>
                                   );
                               })}
@@ -825,32 +711,33 @@ export const AdminSettings: React.FC = () => {
                                           <th className="p-3">Plan ID</th>
                                           <th className="p-3">Provider</th>
                                           <th className="p-3">Name</th>
-                                          <th className="p-3">Type</th>
-                                          <th className="p-3">Price</th>
-                                          <th className="p-3">Status</th>
+                                          <th className="p-3">Cost (API)</th>
+                                          <th className="p-3">User Price</th>
+                                          <th className="p-3">Reseller</th>
+                                          <th className="p-3">Profit (User)</th>
                                           <th className="p-3 text-right">Action</th>
                                       </tr>
                                   </thead>
                                   <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                                      {bundles.map(b => (
+                                      {bundles.map(b => {
+                                          const profit = b.price - b.costPrice;
+                                          return (
                                           <tr key={b.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                                              <td className="p-3 font-mono text-xs">{b.planId}</td>
-                                              <td className="p-3">{PROVIDER_LOGOS[b.provider]}</td>
+                                              <td className="p-3 font-mono text-xs text-gray-500">{b.planId}</td>
+                                              <td className="p-3 font-bold">{PROVIDER_LOGOS[b.provider]}</td>
                                               <td className="p-3 font-medium">{b.name}</td>
-                                              <td className="p-3 text-xs uppercase">{b.type}</td>
-                                              <td className="p-3">₦{b.price}</td>
-                                              <td className="p-3">
-                                                  {b.isAvailable !== false ? 
-                                                      <Check size={16} className="text-green-500"/> : 
-                                                      <X size={16} className="text-red-500"/>
-                                                  }
+                                              <td className="p-3 font-mono text-red-600 dark:text-red-400">₦{b.costPrice}</td>
+                                              <td className="p-3 font-mono">₦{b.price}</td>
+                                              <td className="p-3 font-mono font-bold text-purple-600 dark:text-purple-400">₦{b.resellerPrice || b.price}</td>
+                                              <td className="p-3 font-mono font-bold text-green-600 dark:text-green-400">
+                                                  +₦{profit}
                                               </td>
                                               <td className="p-3 text-right flex justify-end gap-2">
                                                   <button onClick={() => { setEditingBundle(b); setShowBundleModal(true); }} className="text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 p-1 rounded"><Edit2 size={16}/></button>
                                                   <button onClick={() => handleBundleDelete(b.id)} className="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 p-1 rounded"><Trash2 size={16}/></button>
                                               </td>
                                           </tr>
-                                      ))}
+                                      )})}
                                   </tbody>
                               </table>
                           </div>
@@ -858,314 +745,79 @@ export const AdminSettings: React.FC = () => {
                   </div>
               )}
 
-              {/* --- REFERRALS SETTINGS --- */}
+              {/* --- REFERRALS --- */}
               {activeTab === 'referrals' && (
                   <div className="space-y-6">
-                      {/* Configuration Card */}
-                      <div className="bg-white dark:bg-gray-900 p-6 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm space-y-4">
-                           <h3 className="font-bold text-gray-800 dark:text-white mb-4 border-b dark:border-gray-800 pb-2 flex items-center gap-2">
-                               <Gift className="text-purple-600" size={20} /> Referral Configuration
-                           </h3>
-                           
-                           <div className="flex items-center gap-4 mb-4 bg-purple-50 dark:bg-purple-900/10 p-4 rounded-xl">
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                    <div className="relative">
-                                        <input 
-                                            type="checkbox" 
-                                            checked={settings.enableReferral}
-                                            onChange={e => setSettings({...settings, enableReferral: e.target.checked})}
-                                            className="sr-only peer"
-                                        />
-                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
-                                    </div>
-                                    <span className="font-bold text-gray-700 dark:text-gray-300">Enable Referral System</span>
-                                </label>
-                                <p className="text-xs text-gray-500 dark:text-gray-400">When enabled, users get a unique code and earn bonuses for inviting others.</p>
-                           </div>
-
-                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                               <div>
-                                   <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Bonus Reward (₦)</label>
-                                   <input 
+                      <div className="bg-white dark:bg-gray-900 p-6 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm">
+                          <h3 className="font-bold text-gray-800 dark:text-white mb-4 border-b dark:border-gray-800 pb-2">Referral Settings</h3>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                              <div className="flex items-center gap-4 border p-4 rounded-xl bg-gray-50 dark:bg-gray-800 dark:border-gray-700">
+                                  <input type="checkbox" checked={settings.enableReferral} onChange={e => setSettings({...settings, enableReferral: e.target.checked})} className="w-5 h-5 accent-green-600"/>
+                                  <span className="font-bold text-gray-700 dark:text-gray-300">Enable System</span>
+                              </div>
+                              <div>
+                                  <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Bonus Amount (₦)</label>
+                                  <input 
                                       type="number"
+                                      className="w-full p-3 border dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                                       value={settings.referralReward}
                                       onChange={e => setSettings({...settings, referralReward: Number(e.target.value)})}
-                                      className="w-full p-3 border dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white"
-                                      placeholder="e.g. 100"
-                                   />
-                                   <p className="text-[10px] text-gray-400 mt-1">Amount credited to referrer's bonus wallet per new signup.</p>
-                               </div>
-                               <div>
-                                   <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Min. Withdrawal (₦)</label>
-                                   <input 
+                                  />
+                              </div>
+                              <div>
+                                  <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Min Withdrawal (₦)</label>
+                                  <input 
                                       type="number"
-                                      value={settings.referralMinWithdrawal || 500}
+                                      className="w-full p-3 border dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                                      value={settings.referralMinWithdrawal}
                                       onChange={e => setSettings({...settings, referralMinWithdrawal: Number(e.target.value)})}
-                                      className="w-full p-3 border dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white"
-                                      placeholder="e.g. 500"
-                                   />
-                                    <p className="text-[10px] text-gray-400 mt-1">Minimum bonus balance required before user can move funds to main wallet.</p>
-                               </div>
-                           </div>
-                           
-                           <button onClick={handleSave} disabled={isSaving} className="mt-4 px-6 py-3 bg-green-700 text-white rounded-xl font-bold hover:bg-green-800">
-                               {isSaving ? 'Saving...' : 'Update Configuration'}
-                           </button>
-                      </div>
-                      
-                      {/* Leaderboard Section */}
-                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                          <div className="lg:col-span-2 bg-white dark:bg-gray-900 p-6 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm">
-                                <h3 className="font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
-                                    <Trophy className="text-yellow-500" size={20} /> Top Referrers
-                                </h3>
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-left text-sm text-gray-700 dark:text-gray-300">
-                                        <thead className="bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 uppercase font-semibold">
-                                            <tr>
-                                                <th className="p-3">Rank</th>
-                                                <th className="p-3">User</th>
-                                                <th className="p-3 text-center">Invited</th>
-                                                <th className="p-3 text-right">Earned</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                                            {topReferrers.map((user, index) => (
-                                                <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                                                    <td className="p-3">
-                                                        {index < 3 ? (
-                                                            <div className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-white text-xs ${index === 0 ? 'bg-yellow-400' : index === 1 ? 'bg-gray-400' : 'bg-orange-400'}`}>
-                                                                {index + 1}
-                                                            </div>
-                                                        ) : (
-                                                            <span className="pl-2 font-mono text-gray-500 text-xs">#{index + 1}</span>
-                                                        )}
-                                                    </td>
-                                                    <td className="p-3">
-                                                        <p className="font-bold text-gray-800 dark:text-gray-200">{user.name}</p>
-                                                        <p className="text-xs text-gray-400">{user.email}</p>
-                                                    </td>
-                                                    <td className="p-3 text-center font-bold text-purple-600 dark:text-purple-400">
-                                                        {user.referralCount}
-                                                    </td>
-                                                    <td className="p-3 text-right font-mono text-green-600 dark:text-green-400">
-                                                        ₦{(user.referralCount * settings.referralReward).toLocaleString()}
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                            {topReferrers.length === 0 && (
-                                                <tr>
-                                                    <td colSpan={4} className="p-6 text-center text-gray-400">No active referrers found yet.</td>
-                                                </tr>
-                                            )}
-                                        </tbody>
-                                    </table>
-                                </div>
+                                  />
+                              </div>
                           </div>
-                          
-                          <div className="lg:col-span-1 space-y-6">
-                                <div className="bg-blue-50 dark:bg-blue-900/10 p-6 rounded-2xl border border-blue-100 dark:border-blue-900 text-blue-900 dark:text-blue-300">
-                                    <h4 className="font-bold mb-2">Total Payouts</h4>
-                                    <p className="text-3xl font-bold">₦{topReferrers.reduce((acc, curr) => acc + (curr.referralCount * settings.referralReward), 0).toLocaleString()}</p>
-                                    <p className="text-xs mt-1 opacity-70">Calculated based on current reward rate.</p>
-                                </div>
-                                
-                                <div className="bg-purple-50 dark:bg-purple-900/10 p-6 rounded-2xl border border-purple-100 dark:border-purple-900 text-purple-900 dark:text-purple-300">
-                                    <h4 className="font-bold mb-2">Total Invites</h4>
-                                    <p className="text-3xl font-bold">{topReferrers.reduce((acc, curr) => acc + curr.referralCount, 0)}</p>
-                                    <p className="text-xs mt-1 opacity-70">Successful signups via code.</p>
-                                </div>
+                          <button onClick={handleSave} className="mt-4 px-6 py-2 bg-green-700 text-white rounded-lg font-bold hover:bg-green-800">Update Referral Config</button>
+                      </div>
+
+                      <div className="bg-white dark:bg-gray-900 p-6 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm">
+                          <h3 className="font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2"><Trophy className="text-yellow-500"/> Top Referrers</h3>
+                          <div className="overflow-x-auto">
+                              <table className="w-full text-left text-sm text-gray-700 dark:text-gray-300">
+                                  <thead className="bg-gray-50 dark:bg-gray-800">
+                                      <tr>
+                                          <th className="p-3">User</th>
+                                          <th className="p-3">Referrals</th>
+                                          <th className="p-3">Bonus Earned</th>
+                                      </tr>
+                                  </thead>
+                                  <tbody>
+                                      {topReferrers.map((u, i) => (
+                                          <tr key={u.id} className="border-b dark:border-gray-800">
+                                              <td className="p-3 font-bold">{i+1}. {u.name}</td>
+                                              <td className="p-3">{u.referralCount} users</td>
+                                              <td className="p-3 font-mono text-green-600 dark:text-green-400">₦{(u.referralCount * settings.referralReward).toLocaleString()}</td>
+                                          </tr>
+                                      ))}
+                                      {topReferrers.length === 0 && <tr><td colSpan={3} className="p-4 text-center text-gray-400">No referrals yet.</td></tr>}
+                                  </tbody>
+                              </table>
                           </div>
                       </div>
                   </div>
               )}
 
-              {/* --- PAYMENT SETTINGS --- */}
-              {activeTab === 'payment' && (
-                  <div className="space-y-6">
-                      {/* Manual Funding Config */}
-                      <div className="bg-white dark:bg-gray-900 p-6 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm space-y-4">
-                           <h3 className="font-bold text-gray-800 dark:text-white mb-4 border-b dark:border-gray-800 pb-2">Manual Funding (Bank Transfer)</h3>
-                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                               <div>
-                                   <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Bank Name</label>
-                                   <input 
-                                      value={settings.bankName}
-                                      onChange={e => setSettings({...settings, bankName: e.target.value})}
-                                      className="w-full p-3 border dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white"
-                                   />
-                               </div>
-                               <div>
-                                   <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Account Number</label>
-                                   <input 
-                                      value={settings.accountNumber}
-                                      onChange={e => setSettings({...settings, accountNumber: e.target.value})}
-                                      className="w-full p-3 border dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white"
-                                   />
-                               </div>
-                                <div>
-                                   <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Account Name</label>
-                                   <input 
-                                      value={settings.accountName}
-                                      onChange={e => setSettings({...settings, accountName: e.target.value})}
-                                      className="w-full p-3 border dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white"
-                                   />
-                               </div>
-                           </div>
-                      </div>
-
-                      {/* Paystack Config */}
-                      <div className="bg-white dark:bg-gray-900 p-6 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm space-y-4 relative overflow-hidden">
-                           <div className="absolute top-0 right-0 w-2 h-full bg-[#09A5DB]"></div>
-                           <h3 className="font-bold text-gray-800 dark:text-white mb-2">Paystack Integration</h3>
-                           <div className="flex items-center gap-4 mb-4">
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                    <input 
-                                        type="checkbox" 
-                                        checked={settings.enablePaystack}
-                                        onChange={e => setSettings({...settings, enablePaystack: e.target.checked})}
-                                        className="w-5 h-5 accent-blue-600"
-                                    />
-                                    <span className="font-medium text-sm text-gray-700 dark:text-gray-300">Enable Paystack</span>
-                                </label>
-                           </div>
-                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                               <div>
-                                   <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Public Key</label>
-                                   <input 
-                                      type="password"
-                                      value={settings.paystackPublicKey}
-                                      onChange={e => setSettings({...settings, paystackPublicKey: e.target.value})}
-                                      className="w-full p-3 border dark:border-gray-700 rounded-xl font-mono text-sm bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white"
-                                      placeholder="pk_test_..."
-                                   />
-                               </div>
-                               <div>
-                                   <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Secret Key</label>
-                                   <input 
-                                      type="password"
-                                      value={settings.paystackSecretKey}
-                                      onChange={e => setSettings({...settings, paystackSecretKey: e.target.value})}
-                                      className="w-full p-3 border dark:border-gray-700 rounded-xl font-mono text-sm bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white"
-                                      placeholder="sk_test_..."
-                                   />
-                               </div>
-                           </div>
-                      </div>
-
-                       {/* Flutterwave Config */}
-                      <div className="bg-white dark:bg-gray-900 p-6 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm space-y-4 relative overflow-hidden">
-                           <div className="absolute top-0 right-0 w-2 h-full bg-[#f5a623]"></div>
-                           <h3 className="font-bold text-gray-800 dark:text-white mb-2">Flutterwave Integration</h3>
-                           <div className="flex items-center gap-4 mb-4">
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                    <input 
-                                        type="checkbox" 
-                                        checked={settings.enableFlutterwave}
-                                        onChange={e => setSettings({...settings, enableFlutterwave: e.target.checked})}
-                                        className="w-5 h-5 accent-orange-600"
-                                    />
-                                    <span className="font-medium text-sm text-gray-700 dark:text-gray-300">Enable Flutterwave</span>
-                                </label>
-                           </div>
-                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                               <div>
-                                   <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Public Key</label>
-                                   <input 
-                                      type="password"
-                                      value={settings.flutterwavePublicKey}
-                                      onChange={e => setSettings({...settings, flutterwavePublicKey: e.target.value})}
-                                      className="w-full p-3 border dark:border-gray-700 rounded-xl font-mono text-sm bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white"
-                                      placeholder="FLWPUBK_TEST..."
-                                   />
-                               </div>
-                               <div>
-                                   <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Secret Key</label>
-                                   <input 
-                                      type="password"
-                                      value={settings.flutterwaveSecretKey}
-                                      onChange={e => setSettings({...settings, flutterwaveSecretKey: e.target.value})}
-                                      className="w-full p-3 border dark:border-gray-700 rounded-xl font-mono text-sm bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white"
-                                      placeholder="FLWSECK_TEST..."
-                                   />
-                               </div>
-                           </div>
-                      </div>
-
-                       {/* Monnify Config */}
-                      <div className="bg-white dark:bg-gray-900 p-6 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm space-y-4 relative overflow-hidden">
-                           <div className="absolute top-0 right-0 w-2 h-full bg-[#035BA8]"></div>
-                           <h3 className="font-bold text-gray-800 dark:text-white mb-2">Monnify Integration</h3>
-                           <div className="flex items-center gap-4 mb-4">
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                    <input 
-                                        type="checkbox" 
-                                        checked={settings.enableMonnify}
-                                        onChange={e => setSettings({...settings, enableMonnify: e.target.checked})}
-                                        className="w-5 h-5 accent-indigo-600"
-                                    />
-                                    <span className="font-medium text-sm text-gray-700 dark:text-gray-300">Enable Monnify</span>
-                                </label>
-                           </div>
-                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                               <div>
-                                   <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">API Key</label>
-                                   <input 
-                                      type="password"
-                                      value={settings.monnifyApiKey}
-                                      onChange={e => setSettings({...settings, monnifyApiKey: e.target.value})}
-                                      className="w-full p-3 border dark:border-gray-700 rounded-xl font-mono text-sm bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white"
-                                      placeholder="MK_TEST..."
-                                   />
-                               </div>
-                               <div>
-                                   <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Secret Key</label>
-                                   <input 
-                                      type="password"
-                                      value={settings.monnifySecretKey}
-                                      onChange={e => setSettings({...settings, monnifySecretKey: e.target.value})}
-                                      className="w-full p-3 border dark:border-gray-700 rounded-xl font-mono text-sm bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white"
-                                      placeholder="MS_TEST..."
-                                   />
-                               </div>
-                               <div>
-                                   <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Contract Code</label>
-                                   <input 
-                                      value={settings.monnifyContractCode}
-                                      onChange={e => setSettings({...settings, monnifyContractCode: e.target.value})}
-                                      className="w-full p-3 border dark:border-gray-700 rounded-xl font-mono text-sm bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white"
-                                      placeholder="1234567890"
-                                   />
-                               </div>
-                           </div>
-                      </div>
-
-                       <button onClick={handleSave} disabled={isSaving} className="px-6 py-3 bg-green-700 text-white rounded-xl font-bold hover:bg-green-800 w-full md:w-auto">
-                          {isSaving ? 'Saving...' : 'Save Payment Configuration'}
-                      </button>
-                  </div>
-              )}
-
-              {/* --- BACKUP SETTINGS --- */}
+              {/* --- BACKUP --- */}
               {activeTab === 'backup' && (
                   <div className="bg-white dark:bg-gray-900 p-6 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm space-y-6">
-                      <h3 className="font-bold text-gray-800 dark:text-white mb-4 border-b dark:border-gray-800 pb-2">System Backup</h3>
-                      <p className="text-gray-500 dark:text-gray-400 text-sm">Download a full JSON dump of your database (Users, Transactions, Settings, etc). Useful for migrating or data safety.</p>
-                      
-                      <div className="flex gap-4">
-                          <button onClick={handleBackupDownload} className="flex items-center gap-2 px-6 py-3 bg-gray-900 dark:bg-gray-700 text-white rounded-xl font-bold hover:bg-black dark:hover:bg-gray-600">
-                              <Database size={20} /> Download Backup
-                          </button>
-                      </div>
-
-                      <h3 className="font-bold text-gray-800 dark:text-white mb-4 border-b dark:border-gray-800 pb-2 pt-4">Restore Database</h3>
-                      <p className="text-red-500 text-sm mb-4">Warning: This will overwrite all current data!</p>
-                      
-                      <div className="border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl p-8 text-center bg-gray-50 dark:bg-gray-800 relative">
-                          <input type="file" onChange={handleRestore} accept=".json" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"/>
-                          <div className="flex flex-col items-center text-gray-400">
-                              <Upload size={32} className="mb-2"/>
-                              <span>Click to Upload Backup JSON</span>
+                      <h3 className="font-bold text-gray-800 dark:text-white mb-4 border-b dark:border-gray-800 pb-2">Data Management</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="p-6 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-900">
+                              <h4 className="font-bold text-blue-800 dark:text-blue-300 mb-2 flex items-center gap-2"><Download size={20}/> Export Database</h4>
+                              <p className="text-sm text-blue-700 dark:text-blue-400 mb-4">Download a full JSON dump of all users, transactions, and settings.</p>
+                              <button onClick={handleBackupDownload} className="px-4 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700">Download Backup</button>
+                          </div>
+                          <div className="p-6 bg-orange-50 dark:bg-orange-900/20 rounded-xl border border-orange-100 dark:border-orange-900">
+                              <h4 className="font-bold text-orange-800 dark:text-orange-300 mb-2 flex items-center gap-2"><Upload size={20}/> Restore Database</h4>
+                              <p className="text-sm text-orange-700 dark:text-orange-400 mb-4">Upload a JSON backup file to restore system state. This will overwrite current data.</p>
+                              <input type="file" accept=".json" onChange={handleRestore} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-orange-100 file:text-orange-700 hover:file:bg-orange-200"/>
                           </div>
                       </div>
                   </div>
@@ -1207,24 +859,24 @@ export const AdminSettings: React.FC = () => {
                               </select>
                           </div>
                           <div>
-                              <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Type</label>
+                              <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Plan Type</label>
                               <select 
                                   className="w-full p-3 border dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white"
                                   value={editingBundle.type}
                                   onChange={e => setEditingBundle({...editingBundle, type: e.target.value as PlanType})}
                               >
-                                  <option value={PlanType.SME}>SME</option>
-                                  <option value={PlanType.GIFTING}>Gifting</option>
-                                  <option value={PlanType.CORPORATE}>Corporate</option>
+                                  {Object.values(PlanType).map(p => (
+                                      <option key={p} value={p}>{p}</option>
+                                  ))}
                               </select>
                           </div>
                       </div>
-                      
+
                       <div>
                           <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Plan Name</label>
                           <input 
                               className="w-full p-3 border dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white"
-                              placeholder="e.g. 1.5GB Monthly"
+                              placeholder="e.g. 1.5GB SME Monthly" 
                               value={editingBundle.name || ''}
                               onChange={e => setEditingBundle({...editingBundle, name: e.target.value})}
                           />
@@ -1232,33 +884,10 @@ export const AdminSettings: React.FC = () => {
 
                       <div className="grid grid-cols-2 gap-4">
                           <div>
-                              <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Price (₦)</label>
-                              <input 
-                                  type="number"
-                                  className="w-full p-3 border dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white"
-                                  placeholder="1000"
-                                  value={editingBundle.price || ''}
-                                  onChange={e => setEditingBundle({...editingBundle, price: Number(e.target.value)})}
-                              />
-                          </div>
-                          <div>
-                              <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Cost Price (₦)</label>
-                              <input 
-                                  type="number"
-                                  className="w-full p-3 border dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white"
-                                  placeholder="950"
-                                  value={editingBundle.costPrice || ''}
-                                  onChange={e => setEditingBundle({...editingBundle, costPrice: Number(e.target.value)})}
-                              />
-                          </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4">
-                          <div>
                               <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Data Amount</label>
                               <input 
                                   className="w-full p-3 border dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white"
-                                  placeholder="1.5GB"
+                                  placeholder="e.g. 1.5GB" 
                                   value={editingBundle.dataAmount || ''}
                                   onChange={e => setEditingBundle({...editingBundle, dataAmount: e.target.value})}
                               />
@@ -1267,55 +896,84 @@ export const AdminSettings: React.FC = () => {
                               <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Validity</label>
                               <input 
                                   className="w-full p-3 border dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white"
-                                  placeholder="30 Days"
+                                  placeholder="e.g. 30 Days" 
                                   value={editingBundle.validity || ''}
                                   onChange={e => setEditingBundle({...editingBundle, validity: e.target.value})}
                               />
                           </div>
                       </div>
 
+                      <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 space-y-3">
+                          <h4 className="text-xs font-bold text-gray-500 uppercase mb-2">Pricing Structure</h4>
+                          <div className="grid grid-cols-3 gap-4">
+                              <div>
+                                  <label className="block text-xs font-bold text-red-500 dark:text-red-400 uppercase mb-1">API Cost (Buying)</label>
+                                  <input 
+                                      type="number"
+                                      className="w-full p-2 border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                                      value={editingBundle.costPrice || ''}
+                                      onChange={e => setEditingBundle({...editingBundle, costPrice: Number(e.target.value)})}
+                                  />
+                              </div>
+                              <div>
+                                  <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">User Selling Price</label>
+                                  <input 
+                                      type="number"
+                                      className="w-full p-2 border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                                      value={editingBundle.price || ''}
+                                      onChange={e => setEditingBundle({...editingBundle, price: Number(e.target.value)})}
+                                  />
+                              </div>
+                              <div>
+                                  <label className="block text-xs font-bold text-purple-600 dark:text-purple-400 uppercase mb-1">Reseller Price</label>
+                                  <input 
+                                      type="number"
+                                      className="w-full p-2 border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white font-bold"
+                                      value={editingBundle.resellerPrice || ''}
+                                      onChange={e => setEditingBundle({...editingBundle, resellerPrice: Number(e.target.value)})}
+                                  />
+                              </div>
+                          </div>
+                          <p className="text-xs text-gray-400 text-center mt-2">
+                              Estimated Profit: <span className="text-green-600 font-bold">₦{(editingBundle.price || 0) - (editingBundle.costPrice || 0)}</span> per sale.
+                          </p>
+                      </div>
+
                       <div>
-                          <label className="block text-xs font-bold text-gray-800 dark:text-gray-200 uppercase mb-1 flex items-center gap-2">
-                              API Plan ID <span className="text-red-500">*</span>
-                          </label>
+                          <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">API Plan ID</label>
                           <input 
-                              className={`w-full p-3 border dark:border-gray-700 rounded-xl font-mono bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white ${bundleError ? 'border-red-500 bg-red-50 dark:bg-red-900/20' : ''}`}
-                              placeholder="Required for automation"
+                              className="w-full p-3 border dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white font-mono"
+                              placeholder="ID from API Provider" 
                               value={editingBundle.planId || ''}
                               onChange={e => setEditingBundle({...editingBundle, planId: e.target.value})}
                           />
-                          <p className="text-[10px] text-gray-400 mt-1">This ID must match the plan ID from your API provider.</p>
                       </div>
 
-                      <div className="flex gap-4 pt-2">
+                      <div className="flex gap-4">
                           <label className="flex items-center gap-2 cursor-pointer">
                               <input 
-                                  type="checkbox"
-                                  checked={editingBundle.isAvailable}
+                                  type="checkbox" 
+                                  checked={editingBundle.isAvailable} 
                                   onChange={e => setEditingBundle({...editingBundle, isAvailable: e.target.checked})}
-                                  className="w-5 h-5 accent-green-600"
+                                  className="w-4 h-4"
                               />
-                              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Available</span>
+                              <span className="text-sm text-gray-700 dark:text-gray-300">Available</span>
                           </label>
                           <label className="flex items-center gap-2 cursor-pointer">
                               <input 
-                                  type="checkbox"
-                                  checked={editingBundle.isBestValue}
+                                  type="checkbox" 
+                                  checked={editingBundle.isBestValue} 
                                   onChange={e => setEditingBundle({...editingBundle, isBestValue: e.target.checked})}
-                                  className="w-5 h-5 accent-yellow-500"
+                                  className="w-4 h-4"
                               />
-                              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Best Value Tag</span>
+                              <span className="text-sm text-gray-700 dark:text-gray-300">Best Value Tag</span>
                           </label>
                       </div>
-                      
-                      {bundleError && (
-                          <div className="p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg text-sm flex items-center gap-2 animate-pulse">
-                              <AlertTriangle size={16}/> {bundleError}
-                          </div>
-                      )}
+
+                      {bundleError && <p className="text-red-500 text-sm">{bundleError}</p>}
 
                       <div className="flex gap-3 mt-4">
-                          <button onClick={() => setShowBundleModal(false)} className="flex-1 py-3 bg-gray-100 dark:bg-gray-700 rounded-xl font-bold text-gray-600 dark:text-gray-300">Cancel</button>
+                          <button onClick={() => setShowBundleModal(false)} className="flex-1 py-3 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-xl font-bold">Cancel</button>
                           <button onClick={handleBundleSave} className="flex-1 py-3 bg-green-700 text-white rounded-xl font-bold hover:bg-green-800">Save Bundle</button>
                       </div>
                   </div>

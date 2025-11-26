@@ -56,6 +56,13 @@ export enum TransactionType {
   REFERRAL_BONUS = 'REFERRAL_BONUS'
 }
 
+export enum KycStatus {
+    NONE = 'NONE',
+    PENDING = 'PENDING',
+    VERIFIED = 'VERIFIED',
+    REJECTED = 'REJECTED'
+}
+
 export interface User {
   id: string;
   name: string;
@@ -66,6 +73,7 @@ export interface User {
   savings: number;
   bonusBalance: number; // For referrals
   walletNumber: string; // New generated wallet number
+  accountNumber?: string; // Virtual Bank Account Number
   referralCode: string;
   referredBy?: string;
   referralCount: number;
@@ -81,6 +89,13 @@ export interface User {
   transactionPin?: string; // Secure 4-digit PIN
   apiKey?: string; // API Key for Resellers/Developers
   resellerRequestStatus?: 'PENDING' | 'REJECTED' | 'NONE';
+  
+  // KYC Data
+  kycStatus?: KycStatus;
+  kycDocType?: string; // BVN, NIN, PVC, PASSPORT
+  kycDocNumber?: string; // Added Document Number
+  kycDocUrl?: string;
+  kycFaceUrl?: string;
 }
 
 export interface Bundle {
@@ -89,6 +104,7 @@ export interface Bundle {
   type: PlanType | string;
   name: string;
   price: number;
+  resellerPrice?: number; // New field for Resellers
   costPrice: number;
   dataAmount: string; // Can represent Plan Name for Cable
   validity: string;
@@ -202,4 +218,14 @@ export interface AccessRule {
     reason: string;
     dateAdded: string;
     isActive: boolean;
+}
+
+export interface CronJob {
+    id: string;
+    name: string;
+    schedule: string; // e.g. "Every Day at 12AM"
+    status: 'active' | 'inactive';
+    lastRun: string;
+    nextRun: string;
+    description: string;
 }

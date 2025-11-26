@@ -124,7 +124,7 @@ export const AdminCommunication: React.FC = () => {
                         className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${
                             activeTab === tab.id 
                             ? 'bg-white dark:bg-gray-600 shadow text-green-700 dark:text-green-300' 
-                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                            : 'text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-100'
                         }`}
                     >
                         <tab.icon size={16}/> {tab.label}
@@ -146,7 +146,7 @@ export const AdminCommunication: React.FC = () => {
                                  <select 
                                     value={broadcastAudience} 
                                     onChange={(e) => setBroadcastAudience(e.target.value)}
-                                    className="w-full p-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-green-500 outline-none text-gray-900 dark:text-white transition-colors"
+                                    className="w-full p-3 bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-green-500 outline-none text-gray-900 dark:text-white transition-colors"
                                  >
                                      <option value="all">All Users</option>
                                      <option value="resellers">Resellers Only</option>
@@ -159,7 +159,7 @@ export const AdminCommunication: React.FC = () => {
                                  <select 
                                     value={broadcastChannel} 
                                     onChange={(e) => setBroadcastChannel(e.target.value)}
-                                    className="w-full p-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-green-500 outline-none text-gray-900 dark:text-white transition-colors"
+                                    className="w-full p-3 bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-green-500 outline-none text-gray-900 dark:text-white transition-colors"
                                  >
                                      <option value="email">Email</option>
                                      <option value="sms">SMS</option>
@@ -176,7 +176,7 @@ export const AdminCommunication: React.FC = () => {
                                     type="text" 
                                     value={broadcastSubject}
                                     onChange={(e) => setBroadcastSubject(e.target.value)}
-                                    className="w-full p-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-green-500 outline-none text-gray-900 dark:text-white transition-colors placeholder-gray-400 dark:placeholder-gray-500"
+                                    className="w-full p-3 bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-green-500 outline-none text-gray-900 dark:text-white transition-colors placeholder-gray-400 dark:placeholder-gray-500"
                                     placeholder="e.g., Important Update regarding prices"
                                 />
                             </div>
@@ -187,7 +187,7 @@ export const AdminCommunication: React.FC = () => {
                             <textarea 
                                 value={broadcastMessage}
                                 onChange={(e) => setBroadcastMessage(e.target.value)}
-                                className="w-full h-40 p-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-green-500 outline-none text-gray-900 dark:text-white transition-colors placeholder-gray-400 dark:placeholder-gray-500"
+                                className="w-full h-40 p-3 bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-green-500 outline-none text-gray-900 dark:text-white transition-colors placeholder-gray-400 dark:placeholder-gray-500"
                                 placeholder="Type your message here..."
                             ></textarea>
                             <div className="flex gap-2 mt-2">
@@ -306,7 +306,7 @@ export const AdminCommunication: React.FC = () => {
                             </div>
                             <h3 className="font-bold text-gray-800 dark:text-white mb-2">{t.name}</h3>
                             {t.subject && <p className="text-xs text-gray-500 dark:text-gray-400 mb-2"><strong>Subject:</strong> {t.subject}</p>}
-                            <div className="bg-gray-50 dark:bg-gray-900 p-3 rounded-lg text-xs text-gray-600 dark:text-gray-300 font-mono h-20 overflow-y-auto border border-gray-100 dark:border-gray-700">
+                            <div className="bg-gray-50 dark:bg-gray-950 p-3 rounded-lg text-xs text-gray-600 dark:text-gray-300 font-mono h-20 overflow-y-auto border border-gray-100 dark:border-gray-700">
                                 {t.body}
                             </div>
                         </div>
@@ -324,20 +324,20 @@ export const AdminCommunication: React.FC = () => {
                     <h3 className="font-bold text-lg mb-4 text-gray-900 dark:text-white">New Announcement</h3>
                     <div className="space-y-4">
                         <input 
-                            className="w-full p-3 border dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white outline-none focus:border-green-500"
+                            className="w-full p-3 border dark:border-gray-600 rounded-xl bg-white dark:bg-gray-950 text-gray-900 dark:text-white outline-none focus:border-green-500"
                             placeholder="Title" 
                             value={newAnnouncement.title || ''}
                             onChange={e => setNewAnnouncement({...newAnnouncement, title: e.target.value})}
                         />
                          <textarea 
-                            className="w-full p-3 border dark:border-gray-700 rounded-xl h-24 bg-white dark:bg-gray-900 text-gray-900 dark:text-white outline-none focus:border-green-500"
+                            className="w-full p-3 border dark:border-gray-600 rounded-xl h-24 bg-white dark:bg-gray-950 text-gray-900 dark:text-white outline-none focus:border-green-500"
                             placeholder="Message Content" 
                             value={newAnnouncement.message || ''}
                             onChange={e => setNewAnnouncement({...newAnnouncement, message: e.target.value})}
                         />
                         <div className="grid grid-cols-2 gap-4">
                              <select 
-                                className="p-3 border dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white outline-none focus:border-green-500"
+                                className="p-3 border dark:border-gray-600 rounded-xl bg-white dark:bg-gray-950 text-gray-900 dark:text-white outline-none focus:border-green-500"
                                 value={newAnnouncement.type}
                                 onChange={e => setNewAnnouncement({...newAnnouncement, type: e.target.value as any})}
                              >
@@ -347,7 +347,7 @@ export const AdminCommunication: React.FC = () => {
                                  <option value="promo">Promo (Purple)</option>
                              </select>
                              <select 
-                                className="p-3 border dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white outline-none focus:border-green-500"
+                                className="p-3 border dark:border-gray-600 rounded-xl bg-white dark:bg-gray-950 text-gray-900 dark:text-white outline-none focus:border-green-500"
                                 value={newAnnouncement.audience}
                                 onChange={e => setNewAnnouncement({...newAnnouncement, audience: e.target.value as any})}
                              >
@@ -380,13 +380,13 @@ export const AdminCommunication: React.FC = () => {
                     <h3 className="font-bold text-lg mb-4 text-gray-900 dark:text-white">{editingTemplate.id ? 'Edit' : 'New'} Template</h3>
                     <div className="space-y-4">
                         <input 
-                            className="w-full p-3 border dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white outline-none focus:border-green-500"
+                            className="w-full p-3 border dark:border-gray-600 rounded-xl bg-white dark:bg-gray-950 text-gray-900 dark:text-white outline-none focus:border-green-500"
                             placeholder="Template Name (e.g. Welcome Email)" 
                             value={editingTemplate.name || ''}
                             onChange={e => setEditingTemplate({...editingTemplate, name: e.target.value})}
                         />
                         <select 
-                            className="w-full p-3 border dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white outline-none focus:border-green-500"
+                            className="w-full p-3 border dark:border-gray-600 rounded-xl bg-white dark:bg-gray-950 text-gray-900 dark:text-white outline-none focus:border-green-500"
                             value={editingTemplate.channel}
                             onChange={e => setEditingTemplate({...editingTemplate, channel: e.target.value as any})}
                         >
@@ -396,14 +396,14 @@ export const AdminCommunication: React.FC = () => {
                         </select>
                         {editingTemplate.channel !== 'sms' && (
                             <input 
-                                className="w-full p-3 border dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white outline-none focus:border-green-500"
+                                className="w-full p-3 border dark:border-gray-600 rounded-xl bg-white dark:bg-gray-950 text-gray-900 dark:text-white outline-none focus:border-green-500"
                                 placeholder="Subject Line" 
                                 value={editingTemplate.subject || ''}
                                 onChange={e => setEditingTemplate({...editingTemplate, subject: e.target.value})}
                             />
                         )}
                         <textarea 
-                            className="w-full p-3 border dark:border-gray-700 rounded-xl h-32 font-mono text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-white outline-none focus:border-green-500"
+                            className="w-full p-3 border dark:border-gray-600 rounded-xl h-32 font-mono text-sm bg-white dark:bg-gray-950 text-gray-900 dark:text-white outline-none focus:border-green-500"
                             placeholder="Body content... Use {name} for variables." 
                             value={editingTemplate.body || ''}
                             onChange={e => setEditingTemplate({...editingTemplate, body: e.target.value})}

@@ -74,7 +74,7 @@ export const AdminSupport: React.FC = () => {
                         </span>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50/30 dark:bg-gray-900/30">
+                    <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50/30 dark:bg-gray-950/30">
                         {selectedTicket.messages.map(msg => (
                             <div key={msg.id} className={`flex ${msg.isAdmin ? 'justify-end' : 'justify-start'}`}>
                                 <div className={`max-w-[70%] p-3 rounded-2xl text-sm ${

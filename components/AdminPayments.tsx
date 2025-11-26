@@ -60,7 +60,7 @@ export const AdminPayments: React.FC = () => {
              ) : (
                 <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm text-gray-700 dark:text-gray-300">
-                        <thead className="bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 uppercase font-semibold border-b border-gray-100 dark:border-gray-700">
+                        <thead className="bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-300 uppercase font-semibold border-b border-gray-100 dark:border-gray-700">
                             <tr>
                                 <th className="p-4">User ID</th>
                                 <th className="p-4">Reference</th>

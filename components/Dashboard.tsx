@@ -1,12 +1,13 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { User, Announcement, AppNotification, TransactionType, TransactionStatus } from '../types';
+import { User, Announcement, AppNotification, TransactionType, TransactionStatus, KycStatus } from '../types';
 import { TopUpForm } from './TopUpForm';
 import { fundWallet } from '../services/topupService';
 import { MockDB } from '../services/mockDb';
 import { SettingsService, AppSettings } from '../services/settingsService';
 import { playNotification } from '../utils/audio';
-import { Wallet, TrendingUp, Plus, ArrowRight, Bell, X, AlertTriangle, Smartphone, Copy, Upload, CreditCard, Landmark, CheckCircle, Gift, Share2, Loader2, Lock, Speaker } from 'lucide-react';
+import { Wallet, TrendingUp, Plus, ArrowRight, Bell, X, AlertTriangle, Smartphone, Copy, Upload, CreditCard, Landmark, CheckCircle, Gift, Share2, Loader2, Lock, Speaker, UserCheck } from 'lucide-react';
+import { VerificationModal } from './VerificationModal';
 
 interface DashboardProps {
   user: User;
@@ -24,6 +25,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
   const [isRedeeming, setIsRedeeming] = useState(false);
   const [settings, setSettings] = useState<AppSettings | null>(null);
   
+  // Verification State
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
+
   // Funding State
   const [fundingMethod, setFundingMethod] = useState<'card' | 'manual'>('card');
   const [manualProofFile, setManualProofFile] = useState<File | null>(null);
@@ -258,7 +262,28 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
           </div>
       </div>
 
-      {/* Announcements Section - Ensure this is visible */}
+      {/* Verification Alert */}
+      {!user.isVerified && (
+          <div className="p-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-100 dark:border-orange-800 rounded-xl flex items-center justify-between animate-in slide-in-from-top-4">
+              <div className="flex items-center gap-3">
+                  <div className="p-2 bg-orange-100 dark:bg-orange-900/50 rounded-full text-orange-600 dark:text-orange-400">
+                      <UserCheck size={20} />
+                  </div>
+                  <div>
+                      <h4 className="font-bold text-orange-800 dark:text-orange-300 text-sm">Verify your Identity</h4>
+                      <p className="text-xs text-orange-600 dark:text-orange-400">Complete KYC to unlock automated wallet funding and higher limits.</p>
+                  </div>
+              </div>
+              <button 
+                  onClick={() => setShowVerifyModal(true)}
+                  className="px-4 py-2 bg-orange-600 text-white rounded-lg text-xs font-bold hover:bg-orange-700 transition-colors shadow-lg shadow-orange-200 dark:shadow-none"
+              >
+                  Verify Now
+              </button>
+          </div>
+      )}
+
+      {/* Announcements Section */}
       {visibleAnnouncements.length > 0 && (
           <div className="space-y-3">
               {visibleAnnouncements.map(ann => (
@@ -302,12 +327,21 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
                     <h1 className="text-4xl md:text-5xl font-bold font-mono tracking-tight">₦{user.balance.toLocaleString()}</h1>
                 </div>
                 
-                {/* Wallet ID Display */}
-                <div className="inline-flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-lg border border-white/20 backdrop-blur-md">
-                    <span className="text-xs text-green-200 uppercase tracking-widest font-bold">Wallet ID:</span>
-                    <span className="font-mono text-sm font-bold tracking-wider">{user.walletNumber}</span>
-                    <button onClick={handleCopyWallet} className="ml-2 text-white hover:text-green-300"><Copy size={12}/></button>
-                </div>
+                {/* Wallet ID Display / Verify Prompt */}
+                {user.isVerified ? (
+                    <div className="inline-flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-lg border border-white/20 backdrop-blur-md">
+                        <span className="text-xs text-green-200 uppercase tracking-widest font-bold">Wallet ID:</span>
+                        <span className="font-mono text-sm font-bold tracking-wider">{user.walletNumber}</span>
+                        <button onClick={handleCopyWallet} className="ml-2 text-white hover:text-green-300"><Copy size={12}/></button>
+                    </div>
+                ) : (
+                    <button 
+                        onClick={() => setShowVerifyModal(true)}
+                        className="inline-flex items-center gap-2 bg-orange-500/20 hover:bg-orange-500/30 transition-colors px-3 py-1.5 rounded-lg border border-orange-500/30 backdrop-blur-md text-orange-200 text-xs cursor-pointer"
+                    >
+                        <Lock size={12} /> Click to Complete KYC & Get Wallet ID
+                    </button>
+                )}
             </div>
 
             <div className="flex flex-col md:flex-row gap-4 md:justify-end">
@@ -448,9 +482,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
                 <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl mb-6">
                     <button 
                         onClick={() => setFundingMethod('card')}
-                        className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1 ${fundingMethod === 'card' ? 'bg-white dark:bg-gray-700 shadow text-green-700 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}`}
+                        disabled={!user.isVerified}
+                        className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1 ${fundingMethod === 'card' ? 'bg-white dark:bg-gray-700 shadow text-green-700 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'} ${!user.isVerified ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
-                        <CreditCard size={14}/> Online / Card
+                        <CreditCard size={14}/> Online
                     </button>
                     <button 
                          onClick={() => setFundingMethod('manual')}
@@ -459,6 +494,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
                         <Landmark size={14}/> Transfer
                     </button>
                 </div>
+                
+                {!user.isVerified && fundingMethod === 'card' && (
+                    <div className="mb-4 p-3 bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 rounded-xl text-xs text-center border border-orange-100 dark:border-orange-800">
+                        Automated funding requires account verification. Please use manual transfer or verify your ID.
+                    </div>
+                )}
                 
                 <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl mb-4 border border-gray-100 dark:border-gray-700">
                     <label className="text-xs text-gray-400 uppercase font-bold mb-1 block">Amount (₦)</label>
@@ -471,7 +512,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
                     />
                 </div>
 
-                {fundingMethod === 'card' && (
+                {fundingMethod === 'card' && user.isVerified && (
                     <div className="space-y-3 mb-6">
                          <p className="text-xs font-bold text-gray-400 uppercase">Select Gateway</p>
                          
@@ -608,6 +649,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, refreshUser, onViewR
               </div>
           </div>
       )}
+
+      {/* Verification Modal */}
+      {showVerifyModal && <VerificationModal user={user} onClose={() => setShowVerifyModal(false)} onSuccess={refreshUser} />}
 
     </div>
   );
