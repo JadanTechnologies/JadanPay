@@ -164,7 +164,7 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
       </div>
 
       <form onSubmit={handleFormSubmit} className="space-y-5 relative z-10 animate-fade-in">
-        <div className="grid grid-cols-4 gap-3">
+        <div className="flex flex-wrap gap-3">
             {(type === TransactionType.AIRTIME || type === TransactionType.DATA ? Object.values(Provider) : type === TransactionType.CABLE ? BILL_PROVIDERS.CABLE : BILL_PROVIDERS.ELECTRICITY).map((p) => {
                 const isSelected = provider === p;
                 return (
@@ -172,7 +172,7 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
                         key={p}
                         type="button"
                         onClick={() => setProvider(p)}
-                        className={`relative overflow-hidden rounded-xl transition-all duration-300 group border-2 flex items-center justify-center min-h-[60px] ${isSelected ? 'border-green-500 bg-green-50 dark:bg-green-900/20' : 'border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-600'}`}
+                        className={`relative overflow-hidden rounded-xl transition-all duration-300 group border-2 flex items-center justify-center min-h-[60px] flex-1 basis-[calc(25%-0.75rem)] min-w-[60px] ${isSelected ? 'border-green-500 bg-green-50 dark:bg-green-900/20' : 'border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-600'}`}
                     >
                         <img src={PROVIDER_IMAGES[p]} alt={p} className="h-8 object-contain" />
                     </button>

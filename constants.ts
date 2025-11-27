@@ -33,19 +33,21 @@ export const PROVIDER_LOGOS = {
 };
 
 export const PROVIDER_IMAGES: Record<string, string> = {
-  [Provider.MTN]: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/New-mtn-logo.jpg/600px-New-mtn-logo.jpg',
-  [Provider.GLO]: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Glo_button.png/480px-Glo_button.png',
-  [Provider.AIRTEL]: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/bd/Airtel_Logo.svg/1200px-Airtel_Logo.svg.png',
-  [Provider.NMOBILE]: 'https://upload.wikimedia.org/wikipedia/commons/9/98/9mobile_Logo.png',
-  // Bills
-  [BillProvider.DSTV]: 'https://upload.wikimedia.org/wikipedia/en/a/a3/DStv_Logo.png',
-  [BillProvider.GOTV]: 'https://upload.wikimedia.org/wikipedia/en/thumb/e/e3/GOtv_Logo.png/220px-GOtv_Logo.png',
+  // Telcos - Using more stable/official URLs
+  [Provider.MTN]: 'https://www.mtn.ng/wp-content/themes/mtn-sme/images/logo.svg',
+  [Provider.GLO]: 'https://www.gloworld.com/ng/wp-content/uploads/2021/05/Glo-Logo-300x120-1.png',
+  [Provider.AIRTEL]: 'https://www.airtel.com.ng/assets/images/logo-red-black.png',
+  [Provider.NMOBILE]: 'https://9mobile.com.ng/wp-content/uploads/2022/10/9mobile-logo.png',
+  
+  // Bills - Using official URLs
+  [BillProvider.DSTV]: 'https://www.dstv.com/media/1360/dstv-logo-new.png',
+  [BillProvider.GOTV]: 'https://www.gotvafrica.com/media/1330/gotv-logo-new-1.png',
   [BillProvider.STARTIMES]: 'https://upload.wikimedia.org/wikipedia/commons/e/e6/StarTimes_Logo.png',
-  [BillProvider.IKEDC]: 'https://pbs.twimg.com/profile_images/13561788770',
-  [BillProvider.EKEDC]: 'https://pbs.twimg.com/profile_images/13561788770', // Placeholder
-  [BillProvider.AEDC]: 'https://pbs.twimg.com/profile_images/13561788770', // Placeholder
-  [BillProvider.IBEDC]: 'https://pbs.twimg.com/profile_images/13561788770', // Placeholder
-  [BillProvider.KEDCO]: 'https://pbs.twimg.com/profile_images/13561788770', // Placeholder
+  [BillProvider.IKEDC]: 'https://www.ikejaelectric.com/wp-content/uploads/2021/03/cropped-ie-logo-1.png',
+  [BillProvider.EKEDC]: 'https://www.ekedp.com/assets/img/ekedp_logo.png',
+  [BillProvider.AEDC]: 'https://www.aedc.com/assets/images/logo/aedc-logo-colored.png',
+  [BillProvider.IBEDC]: 'https://www.ibedc.com/wp-content/uploads/2022/01/ibedc-logo-1.png',
+  [BillProvider.KEDCO]: 'https://www.kedco.ng/images/logo.png',
 };
 
 // MOCK DATA FOR USERS
