@@ -1,4 +1,3 @@
-
 import { Provider, Bundle, UserStatus, UserRole, PlanType, BillProvider } from './types';
 
 export const PROVIDER_COLORS = {

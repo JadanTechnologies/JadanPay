@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Save, Globe, Server, CreditCard, Database, Plus, Trash2, Edit2, Check, X, Upload, Mail, Phone, AlertTriangle, Key, Users, Trophy, Gift, MessageSquare, Bell, Send, Smartphone, Activity, Link as LinkIcon, Download, Wifi, Clock, Play, Pause, Lock, DollarSign, Image as ImageIcon } from 'lucide-react';
 import { Provider, Bundle, PlanType, User, CronJob } from '../types';
@@ -304,7 +303,7 @@ export const AdminSettings: React.FC = () => {
                                   <thead className="bg-gray-50 dark:bg-gray-800 uppercase font-semibold">
                                       <tr><th className="p-3">ID</th><th className="p-3">Name</th><th className="p-3">User Price</th><th className="p-3">Reseller Price</th><th className="p-3">Action</th></tr>
                                   </thead>
-                                  <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                                  <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                                       {bundles.map(b => (
                                           <tr key={b.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
                                               <td className="p-3 font-mono">{b.planId}</td>

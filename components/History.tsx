@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Transaction, TransactionStatus, Provider, User } from '../types';
 import { MockDB } from '../services/mockDb';
@@ -160,7 +159,7 @@ export const History: React.FC<HistoryProps> = ({ user, highlightId }) => {
         ))}
       </div>
 
-      {/* FIXED SIZE RECEIPT MODAL */}
+      {/* Enhanced Receipt Modal - FIXED SIZE & CLOSE BUTTON */}
       {selectedTx && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300 overflow-y-auto">
           <div className="w-full max-w-[380px] my-4 relative animate-in zoom-in-95 slide-in-from-bottom-8 duration-300 max-h-[90vh] flex flex-col">
@@ -168,14 +167,16 @@ export const History: React.FC<HistoryProps> = ({ user, highlightId }) => {
              {/* Receipt Card */}
              <div className="bg-white dark:bg-gray-800 rounded-3xl overflow-hidden shadow-2xl relative flex flex-col overflow-y-auto">
                  
-                 {/* Header with Close Button */}
+                 {/* Receipt Header Pattern */}
                  <div className="bg-green-600 p-6 pt-8 text-center relative shrink-0">
+                     {/* FIX: Moved close button inside for accessibility */}
                      <button 
                         onClick={() => setSelectedTx(null)}
                         className="absolute top-4 right-4 p-2 bg-white/20 hover:bg-white/30 text-white rounded-full transition-colors z-50"
                      >
                         <X size={20} />
                      </button>
+
                      <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_2px_2px,#fff_1px,transparent_0)] [background-size:16px_16px]"></div>
                      <div className="relative z-10 flex flex-col items-center">
                          <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center mb-3 shadow-lg animate-bounce">
@@ -200,14 +201,17 @@ export const History: React.FC<HistoryProps> = ({ user, highlightId }) => {
                              ₦{selectedTx.amount.toLocaleString()}
                           </h1>
                       </div>
+
+                      {/* Transaction Details */}
                       <div className="bg-gray-50 dark:bg-gray-700/30 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden text-left">
                          <div className="p-4 border-b border-gray-200 dark:border-gray-600 flex justify-between items-center bg-gray-100/50 dark:bg-gray-800/50">
                              <div>
                                  <span className="block text-[10px] font-bold text-gray-400 uppercase">Reference</span>
                                  <span className="font-mono font-bold text-gray-700 dark:text-gray-200 text-xs">{selectedTx.reference}</span>
                              </div>
-                             <button onClick={() => handleCopyRef(selectedTx.reference)} className="text-gray-400 hover:text-green-600"><Copy size={14}/></button>
+                             <button onClick={() => handleCopyRef(selectedTx.reference)} className="text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors"><Copy size={14}/></button>
                          </div>
+
                          <div className="p-4 space-y-3">
                              <div className="flex justify-between items-center">
                                  <span className="text-sm text-gray-500 dark:text-gray-400">Provider</span>
@@ -218,11 +222,20 @@ export const History: React.FC<HistoryProps> = ({ user, highlightId }) => {
                                      <span className="font-bold text-gray-900 dark:text-white text-sm">{selectedTx.provider || 'Wallet'}</span>
                                  </div>
                              </div>
+
                              <div className="flex justify-between items-center">
                                  <span className="text-sm text-gray-500 dark:text-gray-400">Recipient</span>
                                  <span className="font-mono font-bold text-gray-900 dark:text-white text-sm">{selectedTx.destinationNumber || selectedTx.userId}</span>
                              </div>
+                             
+                             {selectedTx.bundleName && (
+                                 <div className="flex justify-between items-center">
+                                     <span className="text-sm text-gray-500 dark:text-gray-400">Plan</span>
+                                     <span className="font-medium text-gray-900 dark:text-white text-sm">{selectedTx.bundleName}</span>
+                                 </div>
+                             )}
                          </div>
+                         
                          {selectedTx.meterToken && (
                              <div className="border-t border-dashed border-gray-200 dark:border-gray-600 bg-green-50/50 dark:bg-green-900/10 p-4 text-center">
                                  <span className="block text-green-700 dark:text-green-400 font-bold text-[10px] uppercase mb-1">Electricity Token</span>
@@ -231,13 +244,25 @@ export const History: React.FC<HistoryProps> = ({ user, highlightId }) => {
                              </div>
                          )}
                       </div>
+
                       <div className="grid grid-cols-2 gap-4 mt-8">
-                          <button onClick={handleShare} className="flex flex-col items-center justify-center gap-2 py-4 rounded-2xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300">
-                             <Share2 size={20} className={shareState === 'copied' ? 'text-green-500' : ''}/>
-                             <span className="text-xs font-bold">{shareState === 'copied' ? 'Copied!' : 'Share'}</span>
+                          <button 
+                             onClick={handleShare}
+                             className={`flex flex-col items-center justify-center gap-2 py-4 rounded-2xl transition-all group border ${shareState === 'shared' || shareState === 'copied' ? 'bg-green-50 border-green-200 text-green-700' : 'bg-gray-50 dark:bg-gray-700 border-transparent text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600'}`}
+                          >
+                             <div className={`p-2 rounded-full ${shareState === 'shared' || shareState === 'copied' ? 'bg-green-200' : 'bg-white dark:bg-gray-600'} shadow-sm`}>
+                                 {shareState === 'copied' ? <Check size={18} /> : shareState === 'shared' ? <ExternalLink size={18} /> : <Share2 size={18} />}
+                             </div>
+                             <span className="text-xs font-bold">{shareState === 'copied' ? 'Copied!' : shareState === 'shared' ? 'Shared!' : 'Share'}</span>
                           </button>
-                          <button onClick={() => alert("Saved")} className="flex flex-col items-center justify-center gap-2 py-4 bg-gray-900 text-white dark:bg-black rounded-2xl">
-                             <Download size={20}/>
+                          
+                          <button 
+                             className="flex flex-col items-center justify-center gap-2 py-4 bg-gray-900 text-white dark:bg-black rounded-2xl hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-gray-200 dark:shadow-none"
+                             onClick={() => alert("Image download simulated.")}
+                          >
+                             <div className="p-2 bg-gray-700 rounded-full shadow-sm">
+                                 <Download size={18}/>
+                             </div>
                              <span className="text-xs font-bold">Save</span>
                           </button>
                       </div>
