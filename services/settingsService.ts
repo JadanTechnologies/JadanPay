@@ -16,26 +16,15 @@ export interface AppSettings {
   // Service Status
   providerStatus: Record<string, boolean>;
   providerStats: Record<string, number>; 
-  // FIX: Added missing property
   providerNetworkIds: Record<string, string>;
   
   // API Integration Settings
   activeApiVendor: ApiVendor;
-  apiKeys: {
-      BILALSADA: string;
-      MASKAWA: string;
-      ALRAHUZ: string;
-      ABBAPHANTAMI: string;
-      SIMHOST: string;
-  };
+  apiKeys: Record<ApiVendor, string>;
+  webhookUrls: Record<ApiVendor, string>; // Added for webhooks
+
   // Custom Base URLs for Vendors
-  apiBaseUrls: {
-      BILALSADA: string;
-      MASKAWA: string;
-      ALRAHUZ: string;
-      ABBAPHANTAMI: string;
-      SIMHOST: string;
-  };
+  apiBaseUrls: Record<ApiVendor, string>;
 
   // SMS & Notifications
   enableTwilio: boolean;
@@ -120,7 +109,6 @@ const defaultSettings: AppSettings = {
     [Provider.AIRTEL]: true,
     [Provider.NMOBILE]: true,
   },
-  // FIX: Added missing property default values
   providerNetworkIds: {
       [Provider.MTN]: '1',
       [Provider.GLO]: '2',
@@ -136,6 +124,13 @@ const defaultSettings: AppSettings = {
   
   activeApiVendor: 'BILALSADA',
   apiKeys: {
+      BILALSADA: '',
+      MASKAWA: '',
+      ALRAHUZ: '',
+      ABBAPHANTAMI: '',
+      SIMHOST: ''
+  },
+  webhookUrls: { // Added default webhook URLs
       BILALSADA: '',
       MASKAWA: '',
       ALRAHUZ: '',
@@ -225,9 +220,9 @@ try {
         ...defaultSettings, 
         ...parsed,
         apiKeys: { ...defaultSettings.apiKeys, ...(parsed.apiKeys || {}) },
+        webhookUrls: { ...defaultSettings.webhookUrls, ...(parsed.webhookUrls || {}) }, // Merge webhooks
         apiBaseUrls: { ...defaultSettings.apiBaseUrls, ...(parsed.apiBaseUrls || {}) },
         servicePricing: { ...defaultSettings.servicePricing, ...(parsed.servicePricing || {}) },
-        // FIX: Added deep merge for new property
         providerNetworkIds: { ...defaultSettings.providerNetworkIds, ...(parsed.providerNetworkIds || {}) }
     };
   }

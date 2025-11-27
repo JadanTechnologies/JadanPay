@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Save, Globe, Server, CreditCard, Database, Plus, Trash2, Edit2, Check, X, Upload, Mail, Phone, AlertTriangle, Key, Users, Trophy, Gift, MessageSquare, Bell, Send, Smartphone, Activity, Link as LinkIcon, Download, Wifi, Clock, Play, Pause, Lock, DollarSign, Image as ImageIcon, Power, Loader2, ArrowDown, ArrowUp, Zap } from 'lucide-react';
 import { Provider, Bundle, PlanType, User, CronJob } from '../types';
@@ -355,14 +356,23 @@ export const AdminSettings: React.FC = () => {
                         >
                             {Object.keys(settings.apiKeys).map(vendor => <option key={vendor} value={vendor}>{vendor}</option>)}
                         </select>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
+                        <div className="space-y-6 pt-4">
                             {Object.keys(settings.apiKeys).map(vendor => (
-                                <InputField
-                                    key={vendor}
-                                    label={`${vendor} API Key`}
-                                    value={settings.apiKeys[vendor as ApiVendor]}
-                                    onChange={e => handleNestedChange('apiKeys', vendor, e.target.value)}
-                                />
+                                <div key={vendor} className="p-4 border dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900">
+                                    <h4 className="font-bold mb-2 text-gray-700 dark:text-gray-200">{vendor}</h4>
+                                    <InputField
+                                        label={`API Key`}
+                                        value={settings.apiKeys[vendor as ApiVendor]}
+                                        onChange={e => handleNestedChange('apiKeys', vendor, e.target.value)}
+                                    />
+                                    <div className="mt-4">
+                                        <InputField
+                                            label={`Webhook URL`}
+                                            value={settings.webhookUrls[vendor as ApiVendor]}
+                                            onChange={e => handleNestedChange('webhookUrls', vendor, e.target.value)}
+                                        />
+                                    </div>
+                                </div>
                             ))}
                         </div>
                     </SettingsCard>
