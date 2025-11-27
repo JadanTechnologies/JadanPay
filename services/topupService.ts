@@ -1,4 +1,5 @@
 
+
 import { Transaction, TransactionType, TransactionStatus, Provider, Bundle, User, BillProvider } from '../types';
 import { MockDB } from './mockDb';
 import { ApiService } from './apiService';
@@ -29,11 +30,9 @@ export const processAirtimePurchase = async (
 ): Promise<Transaction> => {
   const settings = await SettingsService.getSettings();
   
-  // Dynamic Pricing Logic from Settings
   const sellingPercentage = settings.servicePricing?.airtimeSellingPercentage || 100;
   const costPercentage = settings.servicePricing?.airtimeCostPercentage || 98;
 
-  // Calculate actual amounts
   const sellingPrice = amount * (sellingPercentage / 100);
   const costPrice = amount * (costPercentage / 100);
   const profit = sellingPrice - costPrice;
@@ -42,7 +41,6 @@ export const processAirtimePurchase = async (
     throw new Error("Insufficient wallet balance.");
   }
 
-  // Calculate Roundup based on Selling Price
   let finalDeduction = sellingPrice;
   let savedAmount = 0;
   
@@ -58,9 +56,7 @@ export const processAirtimePurchase = async (
      throw new Error("Insufficient balance for transaction + savings roundup.");
   }
 
-  // --- API INTEGRATION ---
   try {
-      // Pass the original amount (face value) to the API
       const apiResponse = await ApiService.buyAirtime(provider, phone, amount);
       if (!apiResponse.success) {
           throw new Error(apiResponse.error || "Provider failed to process transaction");
@@ -70,7 +66,6 @@ export const processAirtimePurchase = async (
       throw new Error(error.message || "Service temporarily unavailable. Please try again later.");
   }
 
-  // Deduct Balance
   const updatedUser = await MockDB.updateUserBalance(user.id, -finalDeduction);
   
   if (savedAmount > 0) {
@@ -82,7 +77,7 @@ export const processAirtimePurchase = async (
     userId: user.id,
     type: TransactionType.AIRTIME,
     provider,
-    amount: sellingPrice, // Record what user paid
+    amount: sellingPrice,
     costPrice,
     profit,
     destinationNumber: phone,
@@ -185,27 +180,20 @@ export const processBillPayment = async (
     type: TransactionType,
     provider: BillProvider,
     number: string,
-    amount: number,
+    amount: number, // This is the TOTAL amount the user pays
     bundle?: Bundle
 ): Promise<Transaction> => {
     const settings = await SettingsService.getSettings();
-    // Use dynamic service fee from settings
     const serviceFee = settings.servicePricing?.billServiceFee || 100;
-
-    const baseAmount = bundle ? bundle.price : amount;
-    // TotalDeduct passed from form usually includes fee, but let's recalculate to be safe
-    // Actually form passes totalDeduct directly. Let's assume amount passed IS the total to deduct.
-    // If logic changes, we might need to adjust.
-    // Standard: amount passed to this func is Total Payable by user.
     
     if (user.balance < amount) throw new Error("Insufficient wallet balance.");
 
-    await new Promise(r => setTimeout(r, 1500));
+    // Simulate API call
+    await new Promise(r => setTimeout(r, 2000));
+    const meterToken = type === TransactionType.ELECTRICITY ? `${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}` : undefined;
 
     const updatedUser = await MockDB.updateUserBalance(user.id, -amount);
 
-    // Calculate Profit: Service Fee is profit. 
-    // Cost = Amount User Paid - Service Fee
     const costPrice = amount - serviceFee; 
     const profit = serviceFee;
 
@@ -224,12 +212,13 @@ export const processBillPayment = async (
         reference: generateRef(),
         previousBalance: user.balance,
         newBalance: updatedUser.balance,
-        customerName: 'MOCKED CUSTOMER'
+        customerName: 'JABIR MUSA', // From validation
+        meterToken: meterToken
     };
 
     await MockDB.addTransaction(tx);
 
-    const smsMsg = `JadanPay: Bill Payment (${provider}) for ${number} Successful. Amount: N${amount}. New Bal: N${updatedUser.balance.toFixed(2)}`;
+    const smsMsg = `JadanPay: Bill Payment (${provider}) for ${number} of N${amount} was successful. New Bal: N${updatedUser.balance.toFixed(2)}`;
     await NotificationService.sendSms(user.phone, smsMsg);
 
     return tx;

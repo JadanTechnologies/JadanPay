@@ -1,4 +1,5 @@
 
+
 export enum UserRole {
   USER = 'user',
   RESELLER = 'reseller',
@@ -49,7 +50,6 @@ export enum TransactionType {
   DATA = 'DATA',
   CABLE = 'CABLE',           
   ELECTRICITY = 'ELECTRICITY',
-  BILL_PAYMENT = 'BILL_PAYMENT',
   WALLET_FUND = 'WALLET_FUND',
   ADMIN_CREDIT = 'ADMIN_CREDIT',
   ADMIN_DEBIT = 'ADMIN_DEBIT',
@@ -117,7 +117,7 @@ export interface Transaction {
   id: string;
   userId: string;
   type: TransactionType;
-  provider?: Provider | string; // Updated type
+  provider?: Provider | BillProvider | string; // Updated type
   amount: number;
   costPrice?: number;
   profit?: number;
