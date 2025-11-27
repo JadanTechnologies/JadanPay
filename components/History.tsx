@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Transaction, TransactionStatus, Provider, User } from '../types';
 import { MockDB } from '../services/mockDb';
-import { X, Share2, CheckCircle2, Download, RefreshCw, Check, Search, Calendar, Copy, Receipt, Link as LinkIcon, Smartphone, CreditCard, ExternalLink, QrCode } from 'lucide-react';
+import { X, Share2, CheckCircle2, Download, RefreshCw, Check, Search, Calendar, Copy, Receipt, Link as LinkIcon, Smartphone, CreditCard, ExternalLink, QrCode, Clock } from 'lucide-react';
 import { PROVIDER_LOGOS, PROVIDER_COLORS, PROVIDER_IMAGES } from '../constants';
 import { playNotification } from '../utils/audio';
 
@@ -232,6 +232,15 @@ export const History: React.FC<HistoryProps> = ({ user, highlightId }) => {
                                  <div className="flex justify-between items-center">
                                      <span className="text-sm text-gray-500 dark:text-gray-400">Plan</span>
                                      <span className="font-medium text-gray-900 dark:text-white text-sm">{selectedTx.bundleName}</span>
+                                 </div>
+                             )}
+
+                            {selectedTx.expiryDate && (
+                                 <div className="flex justify-between items-center">
+                                     <span className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1"><Clock size={12}/> Expires On</span>
+                                     <span className="font-bold text-orange-600 dark:text-orange-400 text-sm">
+                                         {new Date(selectedTx.expiryDate).toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                     </span>
                                  </div>
                              )}
                          </div>

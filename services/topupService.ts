@@ -21,6 +21,34 @@ const parseDataToGB = (amountStr: string): number => {
     return val;
 };
 
+// Helper to calculate expiry date from validity string
+const calculateExpiryDate = (validity: string): Date | null => {
+    if (!validity) return null;
+
+    const now = new Date();
+    const parts = validity.toLowerCase().split(' ');
+    if (parts.length < 2) return null;
+
+    const value = parseInt(parts[0], 10);
+    const unit = parts[1];
+
+    if (isNaN(value)) return null;
+
+    if (unit.startsWith('day')) {
+        now.setDate(now.getDate() + value);
+    } else if (unit.startsWith('hour')) {
+        now.setHours(now.getHours() + value);
+    } else if (unit.startsWith('month')) {
+        now.setMonth(now.getMonth() + value);
+    } else if (unit.startsWith('year')) {
+        now.setFullYear(now.getFullYear() + value);
+    } else {
+        return null; // Unsupported unit
+    }
+
+    return now;
+};
+
 export const processAirtimePurchase = async (
   user: User,
   provider: Provider,
@@ -149,6 +177,7 @@ export const processDataPurchase = async (
 
   const costPrice = bundle.costPrice || (bundle.price * 0.95);
   const profit = bundle.price - costPrice;
+  const expiryDate = calculateExpiryDate(bundle.validity);
 
   const tx: Transaction = {
     id: generateId(),
@@ -164,7 +193,8 @@ export const processDataPurchase = async (
     date: new Date().toISOString(),
     reference: generateRef(),
     previousBalance: user.balance,
-    newBalance: updatedUser.balance
+    newBalance: updatedUser.balance,
+    expiryDate: expiryDate ? expiryDate.toISOString() : undefined,
   };
 
   await MockDB.addTransaction(tx);

@@ -134,6 +134,7 @@ export interface Transaction {
   customerName?: string; // For Bill Validation
   customerAddress?: string; // For Electricity Bills
   meterToken?: string; // For Electricity Tokens
+  expiryDate?: string; // For Data Bundles
 }
 
 export interface DashboardStats {
