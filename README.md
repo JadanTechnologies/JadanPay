@@ -1,20 +1,59 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# JadanPay VTU Web Application
 
-# Run and deploy your AI Studio app
+This is a complete, production-ready VTU & Airtime Top-Up web application for Nigeria with a fully functional Admin Dashboard. It uses React + Tailwind CSS for the frontend and a mock serverless backend.
 
-This contains everything you need to run your app locally.
+## Features
 
-View your app in AI Studio: https://ai.studio/apps/drive/1sm1gd8VwENxBWb8Fv_inSimVst0L8DQm
+- User registration/login
+- Wallet top-up
+- Airtime and data purchase
+- Transaction history and e-receipts
+- Admin Dashboard with user/transaction management
+- Reseller features (sub-accounts, bulk top-up)
+- **New:** Network Success Rate API and Diagnostic Tool
 
-## Run Locally
+## Project Structure
 
-**Prerequisites:**  Node.js
+- `index.html`: The main HTML file.
+- `index.tsx`: The main React application entry point.
+- `components/`: Directory for React components.
+- `services/`: Directory for mock backend logic and API services.
+- `types.ts`: TypeScript type definitions.
+- `constants.ts`: Static data like provider info and sample bundles.
+- `network-api.js`: A separate backend Express server for the Network Test API.
+- `package.json`: Dependencies for the Network Test API server.
 
+## Setup & Running the Application
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+### 1. Frontend Application
+
+The frontend is a static application that runs directly in the browser. You can serve the files using any static file server or by opening `index.html`.
+
+### 2. Network Test API Backend
+
+This project includes a separate Node.js backend to simulate network performance tests.
+
+**Prerequisites:**
+- Node.js (v14 or higher)
+- npm
+
+**Running the API Server:**
+
+1.  Navigate to the project root directory in your terminal.
+2.  Install the required dependencies:
+    ```bash
+    npm install
+    ```
+3.  Start the API server:
+    ```bash
+    npm start
+    ```
+4.  The server will start on `http://localhost:4000` by default. The frontend is configured to call this endpoint.
+
+## How to Use the Network Test Tool
+
+1.  Log in as an Admin (`admin@jadanpay.com` / `1234`).
+2.  Navigate to the **Settings** page from the sidebar.
+3.  Select the **Health** tab.
+4.  In the "Live Network Quality Test" section, choose a provider and click "Run Test".
+5.  You can also enable auto-refresh to monitor the simulated network quality in real-time.
