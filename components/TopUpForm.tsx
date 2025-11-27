@@ -298,6 +298,12 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
                         </option>
                     ))}
                 </select>
+                {selectedBundle && (
+                    <div className="mt-2 p-2 bg-gray-100 dark:bg-gray-800 rounded-lg text-xs flex items-center gap-2 text-gray-600 dark:text-gray-300">
+                        <Info size={14} className="text-blue-500" />
+                        This plan is valid for <strong>{selectedBundle.validity}</strong>.
+                    </div>
+                )}
             </div>
         )}
         
