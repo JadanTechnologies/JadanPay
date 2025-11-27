@@ -54,8 +54,16 @@ export const processAirtimePurchase = async (
   provider: Provider,
   amount: number,
   phone: string,
-  roundUpSavings: boolean
+  roundUpSavings: boolean,
+  pin: string
 ): Promise<Transaction> => {
+  if (!user.transactionPin) {
+    throw new Error("Transaction PIN not set. Please create one in your Profile.");
+  }
+  if (user.transactionPin !== pin) {
+    throw new Error("Incorrect transaction PIN.");
+  }
+
   const settings = await SettingsService.getSettings();
   
   const sellingPercentage = settings.servicePricing?.airtimeSellingPercentage || 100;
@@ -128,8 +136,16 @@ export const processDataPurchase = async (
   user: User,
   bundle: Bundle,
   phone: string,
-  roundUpSavings: boolean
+  roundUpSavings: boolean,
+  pin: string
 ): Promise<Transaction> => {
+  if (!user.transactionPin) {
+    throw new Error("Transaction PIN not set. Please create one in your Profile.");
+  }
+  if (user.transactionPin !== pin) {
+    throw new Error("Incorrect transaction PIN.");
+  }
+
   const amount = bundle.price;
 
     if (user.balance < amount) {
@@ -211,8 +227,16 @@ export const processBillPayment = async (
     provider: BillProvider,
     number: string,
     amount: number, // This is the TOTAL amount the user pays
+    pin: string,
     bundle?: Bundle
 ): Promise<Transaction> => {
+    if (!user.transactionPin) {
+        throw new Error("Transaction PIN not set. Please create one in your Profile.");
+    }
+    if (user.transactionPin !== pin) {
+        throw new Error("Incorrect transaction PIN.");
+    }
+
     const settings = await SettingsService.getSettings();
     const serviceFee = settings.servicePricing?.billServiceFee || 100;
     

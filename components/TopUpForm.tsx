@@ -16,7 +16,9 @@ interface TopUpFormProps {
 const BILL_SERVICE_FEE = 100; // This can be moved to settings later
 
 export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewReceipt }) => {
+  const [activeTab, setActiveTab] = useState<'airtime' | 'data' | 'data_refill' | 'cable' | 'power'>('airtime');
   const [type, setType] = useState<TransactionType>(TransactionType.AIRTIME);
+  
   const [provider, setProvider] = useState<string>(Provider.MTN);
   const [phone, setPhone] = useState<string>(''); // Also used for meter/IUC
   const [amount, setAmount] = useState<number | ''>('');
@@ -34,6 +36,12 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
   const [lastTx, setLastTx] = useState<Transaction | null>(null);
   const [resultState, setResultState] = useState<'idle' | 'success' | 'error'>('idle');
 
+  // PIN State
+  const [showPinModal, setShowPinModal] = useState(false);
+  const [pin, setPin] = useState('');
+  const [pinError, setPinError] = useState<string | null>(null);
+
+
   useEffect(() => {
       loadData();
   }, []);
@@ -45,8 +53,8 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
       } catch (e) { console.error("Failed to load top-up data", e); }
   };
   
-  const handleTabChange = (newType: TransactionType) => {
-      setType(newType);
+  const handleTabChange = (newTab: 'airtime' | 'data' | 'data_refill' | 'cable' | 'power') => {
+      setActiveTab(newTab);
       setPhone('');
       setAmount('');
       setSelectedBundle(null);
@@ -54,10 +62,30 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
       setResultState('idle');
       setCustomerName(null);
       setValidationError(null);
-      
-      if (newType === TransactionType.CABLE) setProvider(BillProvider.DSTV);
-      else if (newType === TransactionType.ELECTRICITY) setProvider(BillProvider.IKEDC);
-      else setProvider(Provider.MTN);
+
+      switch(newTab) {
+          case 'airtime':
+              setType(TransactionType.AIRTIME);
+              setProvider(Provider.MTN);
+              break;
+          case 'data':
+              setType(TransactionType.DATA);
+              setProvider(Provider.MTN);
+              break;
+          case 'data_refill':
+              setType(TransactionType.DATA);
+              setPhone(user.phone);
+              setProvider(Provider.MTN);
+              break;
+          case 'cable':
+              setType(TransactionType.CABLE);
+              setProvider(BillProvider.DSTV);
+              break;
+          case 'power':
+              setType(TransactionType.ELECTRICITY);
+              setProvider(BillProvider.IKEDC);
+              break;
+      }
   };
 
   const handleVerifyCustomer = async () => {
@@ -77,10 +105,12 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
   };
   
   useEffect(() => {
-      // Reset validation when number changes
-      setCustomerName(null);
-      setValidationError(null);
-  }, [phone]);
+      // Reset validation when number changes, except for data refill
+      if (activeTab !== 'data_refill') {
+          setCustomerName(null);
+          setValidationError(null);
+      }
+  }, [phone, activeTab]);
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,30 +131,53 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
     setShowConfirm(true);
   };
 
+  const handleProceedToPin = () => {
+      setShowConfirm(false);
+      setShowPinModal(true);
+      setPin('');
+      setPinError(null);
+  };
+
   const executeTransaction = async () => {
-    setShowConfirm(false);
+    if (pin.length !== 4) {
+        setPinError("PIN must be 4 digits.");
+        return;
+    }
+
     setLoading(true);
-    setResultState('idle');
-    setError(null);
+    setPinError(null);
     
     try {
       let tx: Transaction;
       if (type === TransactionType.AIRTIME) {
-        tx = await processAirtimePurchase(user, provider as Provider, Number(amount), phone, false);
+        tx = await processAirtimePurchase(user, provider as Provider, Number(amount), phone, false, pin);
       } else if (type === TransactionType.DATA) {
-        tx = await processDataPurchase(user, selectedBundle!, phone, false);
+        tx = await processDataPurchase(user, selectedBundle!, phone, false, pin);
       } else {
         const baseAmt = type === TransactionType.CABLE ? selectedBundle!.price : Number(amount);
         const totalDeduct = baseAmt + BILL_SERVICE_FEE;
-        tx = await processBillPayment(user, type, provider as BillProvider, phone, totalDeduct, selectedBundle || undefined);
+        tx = await processBillPayment(user, type, provider as BillProvider, phone, totalDeduct, pin, selectedBundle || undefined);
       }
       
+      setShowPinModal(false);
+      setPin('');
       setLastTx(tx);
       setResultState('success');
+      playNotification("Transaction successful");
       onSuccess();
     } catch (err: any) {
-      setError(err.message || "Transaction failed");
-      setResultState('error');
+      playNotification(err.message || "An error occurred", 'error');
+      if (err.message.includes("Incorrect transaction PIN")) {
+          setPinError(err.message);
+          setPin(''); // Clear input for re-entry
+      } else if (err.message.includes("Transaction PIN not set")) {
+          setShowPinModal(false);
+          setError(err.message + ' You can set it on the Profile page.');
+      } else {
+          setShowPinModal(false);
+          setError(err.message || "Transaction failed");
+          setResultState('error');
+      }
     } finally {
       setLoading(false);
     }
@@ -132,14 +185,20 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
   
   const getTransactionDetails = () => {
      let cost = 0, desc = "", serviceFee = 0;
-     if (type === TransactionType.AIRTIME || type === TransactionType.ELECTRICITY) {
+     if (type === TransactionType.AIRTIME) {
          cost = Number(amount);
-         desc = type === TransactionType.ELECTRICITY ? "Electricity Top-up" : "Airtime";
-         if (type === TransactionType.ELECTRICITY) serviceFee = BILL_SERVICE_FEE;
-     } else {
-         cost = selectedBundle ? selectedBundle.price : 0;
-         desc = selectedBundle ? `Cable - ${selectedBundle.name}` : '';
-         if (type === TransactionType.CABLE) serviceFee = BILL_SERVICE_FEE;
+         desc = `${provider} Airtime`;
+     } else if (type === TransactionType.ELECTRICITY) {
+         cost = Number(amount);
+         desc = "Electricity Top-up";
+         serviceFee = BILL_SERVICE_FEE;
+     } else if (type === TransactionType.DATA) {
+         cost = selectedBundle?.price || 0;
+         desc = selectedBundle?.name || 'Data';
+     } else if (type === TransactionType.CABLE) {
+         cost = selectedBundle?.price || 0;
+         desc = selectedBundle ? `Cable - ${selectedBundle.name}` : 'Cable';
+         serviceFee = BILL_SERVICE_FEE;
      }
      return { cost, desc, total: cost + serviceFee, serviceFee };
   };
@@ -156,8 +215,14 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
       </h2>
 
       <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl mb-6 relative z-10 overflow-x-auto no-scrollbar">
-        {[{ id: TransactionType.AIRTIME, icon: Smartphone, label: 'Airtime' }, { id: TransactionType.DATA, icon: Wifi, label: 'Data' }, { id: TransactionType.CABLE, icon: Tv, label: 'Cable' }, { id: TransactionType.ELECTRICITY, icon: Zap, label: 'Power' }].map(tab => (
-            <button key={tab.id} onClick={() => handleTabChange(tab.id)} className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-xs md:text-sm font-medium transition-all whitespace-nowrap ${type === tab.id ? 'bg-white dark:bg-gray-700 shadow-sm text-green-700 dark:text-green-400' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}>
+        {[
+            { id: 'airtime', icon: Phone, label: 'Airtime' }, 
+            { id: 'data', icon: Wifi, label: 'Data' },
+            { id: 'data_refill', icon: RefreshCw, label: 'Data Refill' },
+            { id: 'cable', icon: Tv, label: 'Cable' }, 
+            { id: 'power', icon: Zap, label: 'Power' }
+        ].map(tab => (
+            <button key={tab.id} onClick={() => handleTabChange(tab.id as any)} className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-xs md:text-sm font-medium transition-all whitespace-nowrap ${activeTab === tab.id ? 'bg-white dark:bg-gray-700 shadow-sm text-green-700 dark:text-green-400' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}>
               <tab.icon size={16} /> {tab.label}
             </button>
         ))}
@@ -165,7 +230,7 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
 
       <form onSubmit={handleFormSubmit} className="space-y-5 relative z-10 animate-fade-in">
         <div className="flex flex-wrap gap-3">
-            {(type === TransactionType.AIRTIME || type === TransactionType.DATA ? Object.values(Provider) : type === TransactionType.CABLE ? BILL_PROVIDERS.CABLE : BILL_PROVIDERS.ELECTRICITY).map((p) => {
+            {(activeTab.includes('data') || activeTab === 'airtime' ? Object.values(Provider) : activeTab === 'cable' ? BILL_PROVIDERS.CABLE : BILL_PROVIDERS.ELECTRICITY).map((p) => {
                 const isSelected = provider === p;
                 return (
                     <button
@@ -190,8 +255,9 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
                 value={phone}
                 onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
                 placeholder={isBillPayment ? 'Enter number...' : '080...'}
-                className="w-full p-3 bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-green-500 outline-none transition-all font-mono text-lg text-gray-900 dark:text-white"
+                className="w-full p-3 bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-green-500 outline-none transition-all font-mono text-lg text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:text-gray-500"
                 required
+                disabled={activeTab === 'data_refill'}
               />
               {isBillPayment && (
                   <button type="button" onClick={handleVerifyCustomer} disabled={isValidating || !phone} className="px-4 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white rounded-xl font-bold text-sm disabled:opacity-50 flex items-center justify-center">
@@ -214,6 +280,24 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
                   className="w-full p-3 bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-green-500 outline-none font-mono text-lg text-gray-900 dark:text-white"
                   required
                 />
+            </div>
+        )}
+        
+        {type === TransactionType.DATA && (
+            <div className="animate-in fade-in">
+                 <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wider">Select Data Plan</label>
+                 <select 
+                    onChange={e => setSelectedBundle(bundles.find(b => b.id === e.target.value) || null)}
+                    className="w-full p-3 bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-green-500 outline-none text-gray-900 dark:text-white"
+                    required
+                >
+                    <option value="">Choose a data plan</option>
+                    {bundles.filter(b => b.provider === provider && b.isAvailable).map(bundle => (
+                        <option key={bundle.id} value={bundle.id}>
+                            {bundle.name} - ₦{bundle.price.toLocaleString()}
+                        </option>
+                    ))}
+                </select>
             </div>
         )}
         
@@ -251,7 +335,7 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
         {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
         
         <button type="submit" disabled={loading || (isBillPayment && !customerName)} className="w-full py-4 bg-green-700 text-white rounded-xl font-bold text-lg shadow-xl shadow-green-700/20 hover:bg-green-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-          {loading ? <Loader2 className="animate-spin mx-auto"/> : 'Continue'}
+          Continue
         </button>
       </form>
       
@@ -269,9 +353,33 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
              </div>
             <div className="flex gap-3">
                  <button onClick={() => setShowConfirm(false)} className="flex-1 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-xl font-medium hover:bg-gray-200 dark:hover:bg-gray-600">Cancel</button>
-                  <button onClick={executeTransaction} className="flex-1 py-3 bg-green-700 text-white rounded-xl font-bold hover:bg-green-800">Pay Now</button>
+                  <button onClick={handleProceedToPin} className="flex-1 py-3 bg-green-700 text-white rounded-xl font-bold hover:bg-green-800">Pay Now</button>
             </div>
           </div>
+        </div>
+      )}
+
+      {showPinModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-white dark:bg-gray-900 w-full max-w-sm rounded-2xl p-6 shadow-2xl animate-fade-in-up">
+                <h3 className="text-lg font-bold mb-2 text-gray-900 dark:text-white text-center">Enter Transaction PIN</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 text-center mb-6">Enter your 4-digit PIN to authorize this payment.</p>
+                <input
+                    type="password"
+                    value={pin}
+                    onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
+                    maxLength={4}
+                    className="w-full p-4 text-center text-3xl font-mono tracking-[1em] bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl outline-none focus:ring-2 focus:ring-green-500"
+                    autoFocus
+                />
+                {pinError && <p className="text-red-500 text-sm text-center mt-2">{pinError}</p>}
+                <div className="flex gap-3 mt-6">
+                    <button onClick={() => setShowPinModal(false)} className="flex-1 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-xl font-medium">Cancel</button>
+                    <button onClick={executeTransaction} disabled={loading || pin.length !== 4} className="flex-1 py-3 bg-green-700 text-white rounded-xl font-bold flex items-center justify-center gap-2 disabled:opacity-50">
+                        {loading ? <Loader2 className="animate-spin"/> : 'Confirm Purchase'}
+                    </button>
+                </div>
+            </div>
         </div>
       )}
     </div>
