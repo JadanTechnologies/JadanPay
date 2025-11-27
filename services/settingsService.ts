@@ -16,6 +16,8 @@ export interface AppSettings {
   // Service Status
   providerStatus: Record<string, boolean>;
   providerStats: Record<string, number>; 
+  // FIX: Added missing property
+  providerNetworkIds: Record<string, string>;
   
   // API Integration Settings
   activeApiVendor: ApiVendor;
@@ -118,6 +120,13 @@ const defaultSettings: AppSettings = {
     [Provider.AIRTEL]: true,
     [Provider.NMOBILE]: true,
   },
+  // FIX: Added missing property default values
+  providerNetworkIds: {
+      [Provider.MTN]: '1',
+      [Provider.GLO]: '2',
+      [Provider.AIRTEL]: '3',
+      [Provider.NMOBILE]: '4',
+  },
   providerStats: {
     [Provider.MTN]: 98,
     [Provider.GLO]: 85,
@@ -217,7 +226,9 @@ try {
         ...parsed,
         apiKeys: { ...defaultSettings.apiKeys, ...(parsed.apiKeys || {}) },
         apiBaseUrls: { ...defaultSettings.apiBaseUrls, ...(parsed.apiBaseUrls || {}) },
-        servicePricing: { ...defaultSettings.servicePricing, ...(parsed.servicePricing || {}) }
+        servicePricing: { ...defaultSettings.servicePricing, ...(parsed.servicePricing || {}) },
+        // FIX: Added deep merge for new property
+        providerNetworkIds: { ...defaultSettings.providerNetworkIds, ...(parsed.providerNetworkIds || {}) }
     };
   }
 } catch (e) {

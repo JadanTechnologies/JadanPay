@@ -80,12 +80,12 @@ export const CABLE_PLANS: Bundle[] = [
 export const MOCK_USERS_DATA = [
   {
     id: 'u1',
-    name: 'Tunde Bakare',
-    email: 'tunde@example.com',
+    name: 'Jabir',
+    email: 'jabir@example.com',
     phone: '08030000001',
     role: UserRole.USER,
-    balance: 5000,
-    savings: 250,
+    balance: 0,
+    savings: 0,
     // CRITICAL FIX: Set to false to allow testing of verification flow.
     isVerified: false, 
     status: UserStatus.ACTIVE,

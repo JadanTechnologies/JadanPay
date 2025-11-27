@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Provider, Bundle, User, TransactionType, Transaction, PlanType, BillProvider } from '../types';
-import { PROVIDER_LOGOS, BILL_PROVIDERS, CABLE_PLANS } from '../constants';
+import { PROVIDER_LOGOS, BILL_PROVIDERS, CABLE_PLANS, PROVIDER_IMAGES } from '../constants';
 import { processAirtimePurchase, processDataPurchase, processBillPayment } from '../services/topupService';
 import { SettingsService } from '../services/settingsService';
 import { MockDB } from '../services/mockDb';
@@ -13,78 +13,20 @@ interface TopUpFormProps {
   onViewReceipt: (txId: string) => void;
 }
 
-// Define specific limits per provider
-const PROVIDER_LIMITS: Record<string, { min: number; max: number }> = {
-  [Provider.MTN]: { min: 100, max: 50000 },
-  [Provider.GLO]: { min: 100, max: 50000 },
-  [Provider.AIRTEL]: { min: 100, max: 50000 },
-  [Provider.NMOBILE]: { min: 100, max: 50000 },
-  // Electricity min 1000
-  [BillProvider.IKEDC]: { min: 1000, max: 200000 },
-  [BillProvider.EKEDC]: { min: 1000, max: 200000 },
-  [BillProvider.AEDC]: { min: 1000, max: 200000 },
-  [BillProvider.IBEDC]: { min: 1000, max: 200000 },
-  [BillProvider.KEDCO]: { min: 1000, max: 200000 },
-};
-
-// Constant Service Fee for Bills
 const BILL_SERVICE_FEE = 100;
-
-// Helper for Signal Bars
-const SignalBars = ({ level, colorClass }: { level: number, colorClass: string }) => (
-    <div className="flex gap-[2px] items-end h-3">
-        {[1, 2, 3, 4].map(bar => (
-            <div 
-                key={bar} 
-                className={`w-[3px] rounded-sm transition-all duration-500 ${bar <= level ? colorClass : 'bg-gray-200 dark:bg-gray-700 opacity-30'}`}
-                style={{ height: `${bar * 25}%` }}
-            ></div>
-        ))}
-    </div>
-);
 
 export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewReceipt }) => {
   const [type, setType] = useState<TransactionType>(TransactionType.AIRTIME);
-  
-  // General State
   const [provider, setProvider] = useState<string>(Provider.MTN);
-  const [phone, setPhone] = useState<string>(''); // Acts as Phone, Meter No, or IUC
+  const [phone, setPhone] = useState<string>('');
   const [amount, setAmount] = useState<number | ''>('');
-  
-  // Data State
   const [selectedBundle, setSelectedBundle] = useState<Bundle | null>(null);
-  const [selectedPlanType, setSelectedPlanType] = useState<PlanType>(PlanType.SME);
-  const [availablePlanTypes, setAvailablePlanTypes] = useState<PlanType[]>([]);
   const [bundles, setBundles] = useState<Bundle[]>([]);
-
-  // Bill Verification State
-  const [isValidating, setIsValidating] = useState(false);
-  const [customerName, setCustomerName] = useState<string | null>(null);
-  const [validationError, setValidationError] = useState<string | null>(null);
-
-  // Common State
   const [loading, setLoading] = useState(false);
-  const [roundUp, setRoundUp] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
   const [lastTx, setLastTx] = useState<Transaction | null>(null);
-  
-  // PIN States
-  const [showPinModal, setShowPinModal] = useState(false);
-  const [pinInput, setPinInput] = useState('');
-  const [pinError, setPinError] = useState<string | null>(null);
-  const [pinMode, setPinMode] = useState<'verify' | 'create'>('verify');
-  const [confirmPinInput, setConfirmPinInput] = useState(''); // For creation
-  
-  // Dynamic Settings
-  const [providerStatus, setProviderStatus] = useState<Record<string, boolean>>({});
-  const [providerStats, setProviderStats] = useState<Record<string, number>>({});
-  
-  // Result View State
   const [resultState, setResultState] = useState<'idle' | 'success' | 'error'>('idle');
-  
-  // QR State
-  const [showQr, setShowQr] = useState(false);
 
   useEffect(() => {
       loadData();
@@ -92,86 +34,18 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
 
   const loadData = async () => {
       try {
-        const settings = await SettingsService.getSettings();
-        setProviderStatus(settings.providerStatus || {});
-        setProviderStats(settings.providerStats || {});
         const dbBundles = await MockDB.getBundles();
         setBundles(dbBundles);
-      } catch (e) {
-        console.error("Failed to load top-up data", e);
-      }
+      } catch (e) { console.error("Failed to load top-up data", e); }
   };
-
-  // Smart Suggest for Telcos
-  useEffect(() => {
-    if ((type === TransactionType.AIRTIME || type === TransactionType.DATA) && phone.length === 11) {
-      let suggested: Provider | null = null;
-      if (phone.startsWith('0803') || phone.startsWith('0806') || phone.startsWith('0813') || phone.startsWith('0816')) suggested = Provider.MTN;
-      else if (phone.startsWith('0805') || phone.startsWith('0815') || phone.startsWith('0811')) suggested = Provider.GLO;
-      else if (phone.startsWith('0802') || phone.startsWith('0812') || phone.startsWith('0902')) suggested = Provider.AIRTEL;
-      else if (phone.startsWith('0809') || phone.startsWith('0819') || phone.startsWith('0909')) suggested = Provider.NMOBILE;
-
-      if (suggested && providerStatus[suggested] !== false) {
-         setProvider(suggested);
-      }
-    }
-  }, [phone, providerStatus, type]);
-
-  // Handle Bill Verification Simulation
-  useEffect(() => {
-    if ((type === TransactionType.ELECTRICITY || type === TransactionType.CABLE) && phone.length >= 10) {
-        // Debounce verification
-        const timer = setTimeout(() => {
-            validateBillCustomer();
-        }, 1200);
-        return () => clearTimeout(timer);
-    } else {
-        setCustomerName(null);
-        setValidationError(null);
-    }
-  }, [phone, provider, type]);
-
-  const validateBillCustomer = async () => {
-      setIsValidating(true);
-      setCustomerName(null);
-      setValidationError(null);
-      
-      // Simulate API verification
-      setTimeout(() => {
-          if (Math.random() > 0.15) {
-              setCustomerName("MOCK USER: " + (Math.random() + 1).toString(36).substring(7).toUpperCase() + " FAMILY");
-          } else {
-              setValidationError("Invalid Number. Please check and try again.");
-          }
-          setIsValidating(false);
-      }, 1500);
-  };
-
-  // Update Data Plan Types
-  useEffect(() => {
-      if (type === TransactionType.DATA) {
-          const typesForProvider = Array.from(new Set(
-              bundles.filter(b => b.provider === provider).map(b => b.type)
-          ));
-          setAvailablePlanTypes(typesForProvider as PlanType[]);
-          
-          if (typesForProvider.includes(PlanType.SME)) setSelectedPlanType(PlanType.SME);
-          else if (typesForProvider.length > 0) setSelectedPlanType(typesForProvider[0] as PlanType);
-      }
-  }, [provider, bundles, type]);
-
+  
   const handleTabChange = (newType: TransactionType) => {
       setType(newType);
       setPhone('');
       setAmount('');
       setSelectedBundle(null);
-      setCustomerName(null);
       setError(null);
-      setValidationError(null);
       setResultState('idle');
-      setShowQr(false);
-      
-      // Set default provider based on type
       if (newType === TransactionType.CABLE) setProvider(BillProvider.DSTV);
       else if (newType === TransactionType.ELECTRICITY) setProvider(BillProvider.IKEDC);
       else setProvider(Provider.MTN);
@@ -180,95 +54,14 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    setLastTx(null);
     setResultState('idle');
-    setShowQr(false);
 
     if (!phone) {
         setError("Please enter the number");
         return;
     }
-
-    if (type === TransactionType.AIRTIME || type === TransactionType.DATA) {
-        if (phone.length !== 11) { setError("Phone number must be 11 digits"); return; }
-    } else {
-        if (!customerName && !isValidating) { setError("Please verify customer details first"); return; }
-        if (validationError) { setError(validationError); return; }
-    }
-
-    if ((type === TransactionType.AIRTIME || type === TransactionType.ELECTRICITY)) {
-        if (!amount || Number(amount) <= 0) { setError("Enter a valid amount"); return; }
-        const limits = PROVIDER_LIMITS[provider] || { min: 100, max: 50000 };
-        if (Number(amount) < limits.min) { setError(`Minimum amount is ₦${limits.min}`); return; }
-    }
-
-    if ((type === TransactionType.DATA || type === TransactionType.CABLE) && !selectedBundle) {
-        setError("Please select a plan");
-        return;
-    }
-
-    // Extra Validation for Data Bundle Availability
-    if (type === TransactionType.DATA && selectedBundle && selectedBundle.isAvailable === false) {
-        setError("Selected plan is currently unavailable.");
-        return;
-    }
-
-    // Check if User needs to create a PIN first
-    if (!user.transactionPin) {
-        setPinMode('create');
-        setShowPinModal(true);
-        setPinInput('');
-        setConfirmPinInput('');
-        setPinError(null);
-        return;
-    }
-
+    
     setShowConfirm(true);
-  };
-
-  const initiatePinVerification = () => {
-      setShowConfirm(false);
-      setPinMode('verify');
-      setShowPinModal(true);
-      setPinInput('');
-      setPinError(null);
-  };
-
-  const handlePinSubmit = async () => {
-      setPinError(null);
-
-      if (pinMode === 'create') {
-          if (pinInput.length !== 4) {
-              setPinError("PIN must be 4 digits.");
-              return;
-          }
-          if (pinInput !== confirmPinInput) {
-              setPinError("PINs do not match.");
-              return;
-          }
-          
-          // Create PIN
-          try {
-              const updatedUser = await MockDB.updateUser({ ...user, transactionPin: pinInput });
-              // Update local user prop roughly (better to use the callback in real app, but user prop is readonly)
-              user.transactionPin = pinInput; 
-              setPinMode('verify');
-              setShowPinModal(false);
-              alert("PIN Created Successfully! Please proceed with your transaction.");
-              setShowConfirm(true); // Re-open confirm modal to proceed
-          } catch(e) {
-              setPinError("Failed to save PIN.");
-          }
-          return;
-      }
-
-      // Verify Mode
-      if (pinInput === user.transactionPin) {
-          setShowPinModal(false);
-          executeTransaction();
-      } else {
-          setPinError("Incorrect PIN.");
-      }
   };
 
   const executeTransaction = async () => {
@@ -280,213 +73,44 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
     try {
       let tx: Transaction;
       if (type === TransactionType.AIRTIME) {
-        tx = await processAirtimePurchase(user, provider as Provider, Number(amount), phone, roundUp);
+        tx = await processAirtimePurchase(user, provider as Provider, Number(amount), phone, false);
       } else if (type === TransactionType.DATA) {
-        tx = await processDataPurchase(user, selectedBundle!, phone, roundUp);
+        tx = await processDataPurchase(user, selectedBundle!, phone, false);
       } else {
-        // Bills
         const baseAmt = type === TransactionType.CABLE ? selectedBundle!.price : Number(amount);
         const totalDeduct = baseAmt + BILL_SERVICE_FEE;
-        
         tx = await processBillPayment(user, type, provider as BillProvider, phone, totalDeduct, selectedBundle || undefined);
       }
       
       setLastTx(tx);
       setResultState('success');
       onSuccess();
-      
-      let successMessage = "Transaction successful.";
-      const provName = PROVIDER_LOGOS[provider as Provider] || provider;
-      const targetPhone = phone.split('').join(' '); 
-
-      if (type === TransactionType.DATA && selectedBundle) {
-          successMessage = `${provName} data worth of ${selectedBundle.dataAmount} has been sent to ${targetPhone} successfully.`;
-      } else if (type === TransactionType.AIRTIME) {
-          successMessage = `${provName} airtime worth of ${amount} Naira has been sent to ${targetPhone} successfully.`;
-      } else {
-          successMessage = `${type} payment for ${provName} was successful.`;
-      }
-      playNotification(successMessage);
-
     } catch (err: any) {
       setError(err.message || "Transaction failed");
       setResultState('error');
-      
-      let errorMsg = "Transaction failed due to insufficient balance or network issue.";
-      playNotification(errorMsg, 'error');
-
     } finally {
       setLoading(false);
     }
   };
-
-  const resetForm = () => {
-      setResultState('idle');
-      setAmount('');
-      setSelectedBundle(null);
-      setShowQr(false);
-      if (type !== TransactionType.DATA && type !== TransactionType.AIRTIME) {
-          setPhone(''); 
-          setCustomerName(null);
-      }
-      setLastTx(null);
-  };
-
-  const handleShareReceipt = async () => {
-      if (!lastTx) return;
-      const shareText = `JadanPay Receipt\nType: ${lastTx.type}\nAmount: ₦${lastTx.amount.toLocaleString()}\nRef: ${lastTx.reference}\nTo: ${lastTx.destinationNumber}\nStatus: Successful`;
-      if (navigator.share) {
-          try {
-              await navigator.share({ title: 'Transaction Receipt', text: shareText });
-          } catch (e) { console.log(e); }
-      } else {
-          navigator.clipboard.writeText(shareText);
-          alert("Receipt copied to clipboard!");
-      }
-  };
-
+  
   const getTransactionDetails = () => {
-     let cost = 0;
-     let desc = "";
-     let serviceFee = 0;
-
+     let cost = 0, desc = "", serviceFee = 0;
      if (type === TransactionType.AIRTIME || type === TransactionType.ELECTRICITY) {
          cost = Number(amount);
-         desc = type === TransactionType.ELECTRICITY ? "Electricity Token" : "Airtime Top-up";
+         desc = type === TransactionType.ELECTRICITY ? "Electricity" : "Airtime";
          if (type === TransactionType.ELECTRICITY) serviceFee = BILL_SERVICE_FEE;
      } else {
          cost = selectedBundle ? selectedBundle.price : 0;
          desc = selectedBundle ? selectedBundle.name : '';
          if (type === TransactionType.CABLE) serviceFee = BILL_SERVICE_FEE;
      }
-     
-     let roundupAmt = 0;
-     if (roundUp && (type === TransactionType.AIRTIME || type === TransactionType.DATA)) {
-        const nextHundred = Math.ceil(cost / 100) * 100;
-        if (nextHundred > cost) {
-            roundupAmt = nextHundred - cost;
-        }
-     }
-
-     return { cost, desc, total: cost + roundupAmt + serviceFee, roundupAmt, serviceFee };
-  };
-  
-  const getNetworkStatus = (p: string) => {
-      const isOnline = providerStatus[p] !== false;
-      const stat = providerStats[p] || 98; 
-
-      if (!isOnline) return { label: 'OFFLINE', color: 'bg-red-500', text: 'text-red-600', bars: 0, ping: '---' };
-      if (stat >= 90) return { label: 'EXCELLENT', color: 'bg-emerald-500', text: 'text-emerald-600', bars: 4, ping: '24ms' };
-      if (stat >= 70) return { label: 'GOOD', color: 'bg-green-500', text: 'text-green-600', bars: 3, ping: '45ms' };
-      if (stat >= 50) return { label: 'FAIR', color: 'bg-yellow-500', text: 'text-yellow-600', bars: 2, ping: '120ms' };
-      return { label: 'CRITICAL', color: 'bg-orange-500', text: 'text-orange-600', bars: 1, ping: '300ms' };
+     return { cost, desc, total: cost + serviceFee, serviceFee };
   };
 
   const details = getTransactionDetails();
 
-  if (resultState === 'success' && lastTx) {
-      return (
-          <div className="bg-white dark:bg-gray-900 rounded-2xl p-8 shadow-sm border border-gray-100 dark:border-gray-800 text-center animate-fade-in flex flex-col items-center justify-center min-h-[400px]">
-              <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center mb-6 shadow-lg shadow-green-200 dark:shadow-green-900/10">
-                  <Check size={40} strokeWidth={4} />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Transaction Successful!</h2>
-              <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-xs mx-auto">
-                  You successfully sent <span className="font-bold text-gray-900 dark:text-white">{lastTx.bundleName || `₦${lastTx.amount}`}</span> to <span className="font-mono text-gray-800 dark:text-gray-200">{lastTx.destinationNumber}</span>.
-              </p>
-              
-              {showQr && (
-                  <div className="mb-6 p-4 bg-white rounded-xl shadow-inner border border-gray-100 flex flex-col items-center animate-in zoom-in slide-in-from-bottom-2">
-                      <img 
-                          src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`https://jadanpay.com/receipt/${lastTx.id}`)}`}
-                          alt="Receipt QR"
-                          className="rounded-lg mix-blend-multiply"
-                      />
-                      <p className="text-[10px] text-gray-400 mt-2 font-bold uppercase tracking-wider">Scan to view receipt</p>
-                  </div>
-              )}
-
-              <div className="flex flex-col gap-3 w-full max-w-xs">
-                  <div className="grid grid-cols-2 gap-3">
-                      <button 
-                          onClick={handleShareReceipt}
-                          className="py-3 px-4 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-white rounded-xl font-bold hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center gap-2 text-sm"
-                      >
-                          <Share2 size={16}/> Share
-                      </button>
-                      <button 
-                          onClick={() => setShowQr(!showQr)}
-                          className={`py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 text-sm border transition-colors ${
-                              showQr 
-                                ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-700 dark:text-green-400' 
-                                : 'bg-gray-100 dark:bg-gray-800 border-transparent text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700'
-                          }`}
-                      >
-                          <QrCode size={16}/> {showQr ? 'Hide QR' : 'Code'}
-                      </button>
-                  </div>
-
-                  <button 
-                      onClick={() => onViewReceipt(lastTx.id)}
-                      className="w-full py-3 px-4 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-white rounded-xl font-bold hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center gap-2 text-sm"
-                  >
-                      <Receipt size={16}/> View Full Receipt
-                  </button>
-
-                  {(type === TransactionType.AIRTIME || type === TransactionType.DATA) && (
-                       <a 
-                          href={`tel:${lastTx.destinationNumber}`}
-                          className="w-full py-3.5 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 flex items-center justify-center gap-2 shadow-lg shadow-green-200 dark:shadow-green-900/20"
-                       >
-                           <Phone size={18}/> Call Recipient
-                       </a>
-                  )}
-                  
-                  <button 
-                      onClick={resetForm}
-                      className="w-full py-3 text-gray-400 hover:text-gray-600 dark:hover:text-white text-sm font-medium mt-2"
-                  >
-                      Perform Another Transaction
-                  </button>
-              </div>
-          </div>
-      );
-  }
-
-  if (resultState === 'error') {
-      return (
-          <div className="bg-white dark:bg-gray-900 rounded-2xl p-8 shadow-sm border border-gray-100 dark:border-gray-800 text-center animate-fade-in flex flex-col items-center justify-center min-h-[400px]">
-              <div className="w-20 h-20 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full flex items-center justify-center mb-6 shadow-lg shadow-red-200 dark:shadow-red-900/10">
-                  <X size={40} strokeWidth={4} />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Transaction Failed</h2>
-              <p className="text-red-500 mb-8 max-w-xs mx-auto text-sm font-medium bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border border-red-100 dark:border-red-800">
-                  {error || "Something went wrong. Please try again."}
-              </p>
-              
-              <div className="flex flex-col gap-3 w-full max-w-xs">
-                  <button 
-                      onClick={executeTransaction}
-                      disabled={loading}
-                      className="w-full py-3.5 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 flex items-center justify-center gap-2 shadow-lg shadow-red-200 dark:shadow-red-900/20"
-                  >
-                      {loading ? <Loader2 className="animate-spin"/> : <><RefreshCw size={18}/> Retry Transaction</>}
-                  </button>
-                  <button 
-                      onClick={() => setResultState('idle')}
-                      className="w-full py-3 text-gray-400 hover:text-gray-600 dark:hover:text-white text-sm font-medium mt-2"
-                  >
-                      Edit Details
-                  </button>
-              </div>
-          </div>
-      );
-  }
-
   return (
     <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 md:p-6 shadow-sm border border-gray-100 dark:border-gray-800 relative overflow-hidden transition-colors">
-      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-green-50 to-transparent dark:from-green-900/20 rounded-bl-full -z-0 opacity-50"></div>
-      
       <h2 className="text-lg font-bold mb-4 flex items-center gap-2 relative z-10 text-gray-900 dark:text-white">
         <Sparkles className="text-yellow-500" size={20} />
         Quick Pay
@@ -494,67 +118,79 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
 
       <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl mb-6 relative z-10 overflow-x-auto no-scrollbar">
         {[{ id: TransactionType.AIRTIME, icon: Smartphone, label: 'Airtime' }, { id: TransactionType.DATA, icon: Wifi, label: 'Data' }, { id: TransactionType.CABLE, icon: Tv, label: 'Cable' }, { id: TransactionType.ELECTRICITY, icon: Zap, label: 'Power' }].map(tab => (
-            <button key={tab.id} onClick={() => handleTabChange(tab.id)} className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-xs md:text-sm font-medium transition-all whitespace-nowrap ${type === tab.id ? 'bg-white dark:bg-gray-700 shadow-sm text-green-700 dark:text-green-400 scale-[1.02]' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}>
+            <button key={tab.id} onClick={() => handleTabChange(tab.id)} className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-xs md:text-sm font-medium transition-all whitespace-nowrap ${type === tab.id ? 'bg-white dark:bg-gray-700 shadow-sm text-green-700 dark:text-green-400' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}>
               <tab.icon size={16} /> {tab.label}
             </button>
         ))}
       </div>
 
       <form onSubmit={handleFormSubmit} className="space-y-5 relative z-10 animate-fade-in">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-4 gap-3">
             {(type === TransactionType.AIRTIME || type === TransactionType.DATA ? Object.values(Provider) : type === TransactionType.CABLE ? BILL_PROVIDERS.CABLE : BILL_PROVIDERS.ELECTRICITY).map((p) => {
                 const isSelected = provider === p;
-                return ( <button key={p} type="button" onClick={() => setProvider(p)} className={`relative overflow-hidden rounded-xl transition-all duration-300 group border flex flex-col min-h-[80px] ${isSelected ? 'border-green-500 bg-green-50 dark:bg-green-900/20 ring-1 ring-green-500' : 'border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900'}`}>{/* ... */}</button> )
+                return (
+                    <button
+                        key={p}
+                        type="button"
+                        onClick={() => setProvider(p)}
+                        className={`relative overflow-hidden rounded-xl transition-all duration-300 group border-2 flex items-center justify-center min-h-[60px] ${isSelected ? 'border-green-500 bg-green-50 dark:bg-green-900/20' : 'border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900'}`}
+                    >
+                        <img src={PROVIDER_IMAGES[p]} alt={p} className="h-8 object-contain" />
+                    </button>
+                )
             })}
         </div>
         
-        {/* DATA BUNDLES with ENHANCED SELECTION UI */}
-        {type === TransactionType.DATA && (
-             <div className="animate-fade-in">
-                 <div className="mb-4">{/* Plan Type Select */}</div>
-                 <div className="grid grid-cols-2 gap-3 max-h-60 overflow-y-auto pr-1">
-                    {bundles.filter(b => b.provider === provider && b.type === selectedPlanType).map((b) => {
-                        const isUnavailable = b.isAvailable === false;
-                        const isSelected = selectedBundle?.id === b.id;
-                        return (
-                        <div
-                            key={b.id}
-                            onClick={() => {
-                                if (isUnavailable) { setError(`${b.dataAmount} plan is currently unavailable.`); return; }
-                                setSelectedBundle(b); setError(null);
-                            }}
-                            className={`group relative p-3 rounded-2xl border-2 cursor-pointer transition-all duration-300 ease-out overflow-hidden flex flex-col justify-between min-h-[140px] ${
-                                isUnavailable ? 'opacity-50 cursor-not-allowed bg-gray-50 dark:bg-gray-800/50' :
-                                isSelected ? 'border-green-600 bg-green-50 dark:bg-green-900/20 shadow-lg scale-[1.02]' : 
-                                'border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-green-300 dark:hover:border-green-600'
-                            }`}
-                        >
-                             {isUnavailable && <div className="absolute top-2 right-2"><Ban size={16} className="text-gray-400"/></div>}
-                             {isSelected && !isUnavailable && (
-                                <div className="absolute top-2 left-2 bg-green-600 text-white rounded-full p-0.5 shadow-sm animate-in zoom-in duration-200">
-                                    <Check size={12} strokeWidth={4} />
-                                </div>
-                             )}
-                            <div className={`text-lg font-black text-center ${isUnavailable ? 'text-gray-400' : 'text-gray-800 dark:text-white'}`}>{b.dataAmount}</div>
-                            <div className="text-xs text-gray-400 text-center">{b.validity}</div>
-                            <div className={`mt-2 font-bold text-center py-2 rounded-lg transition-all ${
-                                isSelected && !isUnavailable ? 'bg-green-600 text-white shadow-md' :
-                                isUnavailable ? 'bg-gray-200 dark:bg-gray-700 text-gray-400' :
-                                'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 group-hover:bg-green-100 dark:group-hover:bg-green-900/50'
-                            }`}>
-                                ₦{b.price.toLocaleString()}
-                            </div>
-                        </div>
-                    )})}
-                 </div>
-             </div>
+        <div>
+          <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wider">Phone Number</label>
+          <input
+            type="tel"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 11))}
+            placeholder="080..."
+            className="w-full p-3 bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all font-mono text-lg text-gray-900 dark:text-white placeholder:text-gray-400"
+            required
+          />
+        </div>
+
+        {type === TransactionType.AIRTIME && (
+             <div>
+                 <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wider">Amount (₦)</label>
+                 <input
+                  type="number"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value === '' ? '' : Number(e.target.value))}
+                  placeholder="100 - 50,000"
+                  className="w-full p-3 bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-green-500 outline-none font-mono text-lg text-gray-900 dark:text-white"
+                  required
+                />
+            </div>
         )}
         
-        {/* Other form elements are assumed to be correct from previous steps */}
-        {/* ... */}
-
-        <button type="submit" className="w-full py-4 bg-green-700 text-white rounded-xl font-bold">Pay Now</button>
+        {error && <p className="text-red-500 text-sm">{error}</p>}
+        
+        <button type="submit" disabled={loading} className="w-full py-4 bg-green-700 text-white rounded-xl font-bold text-lg shadow-xl shadow-green-700/20 hover:bg-green-800 transition-all">
+          {loading ? <Loader2 className="animate-spin mx-auto"/> : 'Continue'}
+        </button>
       </form>
+      
+      {showConfirm && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-900 w-full max-w-sm rounded-2xl p-6 shadow-2xl animate-fade-in-up">
+            <h3 className="text-lg font-bold mb-4 text-gray-900 dark:text-white">Confirm</h3>
+             <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 space-y-2 mb-6 border border-gray-100 dark:border-gray-700">
+                <div className="flex justify-between text-sm"><span className="text-gray-500">Service:</span><span className="font-medium text-gray-900 dark:text-white">{details.desc}</span></div>
+                <div className="flex justify-between text-sm"><span className="text-gray-500">To:</span><span className="font-mono text-gray-900 dark:text-white">{phone}</span></div>
+                <div className="h-px bg-gray-200 dark:bg-gray-700 my-2"></div>
+                <div className="flex justify-between font-bold text-lg"><span className="text-gray-800 dark:text-white">Total:</span><span className="text-green-700 dark:text-green-400">₦{details.total.toLocaleString()}</span></div>
+             </div>
+            <div className="flex gap-3">
+                 <button onClick={() => setShowConfirm(false)} className="flex-1 py-3 bg-gray-100 dark:bg-gray-700 rounded-xl font-medium">Cancel</button>
+                  <button onClick={executeTransaction} className="flex-1 py-3 bg-green-700 text-white rounded-xl font-bold">Pay</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
