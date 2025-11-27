@@ -1,4 +1,5 @@
-import React, { ReactNode } from 'react';
+
+import React, { ReactNode, ErrorInfo } from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 
@@ -8,18 +9,18 @@ interface ErrorBoundaryProps {
 
 interface ErrorBoundaryState {
   hasError: boolean;
-  error: any;
+  error: Error | null;
 }
 
 // Simple Error Boundary to catch crashes and prevent white screen
 class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
   public state: ErrorBoundaryState = { hasError: false, error: null };
 
-  static getDerivedStateFromError(error: any) {
+  static getDerivedStateFromError(error: Error) {
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: any, errorInfo: any) {
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error("App Crash:", error, errorInfo);
   }
 
@@ -80,7 +81,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
       );
     }
 
-    return (this as any).props.children;
+    return this.props.children;
   }
 }
 
@@ -88,8 +89,7 @@ const renderApp = () => {
     try {
         const rootElement = document.getElementById('root');
         if (!rootElement) {
-            console.error("Root element not found! Retrying...");
-            // Create root if missing (failsafe)
+            console.error("Root element not found! Creating one...");
             const rootNode = document.createElement('div');
             rootNode.id = 'root';
             document.body.appendChild(rootNode);
@@ -114,7 +114,7 @@ const renderApp = () => {
         }
     } catch (e) {
         console.error("Failed to render app root:", e);
-        document.body.innerHTML = '<div style="padding:20px">Critical Error: Failed to start application. check console.</div>';
+        document.body.innerHTML = '<div style="padding:20px">Critical Error: Failed to start application. Check console.</div>';
     }
 };
 

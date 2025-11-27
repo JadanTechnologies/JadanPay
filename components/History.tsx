@@ -54,9 +54,7 @@ export const History: React.FC<HistoryProps> = ({ user, highlightId }) => {
   const handleShare = async () => {
     if (!selectedTx) return;
 
-    // Simulate a deep link for the receipt
     const receiptLink = `https://jadanpay.com/receipt/${selectedTx.id}`;
-    
     const shareData = {
       title: 'JadanPay Transaction Receipt',
       text: `Payment Receipt\nAmount: ₦${selectedTx.amount.toLocaleString()}\nRef: ${selectedTx.reference}\nDate: ${new Date(selectedTx.date).toLocaleDateString()}\nStatus: Successful`,
@@ -71,7 +69,6 @@ export const History: React.FC<HistoryProps> = ({ user, highlightId }) => {
             console.log("Share canceled or failed", error);
         }
     } else {
-        // Fallback: Copy Link
         const copyText = `${shareData.text}\nView: ${shareData.url}`;
         navigator.clipboard.writeText(copyText);
         setShareState('copied');
@@ -83,15 +80,11 @@ export const History: React.FC<HistoryProps> = ({ user, highlightId }) => {
   const handleCopyRef = (ref: string) => {
       navigator.clipboard.writeText(ref);
       playNotification("Reference copied");
-      setShareState('copied');
-      setTimeout(() => setShareState('idle'), 1500);
   };
 
   const handleCopyToken = (token: string) => {
       navigator.clipboard.writeText(token);
       playNotification("Token copied");
-      setShareState('copied');
-      setTimeout(() => setShareState('idle'), 1500);
   };
 
   const filteredTransactions = transactions.filter(t => 
@@ -167,31 +160,29 @@ export const History: React.FC<HistoryProps> = ({ user, highlightId }) => {
         ))}
       </div>
 
-      {/* Enhanced Receipt Modal - FIXED SIZE */}
+      {/* FIXED SIZE RECEIPT MODAL */}
       {selectedTx && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300 overflow-y-auto">
           <div className="w-full max-w-[380px] my-4 relative animate-in zoom-in-95 slide-in-from-bottom-8 duration-300 max-h-[90vh] flex flex-col">
              
-             {/* Close Button - Sticky */}
-             <button 
-                onClick={() => setSelectedTx(null)}
-                className="absolute -top-12 right-0 p-2 bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors backdrop-blur-sm z-50"
-             >
-                <X size={24} />
-             </button>
-
              {/* Receipt Card */}
              <div className="bg-white dark:bg-gray-800 rounded-3xl overflow-hidden shadow-2xl relative flex flex-col overflow-y-auto">
                  
-                 {/* Receipt Header Pattern */}
-                 <div className="bg-green-600 p-8 pt-10 text-center relative shrink-0">
+                 {/* Header with Close Button */}
+                 <div className="bg-green-600 p-6 pt-8 text-center relative shrink-0">
+                     <button 
+                        onClick={() => setSelectedTx(null)}
+                        className="absolute top-4 right-4 p-2 bg-white/20 hover:bg-white/30 text-white rounded-full transition-colors z-50"
+                     >
+                        <X size={20} />
+                     </button>
                      <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_2px_2px,#fff_1px,transparent_0)] [background-size:16px_16px]"></div>
                      <div className="relative z-10 flex flex-col items-center">
-                         <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-4 shadow-lg animate-bounce">
-                            <Check size={32} className="text-green-600" strokeWidth={4} />
+                         <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center mb-3 shadow-lg animate-bounce">
+                            <Check size={28} className="text-green-600" strokeWidth={4} />
                          </div>
-                         <h3 className="text-white font-black text-xl tracking-tight uppercase">Transaction Successful</h3>
-                         <p className="text-green-100 text-sm mt-1 font-medium opacity-90">{new Date(selectedTx.date).toLocaleString()}</p>
+                         <h3 className="text-white font-black text-lg tracking-tight uppercase">Transaction Successful</h3>
+                         <p className="text-green-100 text-xs mt-1 font-medium opacity-90">{new Date(selectedTx.date).toLocaleString()}</p>
                      </div>
                  </div>
 
@@ -203,14 +194,12 @@ export const History: React.FC<HistoryProps> = ({ user, highlightId }) => {
 
                  {/* Receipt Body */}
                  <div className="px-8 pb-8 bg-white dark:bg-gray-800 text-center flex-1 overflow-y-auto">
-                      <div className="mb-8">
+                      <div className="mb-6">
                           <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Total Paid</p>
-                          <h1 className="text-4xl font-black text-gray-900 dark:text-white tracking-tighter">
+                          <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tighter">
                              ₦{selectedTx.amount.toLocaleString()}
                           </h1>
                       </div>
-
-                      {/* Transaction Details */}
                       <div className="bg-gray-50 dark:bg-gray-700/30 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden text-left">
                          <div className="p-4 border-b border-gray-200 dark:border-gray-600 flex justify-between items-center bg-gray-100/50 dark:bg-gray-800/50">
                              <div>
@@ -219,7 +208,6 @@ export const History: React.FC<HistoryProps> = ({ user, highlightId }) => {
                              </div>
                              <button onClick={() => handleCopyRef(selectedTx.reference)} className="text-gray-400 hover:text-green-600"><Copy size={14}/></button>
                          </div>
-
                          <div className="p-4 space-y-3">
                              <div className="flex justify-between items-center">
                                  <span className="text-sm text-gray-500 dark:text-gray-400">Provider</span>
@@ -230,34 +218,25 @@ export const History: React.FC<HistoryProps> = ({ user, highlightId }) => {
                                      <span className="font-bold text-gray-900 dark:text-white text-sm">{selectedTx.provider || 'Wallet'}</span>
                                  </div>
                              </div>
-
                              <div className="flex justify-between items-center">
                                  <span className="text-sm text-gray-500 dark:text-gray-400">Recipient</span>
                                  <span className="font-mono font-bold text-gray-900 dark:text-white text-sm">{selectedTx.destinationNumber || selectedTx.userId}</span>
                              </div>
-                             
-                             {selectedTx.bundleName && (
-                                 <div className="flex justify-between items-center">
-                                     <span className="text-sm text-gray-500 dark:text-gray-400">Plan</span>
-                                     <span className="font-medium text-gray-900 dark:text-white text-sm">{selectedTx.bundleName}</span>
-                                 </div>
-                             )}
                          </div>
-                         
                          {selectedTx.meterToken && (
                              <div className="border-t border-dashed border-gray-200 dark:border-gray-600 bg-green-50/50 dark:bg-green-900/10 p-4 text-center">
                                  <span className="block text-green-700 dark:text-green-400 font-bold text-[10px] uppercase mb-1">Electricity Token</span>
                                  <span className="font-mono font-black text-xl text-gray-900 dark:text-white tracking-[0.2em] block">{selectedTx.meterToken}</span>
+                                 <button onClick={() => handleCopyToken(selectedTx.meterToken!)} className="text-green-600 hover:text-green-700 dark:text-green-400 text-xs mt-1 flex items-center justify-center gap-1 mx-auto font-bold"><Copy size={12}/> Copy Token</button>
                              </div>
                          )}
                       </div>
-
                       <div className="grid grid-cols-2 gap-4 mt-8">
-                          <button onClick={handleShare} className="flex flex-col items-center justify-center gap-2 py-4 rounded-2xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-gray-600 dark:text-gray-300">
+                          <button onClick={handleShare} className="flex flex-col items-center justify-center gap-2 py-4 rounded-2xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300">
                              <Share2 size={20} className={shareState === 'copied' ? 'text-green-500' : ''}/>
                              <span className="text-xs font-bold">{shareState === 'copied' ? 'Copied!' : 'Share'}</span>
                           </button>
-                          <button onClick={() => alert("Saved")} className="flex flex-col items-center justify-center gap-2 py-4 bg-gray-900 text-white dark:bg-black rounded-2xl hover:scale-[1.02] active:scale-95 transition-all">
+                          <button onClick={() => alert("Saved")} className="flex flex-col items-center justify-center gap-2 py-4 bg-gray-900 text-white dark:bg-black rounded-2xl">
                              <Download size={20}/>
                              <span className="text-xs font-bold">Save</span>
                           </button>

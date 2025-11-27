@@ -70,13 +70,13 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({ user, onCl
             
             await MockDB.submitKyc(user.id, docType, docUrl, faceImage, docNumber);
             
-            playNotification("Verification is pending is successful.");
+            playNotification("Verification is pending admin approval.");
             
             onSuccess();
             alert("Verification submitted successfully! Admin will review shortly.");
             onClose();
         } catch (e) {
-            playNotification("Verification failed please try again.", "error");
+            playNotification("Verification failed, please try again.", "error");
             alert("Submission failed.");
         } finally {
             setIsSubmitting(false);
@@ -84,7 +84,7 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({ user, onCl
     };
 
     return (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
             <div className="bg-white dark:bg-gray-900 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
                 <div className="p-4 border-b dark:border-gray-800 flex justify-between items-center bg-gray-50 dark:bg-gray-950">
                     <h3 className="font-bold text-lg text-gray-900 dark:text-white">Verify Identity</h3>

@@ -42,11 +42,11 @@ export const PROVIDER_IMAGES: Record<string, string> = {
   [BillProvider.DSTV]: 'https://upload.wikimedia.org/wikipedia/en/a/a3/DStv_Logo.png',
   [BillProvider.GOTV]: 'https://upload.wikimedia.org/wikipedia/en/thumb/e/e3/GOtv_Logo.png/220px-GOtv_Logo.png',
   [BillProvider.STARTIMES]: 'https://upload.wikimedia.org/wikipedia/commons/e/e6/StarTimes_Logo.png',
-  [BillProvider.IKEDC]: '',
-  [BillProvider.EKEDC]: '',
-  [BillProvider.AEDC]: '',
-  [BillProvider.IBEDC]: '',
-  [BillProvider.KEDCO]: '',
+  [BillProvider.IKEDC]: 'https://pbs.twimg.com/profile_images/1356178877099528193/WdfiL9_h_400x400.jpg',
+  [BillProvider.EKEDC]: 'https://pbs.twimg.com/profile_images/1181528652848553984/u-S9_j9b_400x400.jpg',
+  [BillProvider.AEDC]: 'https://pbs.twimg.com/profile_images/1612396718948139009/6XZ4X6_I_400x400.jpg',
+  [BillProvider.IBEDC]: 'https://pbs.twimg.com/profile_images/1326469626596958208/9qJ_qg4__400x400.jpg',
+  [BillProvider.KEDCO]: 'https://pbs.twimg.com/profile_images/1399657253940248579/k5_j5_j5_400x400.jpg',
 };
 
 export const BILL_PROVIDERS = {
@@ -57,36 +57,25 @@ export const BILL_PROVIDERS = {
 // IDs updated to reflect typical API provider IDs (e.g. BilalSadaSub uses numeric IDs for data)
 export const SAMPLE_BUNDLES: Bundle[] = [
   // MTN - Typical Plan IDs: 7 (1.5GB), 8 (2GB), etc.
-  { id: '1001', planId: '7', provider: Provider.MTN, type: PlanType.SME, name: '1.5GB SME Monthly', price: 1000, costPrice: 950, dataAmount: '1.5GB', validity: '30 Days', isBestValue: true, isAvailable: true },
-  { id: '1002', planId: '8', provider: Provider.MTN, type: PlanType.SME, name: '2GB SME Weekly', price: 500, costPrice: 470, dataAmount: '2GB', validity: '7 Days', isAvailable: false },
-  { id: '1003', planId: '11', provider: Provider.MTN, type: PlanType.CORPORATE, name: '10GB Corporate', price: 3000, costPrice: 2800, dataAmount: '10GB', validity: '30 Days', isAvailable: true },
-  { id: '1004', planId: '15', provider: Provider.MTN, type: PlanType.GIFTING, name: '5GB Gifting', price: 2500, costPrice: 2400, dataAmount: '5GB', validity: '30 Days', isAvailable: true },
+  { id: '1001', planId: '7', provider: Provider.MTN, type: PlanType.SME, name: '1.5GB SME Monthly', price: 1000, costPrice: 950, resellerPrice: 980, dataAmount: '1.5GB', validity: '30 Days', isBestValue: true, isAvailable: true },
+  { id: '1002', planId: '8', provider: Provider.MTN, type: PlanType.SME, name: '2GB SME Weekly', price: 500, costPrice: 470, resellerPrice: 480, dataAmount: '2GB', validity: '7 Days', isAvailable: false },
+  { id: '1003', planId: '11', provider: Provider.MTN, type: PlanType.CORPORATE, name: '10GB Corporate', price: 3000, costPrice: 2800, resellerPrice: 2900, dataAmount: '10GB', validity: '30 Days', isAvailable: true },
+  { id: '1004', planId: '15', provider: Provider.MTN, type: PlanType.GIFTING, name: '5GB Gifting', price: 2500, costPrice: 2400, resellerPrice: 2450, dataAmount: '5GB', validity: '30 Days', isAvailable: true },
   
   // GLO
-  { id: '2001', planId: '24', provider: Provider.GLO, type: PlanType.GIFTING, name: '1.8GB Monthly', price: 1000, costPrice: 900, dataAmount: '1.8GB', validity: '30 Days', isAvailable: true },
-  { id: '2002', planId: '25', provider: Provider.GLO, type: PlanType.CORPORATE, name: '7GB Monthly', price: 2500, costPrice: 2350, dataAmount: '7GB', validity: '30 Days', isBestValue: true, isAvailable: true },
+  { id: '2001', planId: '24', provider: Provider.GLO, type: PlanType.GIFTING, name: '1.8GB Monthly', price: 1000, costPrice: 900, resellerPrice: 950, dataAmount: '1.8GB', validity: '30 Days', isAvailable: true },
+  { id: '2002', planId: '25', provider: Provider.GLO, type: PlanType.CORPORATE, name: '7GB Monthly', price: 2500, costPrice: 2350, resellerPrice: 2400, dataAmount: '7GB', validity: '30 Days', isBestValue: true, isAvailable: true },
   
   // AIRTEL
-  { id: '3001', planId: '32', provider: Provider.AIRTEL, type: PlanType.CORPORATE, name: '1.5GB Corporate', price: 1000, costPrice: 960, dataAmount: '1.5GB', validity: '30 Days', isAvailable: true },
-  { id: '3002', planId: '34', provider: Provider.AIRTEL, type: PlanType.GIFTING, name: '4.5GB Gifting', price: 2000, costPrice: 1900, dataAmount: '4.5GB', validity: '30 Days', isAvailable: true },
+  { id: '3001', planId: '32', provider: Provider.AIRTEL, type: PlanType.CORPORATE, name: '1.5GB Corporate', price: 1000, costPrice: 960, resellerPrice: 980, dataAmount: '1.5GB', validity: '30 Days', isAvailable: true },
   
   // 9MOBILE
-  { id: '4001', planId: '40', provider: Provider.NMOBILE, type: PlanType.SME, name: '1.5GB SME', price: 1000, costPrice: 920, dataAmount: '1.5GB', validity: '30 Days', isAvailable: true },
+  { id: '4001', planId: '40', provider: Provider.NMOBILE, type: PlanType.SME, name: '1.5GB SME', price: 1000, costPrice: 920, resellerPrice: 950, dataAmount: '1.5GB', validity: '30 Days', isAvailable: true },
 ];
 
 export const CABLE_PLANS: Bundle[] = [
-    // DSTV
-    { id: 'dstv1', planId: 'dstv-padi', provider: BillProvider.DSTV, type: 'CABLE', name: 'DSTV Padi', price: 2950, costPrice: 2900, dataAmount: 'Padi', validity: '30 Days', isAvailable: true },
-    { id: 'dstv2', planId: 'dstv-yanga', provider: BillProvider.DSTV, type: 'CABLE', name: 'DSTV Yanga', price: 4200, costPrice: 4150, dataAmount: 'Yanga', validity: '30 Days', isAvailable: true },
-    { id: 'dstv3', planId: 'dstv-confam', provider: BillProvider.DSTV, type: 'CABLE', name: 'DSTV Confam', price: 7400, costPrice: 7300, dataAmount: 'Confam', validity: '30 Days', isAvailable: true, isBestValue: true },
-    { id: 'dstv4', planId: 'dstv-premium', provider: BillProvider.DSTV, type: 'CABLE', name: 'DSTV Premium', price: 29500, costPrice: 29400, dataAmount: 'Premium', validity: '30 Days', isAvailable: true },
-    // GOtv
-    { id: 'gotv1', planId: 'gotv-smallie', provider: BillProvider.GOTV, type: 'CABLE', name: 'GOtv Smallie', price: 1300, costPrice: 1250, dataAmount: 'Smallie', validity: '30 Days', isAvailable: true },
-    { id: 'gotv2', planId: 'gotv-jinja', provider: BillProvider.GOTV, type: 'CABLE', name: 'GOtv Jinja', price: 2700, costPrice: 2650, dataAmount: 'Jinja', validity: '30 Days', isAvailable: true },
-    { id: 'gotv3', planId: 'gotv-jolli', provider: BillProvider.GOTV, type: 'CABLE', name: 'GOtv Jolli', price: 3950, costPrice: 3900, dataAmount: 'Jolli', validity: '30 Days', isAvailable: true, isBestValue: true },
-    // StarTimes
-    { id: 'startimes1', planId: 'nova', provider: BillProvider.STARTIMES, type: 'CABLE', name: 'Nova', price: 1200, costPrice: 1150, dataAmount: 'Nova', validity: '30 Days', isAvailable: true },
-    { id: 'startimes2', planId: 'basic', provider: BillProvider.STARTIMES, type: 'CABLE', name: 'Basic', price: 2600, costPrice: 2550, dataAmount: 'Basic', validity: '30 Days', isAvailable: true },
+    { id: 'dstv1', planId: 'dstv-padi', provider: BillProvider.DSTV, type: 'CABLE', name: 'DSTV Padi', price: 2950, costPrice: 2950, resellerPrice: 2950, dataAmount: 'Padi', validity: '30 Days', isAvailable: true },
+    { id: 'gotv1', planId: 'gotv-smallie', provider: BillProvider.GOTV, type: 'CABLE', name: 'GOtv Smallie', price: 1300, costPrice: 1300, resellerPrice: 1300, dataAmount: 'Smallie', validity: '30 Days', isAvailable: true },
 ];
 
 export const MOCK_USERS_DATA = [
@@ -98,7 +87,8 @@ export const MOCK_USERS_DATA = [
     role: UserRole.USER,
     balance: 5000,
     savings: 250,
-    isVerified: true,
+    // CRITICAL FIX: Set to false to allow testing of verification flow.
+    isVerified: false, 
     status: UserStatus.ACTIVE,
     ipAddress: '197.210.45.22',
     os: 'Android 13',

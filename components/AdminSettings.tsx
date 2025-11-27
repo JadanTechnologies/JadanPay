@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Save, Globe, Server, CreditCard, Database, Plus, Trash2, Edit2, Check, X, Upload, Mail, Phone, AlertTriangle, Key, Users, Trophy, Gift, MessageSquare, Bell, Send, Smartphone, Activity, Link as LinkIcon, Download, Wifi, Clock, Play, Pause, Lock, DollarSign, Image as ImageIcon, Shield } from 'lucide-react';
+import { Save, Globe, Server, CreditCard, Database, Plus, Trash2, Edit2, Check, X, Upload, Mail, Phone, AlertTriangle, Key, Users, Trophy, Gift, MessageSquare, Bell, Send, Smartphone, Activity, Link as LinkIcon, Download, Wifi, Clock, Play, Pause, Lock, DollarSign, Image as ImageIcon } from 'lucide-react';
 import { Provider, Bundle, PlanType, User, CronJob } from '../types';
 import { PROVIDER_LOGOS } from '../constants';
 import { SettingsService, AppSettings, ApiVendor, EmailProvider, PushProvider } from '../services/settingsService';
@@ -389,7 +389,7 @@ export const AdminSettings: React.FC = () => {
                           <div className="space-y-4">
                               {/* Paystack */}
                               <div className="p-4 bg-gray-50 dark:bg-gray-800 border dark:border-gray-700 rounded-xl">
-                                  <label className="flex items-center gap-2 mb-2 font-bold text-blue-600">
+                                  <label className="flex items-center gap-2 mb-2 font-bold text-blue-600 cursor-pointer">
                                       <input type="checkbox" checked={settings.enablePaystack} onChange={e => setSettings({...settings, enablePaystack: e.target.checked})} className="w-4 h-4 rounded border-gray-300"/> Paystack
                                   </label>
                                   {settings.enablePaystack && (
@@ -697,7 +697,21 @@ export const AdminSettings: React.FC = () => {
                               <label className="text-[10px] uppercase font-bold text-gray-500">Reseller Price</label>
                               <input type="number" className="w-full p-3 border dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-950 dark:text-white" placeholder="0.00" value={editingBundle.resellerPrice} onChange={e => setEditingBundle({...editingBundle, resellerPrice: Number(e.target.value)})} />
                           </div>
+                          <div>
+                              <label className="text-[10px] uppercase font-bold text-gray-500">API Cost Price</label>
+                              <input type="number" className="w-full p-3 border dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-950 dark:text-white" placeholder="0.00" value={editingBundle.costPrice} onChange={e => setEditingBundle({...editingBundle, costPrice: Number(e.target.value)})} />
+                          </div>
                       </div>
+                      
+                      {/* Profit Indicator */}
+                      <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800">
+                          <p className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase mb-1">Estimated Profit</p>
+                          <div className="flex justify-between text-xs">
+                              <span>User Sale: <span className="font-bold text-green-600">₦{((editingBundle.price || 0) - (editingBundle.costPrice || 0)).toLocaleString()}</span></span>
+                              <span>Reseller Sale: <span className="font-bold text-green-600">₦{((editingBundle.resellerPrice || 0) - (editingBundle.costPrice || 0)).toLocaleString()}</span></span>
+                          </div>
+                      </div>
+
                       <div className="flex gap-2">
                           <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
                               <input type="checkbox" checked={editingBundle.isAvailable} onChange={e => setEditingBundle({...editingBundle, isAvailable: e.target.checked})}/> Available
