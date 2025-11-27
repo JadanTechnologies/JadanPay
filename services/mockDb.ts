@@ -23,7 +23,7 @@ interface DatabaseSchema {
 }
 
 // Default Data
-const DEFAULT_BUNDLES: Bundle[] = SAMPLE_BUNDLES.map(b => ({...b, planId: b.id, resellerPrice: b.price * 0.95}));
+const DEFAULT_BUNDLES: Bundle[] = SAMPLE_BUNDLES.map(b => ({...b, planId: b.id, resellerPrice: b.price * 0.95, costPrice: b.price * 0.9}));
 const DEFAULT_USERS: User[] = MOCK_USERS_DATA.map(u => ({
     ...u,
     walletNumber: u.id === 'u1' ? '2039485712' : u.id === 'u2' ? '2058392011' : '0000000000',
