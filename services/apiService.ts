@@ -59,16 +59,16 @@ export const ApiService = {
         console.log(`[${vendor} Integration] POST ${baseUrl}${endpoint}`);
         console.log("Payload:", payload);
 
-        // DEMO MODE CHECK
-        if (!apiKey) {
-            console.warn(`[Demo Mode] No API Key for ${vendor}. Simulating success.`);
+        // DEMO MODE CHECK: Validate that the API key exists and is a non-empty string.
+        if (!apiKey || typeof apiKey !== 'string' || apiKey.trim() === '') {
+            console.warn(`[Demo Mode] API Key for ${vendor} is missing or empty. Simulating success.`);
             await new Promise(r => setTimeout(r, 1000));
             
             return { 
                 success: true, 
                 data: { 
                     status: 'success', 
-                    message: 'Transaction successful (Demo Mode)', 
+                    message: 'Transaction successful (Demo Mode - No API Key)', 
                     ref: `DEMO-${Math.floor(Math.random() * 10000000)}`,
                     api_response: { ...payload, timestamp: new Date().toISOString(), note: "Simulated Response" }
                 } 

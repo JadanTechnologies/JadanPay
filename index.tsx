@@ -13,13 +13,10 @@ interface ErrorBoundaryState {
 
 // Simple Error Boundary to catch crashes and prevent white screen
 class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  // FIX: The error "Property 'props' does not exist on type 'ErrorBoundary'" in a React class component is unusual.
-  // Replacing the class property state initialization with a traditional constructor that calls `super(props)`.
-  // This is a more explicit and robust way to initialize the component, ensuring that `this.props` is correctly set up and recognized by TypeScript.
-  constructor(props: ErrorBoundaryProps) {
-    super(props);
-    this.state = { hasError: false, error: null };
-  }
+  // FIX: Replaced the constructor with class property state initialization.
+  // This is a more modern and concise syntax, and it resolves the unusual TypeScript errors
+  // where `state` and `props` were not being recognized on the component instance.
+  state: ErrorBoundaryState = { hasError: false, error: null };
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     return { hasError: true, error };
