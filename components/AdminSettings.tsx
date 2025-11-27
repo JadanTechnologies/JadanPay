@@ -1,6 +1,4 @@
-
 import React, { useState, useEffect, useRef } from 'react';
-// FIX: Import `Zap` icon from lucide-react.
 import { Save, Globe, Server, CreditCard, Database, Plus, Trash2, Edit2, Check, X, Upload, Mail, Phone, AlertTriangle, Key, Users, Trophy, Gift, MessageSquare, Bell, Send, Smartphone, Activity, Link as LinkIcon, Download, Wifi, Clock, Play, Pause, Lock, DollarSign, Image as ImageIcon, Power, Loader2, ArrowDown, ArrowUp, Zap } from 'lucide-react';
 import { Provider, Bundle, PlanType, User, CronJob } from '../types';
 import { PROVIDER_LOGOS } from '../constants';
@@ -59,6 +57,27 @@ export const AdminSettings: React.FC = () => {
       const data = await MockDB.getCronJobs();
       setCronJobs(data);
   };
+
+  const handleSettingChange = (field: keyof AppSettings, value: any) => {
+    if (settings) {
+      setSettings({ ...settings, [field]: value });
+    }
+  };
+
+  const handleNestedChange = (parent: keyof AppSettings, field: string, value: any, isNumeric: boolean = false) => {
+    if (settings) {
+      const finalValue = isNumeric ? Number(value) : value;
+      setSettings({
+        ...settings,
+        [parent]: {
+          // @ts-ignore
+          ...(settings[parent] || {}),
+          [field]: finalValue,
+        },
+      });
+    }
+  };
+
 
   const handleSave = async () => {
     if (!settings) return;
@@ -223,6 +242,39 @@ export const AdminSettings: React.FC = () => {
       }
   };
 
+  const SettingsCard: React.FC<{title: string, icon: any, children: React.ReactNode}> = ({ title, icon: Icon, children }) => (
+    <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
+      <h3 className="font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2">
+        <Icon size={20} className="text-green-500" /> {title}
+      </h3>
+      <div className="space-y-4">{children}</div>
+    </div>
+  );
+
+  const InputField: React.FC<{label: string, value: any, onChange: (e: any) => void, type?: string, placeholder?: string}> = ({ label, value, onChange, type = 'text', placeholder = '' }) => (
+    <div>
+      <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">{label}</label>
+      <input 
+        type={type}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        className="w-full p-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-green-500 outline-none text-gray-900 dark:text-white transition-colors"
+      />
+    </div>
+  );
+
+  const ToggleSwitch: React.FC<{label: string, enabled: boolean, onChange: (e: any) => void}> = ({ label, enabled, onChange }) => (
+    <label className="flex justify-between items-center cursor-pointer p-3 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-600">
+      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{label}</span>
+      <div className="relative">
+        <input type="checkbox" className="sr-only" checked={enabled} onChange={onChange} />
+        <div className={`block w-10 h-6 rounded-full transition-colors ${enabled ? 'bg-green-600' : 'bg-gray-200 dark:bg-gray-600'}`}></div>
+        <div className={`dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${enabled ? 'translate-x-4' : ''}`}></div>
+      </div>
+    </label>
+  );
+
   if (!settings) return <div className="p-10 text-center dark:text-white">Loading...</div>;
 
   return (
@@ -252,12 +304,152 @@ export const AdminSettings: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <div className="lg:col-span-3 space-y-6">
               
-              {/* ... (All other tabs from previous implementation) ... */}
-              {activeTab !== 'health' && (
-                   <div className="bg-white dark:bg-gray-900 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
-                        <p className="text-gray-500 dark:text-gray-400">Content for the '{activeTab}' tab is handled in other parts of the application code.</p>
-                   </div>
-              )}
+             {activeTab === 'general' && (
+                <SettingsCard title="General Settings" icon={Globe}>
+                    <ToggleSwitch label="Maintenance Mode" enabled={settings.maintenanceMode} onChange={e => handleSettingChange('maintenanceMode', e.target.checked)} />
+                    <InputField label="App Name" value={settings.appName} onChange={e => handleSettingChange('appName', e.target.value)} />
+                    <InputField label="Support Email" value={settings.supportEmail} onChange={e => handleSettingChange('supportEmail', e.target.value)} />
+                    <InputField label="Support Phone" value={settings.supportPhone} onChange={e => handleSettingChange('supportPhone', e.target.value)} />
+                </SettingsCard>
+             )}
+
+            {activeTab === 'services' && (
+                <>
+                    <SettingsCard title="Service Providers" icon={Server}>
+                        <div className="grid grid-cols-2 gap-4">
+                            {Object.keys(settings.providerStatus).map(p => (
+                                <ToggleSwitch key={p} label={p} enabled={settings.providerStatus[p]} onChange={() => toggleProvider(p)} />
+                            ))}
+                        </div>
+                    </SettingsCard>
+                    <SettingsCard title="Data Bundles" icon={Wifi}>
+                        <button onClick={() => { setEditingBundle({isAvailable: true, isBestValue: false, type: PlanType.SME}); setShowBundleModal(true); }} className="flex items-center gap-2 px-4 py-2 bg-green-700 text-white rounded-lg text-sm font-bold shadow-md hover:bg-green-800 w-full justify-center">
+                            <Plus size={16}/> Add New Bundle
+                        </button>
+                        <div className="max-h-96 overflow-y-auto space-y-2 pr-2">
+                          {bundles.map(b => (
+                            <div key={b.id} className="p-3 border dark:border-gray-700 rounded-xl flex justify-between items-center bg-gray-50 dark:bg-gray-900">
+                                <div>
+                                    <p className="font-bold text-sm text-gray-800 dark:text-white">{b.name}</p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">₦{b.price} | Cost: ₦{b.costPrice}</p>
+                                </div>
+                                <div className="flex gap-2">
+                                    <button onClick={() => {setEditingBundle(b); setShowBundleModal(true);}} className="p-2 text-gray-400 hover:text-blue-500"><Edit2 size={16}/></button>
+                                    <button onClick={() => handleBundleDelete(b.id)} className="p-2 text-gray-400 hover:text-red-500"><Trash2 size={16}/></button>
+                                </div>
+                            </div>
+                          ))}
+                        </div>
+                    </SettingsCard>
+                </>
+            )}
+
+            {activeTab === 'api' && (
+                <>
+                    <SettingsCard title="API Vendor" icon={Key}>
+                        <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">Active API Vendor</label>
+                        <select
+                            value={settings.activeApiVendor}
+                            onChange={e => handleSettingChange('activeApiVendor', e.target.value as ApiVendor)}
+                            className="w-full p-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-green-500 outline-none text-gray-900 dark:text-white"
+                        >
+                            {Object.keys(settings.apiKeys).map(vendor => <option key={vendor} value={vendor}>{vendor}</option>)}
+                        </select>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
+                            {Object.keys(settings.apiKeys).map(vendor => (
+                                <InputField
+                                    key={vendor}
+                                    label={`${vendor} API Key`}
+                                    value={settings.apiKeys[vendor as ApiVendor]}
+                                    onChange={e => handleNestedChange('apiKeys', vendor, e.target.value)}
+                                />
+                            ))}
+                        </div>
+                    </SettingsCard>
+                     <SettingsCard title="SMS (Twilio)" icon={MessageSquare}>
+                        <ToggleSwitch label="Enable Twilio SMS" enabled={settings.enableTwilio} onChange={e => handleSettingChange('enableTwilio', e.target.checked)} />
+                        <InputField label="Account SID" value={settings.twilioAccountSid} onChange={e => handleSettingChange('twilioAccountSid', e.target.value)} />
+                        <InputField label="Auth Token" value={settings.twilioAuthToken} onChange={e => handleSettingChange('twilioAuthToken', e.target.value)} />
+                        <InputField label="Sender ID" value={settings.twilioSenderId} onChange={e => handleSettingChange('twilioSenderId', e.target.value)} />
+                    </SettingsCard>
+                </>
+            )}
+
+            {activeTab === 'payment' && (
+                <SettingsCard title="Payment Gateways" icon={CreditCard}>
+                    <h4 className="text-sm font-bold border-b dark:border-gray-700 pb-2 mb-2 text-gray-700 dark:text-gray-200">Manual Bank Transfer</h4>
+                    <InputField label="Bank Name" value={settings.bankName} onChange={e => handleSettingChange('bankName', e.target.value)} />
+                    <InputField label="Account Number" value={settings.accountNumber} onChange={e => handleSettingChange('accountNumber', e.target.value)} />
+                    <InputField label="Account Name" value={settings.accountName} onChange={e => handleSettingChange('accountName', e.target.value)} />
+                    
+                    <h4 className="text-sm font-bold border-b dark:border-gray-700 pb-2 mb-2 pt-4 text-gray-700 dark:text-gray-200">Paystack</h4>
+                    <ToggleSwitch label="Enable Paystack" enabled={settings.enablePaystack} onChange={e => handleSettingChange('enablePaystack', e.target.checked)} />
+                    <InputField label="Public Key" value={settings.paystackPublicKey} onChange={e => handleSettingChange('paystackPublicKey', e.target.value)} />
+                    <InputField label="Secret Key" value={settings.paystackSecretKey} onChange={e => handleSettingChange('paystackSecretKey', e.target.value)} />
+                </SettingsCard>
+            )}
+
+            {activeTab === 'referrals' && (
+                <SettingsCard title="Referral Program" icon={Users}>
+                    <ToggleSwitch label="Enable Referrals" enabled={settings.enableReferral} onChange={e => handleSettingChange('enableReferral', e.target.checked)} />
+                    <InputField label="Referral Reward (₦)" type="number" value={settings.referralReward} onChange={e => handleSettingChange('referralReward', Number(e.target.value))} />
+                    <InputField label="Min. Withdrawal (₦)" type="number" value={settings.referralMinWithdrawal} onChange={e => handleSettingChange('referralMinWithdrawal', Number(e.target.value))} />
+                </SettingsCard>
+            )}
+            
+            {activeTab === 'backup' && (
+                <SettingsCard title="Backup & Restore" icon={Database}>
+                    <button onClick={handleBackupDownload} className="w-full justify-center flex items-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700">
+                        <Download size={16}/> Download Data Backup
+                    </button>
+                    <div className="relative p-4 border-2 border-dashed border-red-400 rounded-xl bg-red-50 dark:bg-red-900/20 text-center">
+                        <p className="text-sm font-bold text-red-700 dark:text-red-300">Restore Backup</p>
+                        <p className="text-xs text-red-600 dark:text-red-400 mb-2">Warning: This will overwrite ALL existing data.</p>
+                        <input type="file" accept=".json" onChange={handleRestore} className="text-xs absolute inset-0 w-full h-full opacity-0 cursor-pointer"/>
+                        <span className="text-xs font-bold py-2 px-4 bg-red-600 text-white rounded-lg">Select Backup File</span>
+                    </div>
+                </SettingsCard>
+            )}
+
+            {activeTab === 'app' && (
+                <>
+                  <SettingsCard title="Branding" icon={ImageIcon}>
+                      <InputField label="App Name" value={settings.appName} onChange={e => handleSettingChange('appName', e.target.value)} />
+                      <div className="flex items-center gap-4">
+                        <img src={settings.logoUrl} className="w-16 h-16 rounded-xl bg-gray-100 dark:bg-gray-700 object-contain p-1" />
+                        <div className="flex-1">
+                          <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">Logo URL</label>
+                          <input type="file" accept="image/*" onChange={handleLogoUpload} className="text-xs" />
+                        </div>
+                      </div>
+                  </SettingsCard>
+                  <SettingsCard title="Landing Page" icon={Globe}>
+                       <InputField label="Hero Title" value={settings.landingHeroTitle} onChange={e => handleSettingChange('landingHeroTitle', e.target.value)} />
+                       <textarea
+                            value={settings.landingHeroSubtitle}
+                            onChange={e => handleSettingChange('landingHeroSubtitle', e.target.value)}
+                            className="w-full p-3 h-24 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-green-500 outline-none text-gray-900 dark:text-white"
+                        />
+                  </SettingsCard>
+                </>
+            )}
+            
+            {activeTab === 'automation' && (
+                <SettingsCard title="Automation / Cron Jobs" icon={Clock}>
+                    {cronJobs.map(job => (
+                        <div key={job.id} className="p-3 border dark:border-gray-700 rounded-xl flex justify-between items-center bg-gray-50 dark:bg-gray-900">
+                            <div>
+                                <p className="font-bold text-sm text-gray-800 dark:text-white">{job.name}</p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">{job.schedule} | Next: {job.nextRun}</p>
+                            </div>
+                            <button onClick={() => toggleCron(job.id)} className={`px-3 py-1 text-xs font-bold rounded-full flex items-center gap-1 ${job.status === 'active' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-gray-200 dark:bg-gray-700 text-gray-500'}`}>
+                                {job.status === 'active' ? <Play size={12}/> : <Pause size={12}/>}
+                                {job.status}
+                            </button>
+                        </div>
+                    ))}
+                </SettingsCard>
+            )}
 
               {/* --- HEALTH TAB --- */}
               {activeTab === 'health' && (
@@ -360,12 +552,57 @@ export const AdminSettings: React.FC = () => {
                   </div>
               )}
           </div>
+
+          <div className="lg:col-span-1 space-y-6">
+              <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm sticky top-24">
+                  <h3 className="font-bold text-gray-800 dark:text-white mb-4">Save Changes</h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+                      Remember to save your changes before leaving the page. Some settings may require an app refresh to take effect.
+                  </p>
+                  <button
+                      onClick={handleSave}
+                      disabled={isSaving}
+                      className="w-full py-3 bg-green-700 text-white rounded-xl font-bold hover:bg-green-800 flex items-center justify-center gap-2 shadow-lg shadow-green-200 dark:shadow-green-900/20 disabled:opacity-70"
+                  >
+                      {isSaving ? <Loader2 className="animate-spin" /> : <Save size={18}/>}
+                      Save All Settings
+                  </button>
+              </div>
+          </div>
       </div>
       
       {/* Bundle Modal */}
       {showBundleModal && (
           <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-              {/* ... Modal Content from previous steps ... */}
+               <div className="bg-white dark:bg-gray-800 w-full max-w-lg rounded-2xl p-6 shadow-2xl animate-fade-in-up border dark:border-gray-700">
+                    <h3 className="font-bold text-lg mb-4 text-gray-900 dark:text-white">{editingBundle.id ? 'Edit' : 'Create'} Data Bundle</h3>
+                    {bundleError && <p className="text-red-500 text-sm bg-red-50 dark:bg-red-900/20 p-2 rounded-lg mb-4">{bundleError}</p>}
+                    <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+                        <div className="grid grid-cols-2 gap-4">
+                            <InputField label="Provider" value={editingBundle.provider || ''} onChange={e => setEditingBundle({...editingBundle, provider: e.target.value as Provider})} />
+                            <InputField label="Plan Type" value={editingBundle.type || ''} onChange={e => setEditingBundle({...editingBundle, type: e.target.value as PlanType})} />
+                        </div>
+                        <InputField label="Bundle Name" value={editingBundle.name || ''} onChange={e => setEditingBundle({...editingBundle, name: e.target.value})} placeholder="e.g. MTN SME 1GB" />
+                        <div className="grid grid-cols-2 gap-4">
+                            <InputField label="Data Amount" value={editingBundle.dataAmount || ''} onChange={e => setEditingBundle({...editingBundle, dataAmount: e.target.value})} placeholder="e.g. 1GB" />
+                            <InputField label="Validity" value={editingBundle.validity || ''} onChange={e => setEditingBundle({...editingBundle, validity: e.target.value})} placeholder="e.g. 30 Days" />
+                        </div>
+                         <div className="grid grid-cols-3 gap-4">
+                            <InputField label="Selling Price (₦)" type="number" value={editingBundle.price || ''} onChange={e => setEditingBundle({...editingBundle, price: e.target.value})} />
+                            <InputField label="Reseller Price (₦)" type="number" value={editingBundle.resellerPrice || ''} onChange={e => setEditingBundle({...editingBundle, resellerPrice: e.target.value})} />
+                            <InputField label="Cost Price (₦)" type="number" value={editingBundle.costPrice || ''} onChange={e => setEditingBundle({...editingBundle, costPrice: e.target.value})} />
+                        </div>
+                        <InputField label="API Plan ID" value={editingBundle.planId || ''} onChange={e => setEditingBundle({...editingBundle, planId: e.target.value})} placeholder="ID from your API Vendor" />
+                        <div className="flex gap-4">
+                            <ToggleSwitch label="Is Available?" enabled={!!editingBundle.isAvailable} onChange={e => setEditingBundle({...editingBundle, isAvailable: e.target.checked})} />
+                            <ToggleSwitch label="Best Value?" enabled={!!editingBundle.isBestValue} onChange={e => setEditingBundle({...editingBundle, isBestValue: e.target.checked})} />
+                        </div>
+                    </div>
+                    <div className="flex gap-3 mt-6 pt-4 border-t dark:border-gray-700">
+                        <button onClick={() => setShowBundleModal(false)} className="flex-1 py-3 bg-gray-100 dark:bg-gray-700 rounded-xl font-bold text-gray-600 dark:text-gray-300">Cancel</button>
+                        <button onClick={handleBundleSave} className="flex-1 py-3 bg-green-700 text-white rounded-xl font-bold hover:bg-green-800">Save Bundle</button>
+                    </div>
+               </div>
           </div>
       )}
     </div>
