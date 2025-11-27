@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Transaction, TransactionStatus, Provider, User } from '../types';
 import { MockDB } from '../services/mockDb';
 import { X, Share2, CheckCircle2, Download, RefreshCw, Check, Search, Calendar, Copy, Receipt, Link as LinkIcon, Smartphone, CreditCard, ExternalLink, QrCode } from 'lucide-react';
-import { PROVIDER_LOGOS, PROVIDER_COLORS } from '../constants';
+import { PROVIDER_LOGOS, PROVIDER_COLORS, PROVIDER_IMAGES } from '../constants';
 import { playNotification } from '../utils/audio';
 
 interface HistoryProps {
@@ -99,14 +99,6 @@ export const History: React.FC<HistoryProps> = ({ user, highlightId }) => {
       (t.destinationNumber && t.destinationNumber.includes(searchTerm))
   );
 
-  const getProviderLogo = (providerName: string) => {
-      return (PROVIDER_LOGOS as any)[providerName] || providerName;
-  };
-
-  const getProviderColor = (providerName: string) => {
-      return (PROVIDER_COLORS as any)[providerName] || 'bg-gray-500 text-white';
-  };
-
   return (
     <div className="space-y-6 animate-fade-in pb-20">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white dark:bg-gray-900 p-4 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm transition-colors">
@@ -140,10 +132,12 @@ export const History: React.FC<HistoryProps> = ({ user, highlightId }) => {
           >
             <div className="flex justify-between items-start z-10">
                <div className="flex items-center gap-3">
-                   <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg shadow-sm ${
-                       tx.provider ? getProviderColor(tx.provider) : 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400'
-                   }`}>
-                      {tx.provider ? getProviderLogo(tx.provider).slice(0,1) : 'W'}
+                   <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg shadow-sm bg-gray-50 dark:bg-gray-800 overflow-hidden border border-gray-100 dark:border-gray-700`}>
+                      {tx.provider && PROVIDER_IMAGES[tx.provider] ? (
+                          <img src={PROVIDER_IMAGES[tx.provider]} alt={tx.provider} className="w-full h-full object-cover" />
+                      ) : (
+                          <span className="text-xs text-gray-500">{tx.provider?.slice(0,2) || 'W'}</span>
+                      )}
                    </div>
                    <div>
                       <p className="font-bold text-gray-800 dark:text-white truncate max-w-[120px]">
@@ -169,28 +163,16 @@ export const History: React.FC<HistoryProps> = ({ user, highlightId }) => {
                     {tx.status}
                 </span>
             </div>
-
-            {/* Hover Effect Background */}
-            <div className="absolute inset-0 bg-green-50/50 dark:bg-green-900/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
           </div>
         ))}
-
-        {filteredTransactions.length === 0 && !loading && (
-            <div className="col-span-full text-center py-20 text-gray-400 bg-white dark:bg-gray-900 rounded-3xl border border-dashed border-gray-200 dark:border-gray-800">
-                <div className="w-16 h-16 bg-gray-50 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Search size={24} className="opacity-50"/>
-                </div>
-                <p>No transactions found matching your criteria.</p>
-            </div>
-        )}
       </div>
 
-      {/* Enhanced Receipt Modal */}
+      {/* Enhanced Receipt Modal - FIXED SIZE */}
       {selectedTx && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300 overflow-y-auto">
-          <div className="w-full max-w-[380px] my-8 relative animate-in zoom-in-95 slide-in-from-bottom-8 duration-300">
+          <div className="w-full max-w-[380px] my-4 relative animate-in zoom-in-95 slide-in-from-bottom-8 duration-300 max-h-[90vh] flex flex-col">
              
-             {/* Close Button */}
+             {/* Close Button - Sticky */}
              <button 
                 onClick={() => setSelectedTx(null)}
                 className="absolute -top-12 right-0 p-2 bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors backdrop-blur-sm z-50"
@@ -199,13 +181,11 @@ export const History: React.FC<HistoryProps> = ({ user, highlightId }) => {
              </button>
 
              {/* Receipt Card */}
-             <div className="bg-white dark:bg-gray-800 rounded-3xl overflow-hidden shadow-2xl relative flex flex-col">
+             <div className="bg-white dark:bg-gray-800 rounded-3xl overflow-hidden shadow-2xl relative flex flex-col overflow-y-auto">
                  
                  {/* Receipt Header Pattern */}
-                 <div className="bg-green-600 p-8 pt-10 text-center relative">
-                     {/* Radial Pattern Overlay */}
+                 <div className="bg-green-600 p-8 pt-10 text-center relative shrink-0">
                      <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_2px_2px,#fff_1px,transparent_0)] [background-size:16px_16px]"></div>
-                     
                      <div className="relative z-10 flex flex-col items-center">
                          <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-4 shadow-lg animate-bounce">
                             <Check size={32} className="text-green-600" strokeWidth={4} />
@@ -215,15 +195,14 @@ export const History: React.FC<HistoryProps> = ({ user, highlightId }) => {
                      </div>
                  </div>
 
-                 {/* Sawtooth Divider */}
-                 <div className="relative h-4 bg-green-600">
+                 <div className="relative h-4 bg-green-600 shrink-0">
                      <div className="absolute top-0 left-0 w-full h-4 bg-white dark:bg-gray-800" 
                           style={{clipPath: 'polygon(0 100%, 2% 0, 4% 100%, 6% 0, 8% 100%, 10% 0, 12% 100%, 14% 0, 16% 100%, 18% 0, 20% 100%, 22% 0, 24% 100%, 26% 0, 28% 100%, 30% 0, 32% 100%, 34% 0, 36% 100%, 38% 0, 40% 100%, 42% 0, 44% 100%, 46% 0, 48% 100%, 50% 0, 52% 100%, 54% 0, 56% 100%, 58% 0, 60% 100%, 62% 0, 64% 100%, 66% 0, 68% 100%, 70% 0, 72% 100%, 74% 0, 76% 100%, 78% 0, 80% 100%, 82% 0, 84% 100%, 86% 0, 88% 100%, 90% 0, 92% 100%, 94% 0, 96% 100%, 98% 0, 100% 100%)'}}>
                      </div>
                  </div>
 
                  {/* Receipt Body */}
-                 <div className="px-8 pb-8 bg-white dark:bg-gray-800 text-center flex-1">
+                 <div className="px-8 pb-8 bg-white dark:bg-gray-800 text-center flex-1 overflow-y-auto">
                       <div className="mb-8">
                           <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Total Paid</p>
                           <h1 className="text-4xl font-black text-gray-900 dark:text-white tracking-tighter">
@@ -232,107 +211,55 @@ export const History: React.FC<HistoryProps> = ({ user, highlightId }) => {
                       </div>
 
                       {/* Transaction Details */}
-                      <div className="bg-gray-50 dark:bg-gray-700/30 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
-                         {/* Date & Ref Header */}
+                      <div className="bg-gray-50 dark:bg-gray-700/30 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden text-left">
                          <div className="p-4 border-b border-gray-200 dark:border-gray-600 flex justify-between items-center bg-gray-100/50 dark:bg-gray-800/50">
-                             <div className="flex flex-col text-left">
-                                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Reference</span>
-                                 <div className="flex items-center gap-1">
-                                     <span className="font-mono font-bold text-gray-700 dark:text-gray-200 text-xs tracking-tight">{selectedTx.reference}</span>
-                                     <button onClick={() => handleCopyRef(selectedTx.reference)} className="text-gray-400 hover:text-green-600 transition-colors"><Copy size={10}/></button>
-                                 </div>
+                             <div>
+                                 <span className="block text-[10px] font-bold text-gray-400 uppercase">Reference</span>
+                                 <span className="font-mono font-bold text-gray-700 dark:text-gray-200 text-xs">{selectedTx.reference}</span>
                              </div>
-                             <div className="flex flex-col text-right">
-                                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Time</span>
-                                 <span className="font-bold text-gray-700 dark:text-gray-200 text-xs">{new Date(selectedTx.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-                             </div>
+                             <button onClick={() => handleCopyRef(selectedTx.reference)} className="text-gray-400 hover:text-green-600"><Copy size={14}/></button>
                          </div>
 
                          <div className="p-4 space-y-3">
-                             {/* Service Type */}
-                             <div className="flex justify-between items-center">
-                                 <span className="text-sm text-gray-500 dark:text-gray-400">Service</span>
-                                 <span className="font-bold text-gray-900 dark:text-white capitalize">{selectedTx.type.replace(/_/g, ' ').toLowerCase()}</span>
-                             </div>
-
-                             {/* Provider Row with Logo */}
                              <div className="flex justify-between items-center">
                                  <span className="text-sm text-gray-500 dark:text-gray-400">Provider</span>
-                                 <div className="flex items-center gap-2 bg-white dark:bg-gray-800 px-2 py-1 rounded-lg border border-gray-100 dark:border-gray-700 shadow-sm">
-                                     {selectedTx.provider ? (
-                                         <>
-                                            <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${getProviderColor(selectedTx.provider)}`}>
-                                                {getProviderLogo(selectedTx.provider).charAt(0)}
-                                            </span>
-                                            <span className="font-bold text-sm text-gray-800 dark:text-gray-200">
-                                                {getProviderLogo(selectedTx.provider)}
-                                            </span>
-                                         </>
-                                     ) : (
-                                         <span className="font-bold text-sm text-gray-800 dark:text-gray-200">Wallet</span>
+                                 <div className="flex items-center gap-2">
+                                     {selectedTx.provider && PROVIDER_IMAGES[selectedTx.provider] && (
+                                         <img src={PROVIDER_IMAGES[selectedTx.provider]} alt="" className="w-6 h-6 rounded-full object-cover bg-white" />
                                      )}
+                                     <span className="font-bold text-gray-900 dark:text-white text-sm">{selectedTx.provider || 'Wallet'}</span>
                                  </div>
                              </div>
 
-                             {/* Beneficiary */}
                              <div className="flex justify-between items-center">
-                                 <span className="text-sm text-gray-500 dark:text-gray-400">Beneficiary</span>
-                                 <span className="font-mono font-bold text-gray-900 dark:text-white text-sm tracking-wide">{selectedTx.destinationNumber || selectedTx.userId}</span>
+                                 <span className="text-sm text-gray-500 dark:text-gray-400">Recipient</span>
+                                 <span className="font-mono font-bold text-gray-900 dark:text-white text-sm">{selectedTx.destinationNumber || selectedTx.userId}</span>
                              </div>
                              
-                             {/* Description / Plan Name if available */}
                              {selectedTx.bundleName && (
                                  <div className="flex justify-between items-center">
                                      <span className="text-sm text-gray-500 dark:text-gray-400">Plan</span>
-                                     <span className="font-medium text-gray-900 dark:text-white text-sm text-right max-w-[180px] truncate" title={selectedTx.bundleName}>{selectedTx.bundleName}</span>
+                                     <span className="font-medium text-gray-900 dark:text-white text-sm">{selectedTx.bundleName}</span>
                                  </div>
                              )}
                          </div>
                          
-                         {/* Token Section */}
                          {selectedTx.meterToken && (
-                             <div className="border-t border-dashed border-gray-200 dark:border-gray-600 bg-green-50/50 dark:bg-green-900/10 p-4">
-                                 <span className="block text-green-700 dark:text-green-400 font-bold text-[10px] uppercase mb-1 text-left">Electricity Token</span>
-                                 <div className="flex justify-between items-center bg-white dark:bg-gray-800 p-2 rounded-lg border border-green-100 dark:border-green-800 border-dashed">
-                                     <span className="font-mono font-black text-lg text-gray-900 dark:text-white tracking-[0.2em]">{selectedTx.meterToken}</span>
-                                     <button onClick={() => handleCopyToken(selectedTx.meterToken!)} className="text-green-600 hover:text-green-700 dark:text-green-400 p-1"><Copy size={16}/></button>
-                                 </div>
+                             <div className="border-t border-dashed border-gray-200 dark:border-gray-600 bg-green-50/50 dark:bg-green-900/10 p-4 text-center">
+                                 <span className="block text-green-700 dark:text-green-400 font-bold text-[10px] uppercase mb-1">Electricity Token</span>
+                                 <span className="font-mono font-black text-xl text-gray-900 dark:text-white tracking-[0.2em] block">{selectedTx.meterToken}</span>
                              </div>
                          )}
                       </div>
 
-                      {/* QR Code Real Implementation */}
-                      <div className="mt-6 flex flex-col items-center justify-center">
-                          <div className="p-2 bg-white rounded-xl border border-gray-100 shadow-sm">
-                              <img 
-                                  src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&color=000000&bgcolor=ffffff&data=${encodeURIComponent(`https://jadanpay.com/receipt/${selectedTx.id}`)}`}
-                                  alt="Transaction QR" 
-                                  className="w-32 h-32" 
-                              />
-                          </div>
-                          <p className="text-[10px] text-gray-400 mt-2 font-bold uppercase tracking-wider">Scan to share receipt</p>
-                      </div>
-
-                      {/* Action Buttons */}
                       <div className="grid grid-cols-2 gap-4 mt-8">
-                          <button 
-                             onClick={handleShare}
-                             className={`flex flex-col items-center justify-center gap-2 py-4 rounded-2xl transition-all group border ${shareState === 'shared' || shareState === 'copied' ? 'bg-green-50 border-green-200 text-green-700' : 'bg-gray-50 dark:bg-gray-700 border-transparent text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600'}`}
-                          >
-                             <div className={`p-2 rounded-full ${shareState === 'shared' || shareState === 'copied' ? 'bg-green-200' : 'bg-white dark:bg-gray-600'} shadow-sm`}>
-                                 {shareState === 'copied' ? <Check size={18} /> : shareState === 'shared' ? <ExternalLink size={18} /> : <Share2 size={18} />}
-                             </div>
-                             <span className="text-xs font-bold">{shareState === 'copied' ? 'Copied!' : shareState === 'shared' ? 'Shared!' : 'Share Receipt'}</span>
+                          <button onClick={handleShare} className="flex flex-col items-center justify-center gap-2 py-4 rounded-2xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-gray-600 dark:text-gray-300">
+                             <Share2 size={20} className={shareState === 'copied' ? 'text-green-500' : ''}/>
+                             <span className="text-xs font-bold">{shareState === 'copied' ? 'Copied!' : 'Share'}</span>
                           </button>
-                          
-                          <button 
-                             className="flex flex-col items-center justify-center gap-2 py-4 bg-gray-900 text-white dark:bg-black rounded-2xl hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-gray-200 dark:shadow-none"
-                             onClick={() => alert("Image download simulated.")}
-                          >
-                             <div className="p-2 bg-gray-700 rounded-full shadow-sm">
-                                 <Download size={18}/>
-                             </div>
-                             <span className="text-xs font-bold">Save Image</span>
+                          <button onClick={() => alert("Saved")} className="flex flex-col items-center justify-center gap-2 py-4 bg-gray-900 text-white dark:bg-black rounded-2xl hover:scale-[1.02] active:scale-95 transition-all">
+                             <Download size={20}/>
+                             <span className="text-xs font-bold">Save</span>
                           </button>
                       </div>
                  </div>
@@ -343,4 +270,3 @@ export const History: React.FC<HistoryProps> = ({ user, highlightId }) => {
     </div>
   );
 };
-    

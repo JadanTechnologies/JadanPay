@@ -33,6 +33,22 @@ export const PROVIDER_LOGOS = {
   [BillProvider.KEDCO]: 'Kano Electric',
 };
 
+export const PROVIDER_IMAGES: Record<string, string> = {
+  [Provider.MTN]: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/New-mtn-logo.jpg/600px-New-mtn-logo.jpg',
+  [Provider.GLO]: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Glo_button.png/480px-Glo_button.png',
+  [Provider.AIRTEL]: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/bd/Airtel_Logo.svg/1200px-Airtel_Logo.svg.png',
+  [Provider.NMOBILE]: 'https://upload.wikimedia.org/wikipedia/commons/9/98/9mobile_Logo.png',
+  // Bills
+  [BillProvider.DSTV]: 'https://upload.wikimedia.org/wikipedia/en/a/a3/DStv_Logo.png',
+  [BillProvider.GOTV]: 'https://upload.wikimedia.org/wikipedia/en/thumb/e/e3/GOtv_Logo.png/220px-GOtv_Logo.png',
+  [BillProvider.STARTIMES]: 'https://upload.wikimedia.org/wikipedia/commons/e/e6/StarTimes_Logo.png',
+  [BillProvider.IKEDC]: '',
+  [BillProvider.EKEDC]: '',
+  [BillProvider.AEDC]: '',
+  [BillProvider.IBEDC]: '',
+  [BillProvider.KEDCO]: '',
+};
+
 export const BILL_PROVIDERS = {
     CABLE: [BillProvider.DSTV, BillProvider.GOTV, BillProvider.STARTIMES],
     ELECTRICITY: [BillProvider.IKEDC, BillProvider.EKEDC, BillProvider.AEDC, BillProvider.IBEDC, BillProvider.KEDCO]
