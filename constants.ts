@@ -44,12 +44,12 @@ export const PROVIDER_IMAGES: Record<string, string> = {
   [BillProvider.GOTV]: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/GOtv_logo.svg/512px-GOtv_logo.svg.png',
   [BillProvider.STARTIMES]: 'https://upload.wikimedia.org/wikipedia/commons/e/e6/StarTimes_Logo.png',
   
-  // Electricity - using official sites as they appear to be working. If they fail, this may need revisiting.
-  [BillProvider.IKEDC]: 'https://www.ikejaelectric.com/wp-content/uploads/2021/03/cropped-ie-logo-1.png',
-  [BillProvider.EKEDC]: 'https://www.ekedp.com/assets/img/ekedp_logo.png',
-  [BillProvider.AEDC]: 'https://www.aedc.com/assets/images/logo/aedc-logo-colored.png',
-  [BillProvider.IBEDC]: 'https://www.ibedc.com/wp-content/uploads/2022/01/ibedc-logo-1.png',
-  [BillProvider.KEDCO]: 'https://www.kedco.ng/images/logo.png',
+  // Electricity - using Wikimedia URLs to prevent CORS/hotlinking issues
+  [BillProvider.IKEDC]: 'https://upload.wikimedia.org/wikipedia/en/3/3b/Ikeja_Electric_logo.jpg',
+  [BillProvider.EKEDC]: 'https://upload.wikimedia.org/wikipedia/en/5/52/Eko_Electricity_Distribution_Company_logo.jpg',
+  [BillProvider.AEDC]: 'https://upload.wikimedia.org/wikipedia/en/9/92/Abuja_Electricity_Distribution_Company_logo.png',
+  [BillProvider.IBEDC]: 'https://upload.wikimedia.org/wikipedia/en/5/5d/Ibadan_Electricity_Distribution_Company_%28IBEDC%29_logo.jpg',
+  [BillProvider.KEDCO]: 'https://upload.wikimedia.org/wikipedia/en/3/3d/Kano_Electricity_Distribution_Company_logo.jpg',
 };
 
 // MOCK DATA FOR USERS
