@@ -33,16 +33,18 @@ export const PROVIDER_LOGOS = {
 };
 
 export const PROVIDER_IMAGES: Record<string, string> = {
-  // Telcos - Using more stable/official URLs
-  [Provider.MTN]: 'https://www.mtn.ng/wp-content/themes/mtn-sme/images/logo.svg',
-  [Provider.GLO]: 'https://www.gloworld.com/ng/wp-content/uploads/2021/05/Glo-Logo-300x120-1.png',
-  [Provider.AIRTEL]: 'https://www.airtel.com.ng/assets/images/logo-red-black.png',
-  [Provider.NMOBILE]: 'https://9mobile.com.ng/wp-content/uploads/2022/10/9mobile-logo.png',
+  // Telcos - Using stable Wikimedia URLs for better reliability and CORS
+  [Provider.MTN]: 'https://upload.wikimedia.org/wikipedia/commons/9/93/MTN_Logo.svg',
+  [Provider.GLO]: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/Glo_logo.svg/512px-Glo_logo.svg.png',
+  [Provider.AIRTEL]: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Airtel_logo.svg/512px-Airtel_logo.svg.png',
+  [Provider.NMOBILE]: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/9mobile-Logo.svg/512px-9mobile-Logo.svg.png',
   
-  // Bills - Using official URLs
-  [BillProvider.DSTV]: 'https://www.dstv.com/media/1360/dstv-logo-new.png',
-  [BillProvider.GOTV]: 'https://www.gotvafrica.com/media/1330/gotv-logo-new-1.png',
+  // Bills - Using stable Wikimedia URLs where possible
+  [BillProvider.DSTV]: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/DStv_logo.svg/512px-DStv_logo.svg.png',
+  [BillProvider.GOTV]: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/GOtv_logo.svg/512px-GOtv_logo.svg.png',
   [BillProvider.STARTIMES]: 'https://upload.wikimedia.org/wikipedia/commons/e/e6/StarTimes_Logo.png',
+  
+  // Electricity - using official sites as they appear to be working. If they fail, this may need revisiting.
   [BillProvider.IKEDC]: 'https://www.ikejaelectric.com/wp-content/uploads/2021/03/cropped-ie-logo-1.png',
   [BillProvider.EKEDC]: 'https://www.ekedp.com/assets/img/ekedp_logo.png',
   [BillProvider.AEDC]: 'https://www.aedc.com/assets/images/logo/aedc-logo-colored.png',

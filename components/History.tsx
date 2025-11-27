@@ -124,9 +124,9 @@ export const History: React.FC<HistoryProps> = ({ user, highlightId }) => {
           >
             <div className="flex justify-between items-start z-10">
                <div className="flex items-center gap-3">
-                   <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg shadow-sm bg-gray-50 dark:bg-gray-800 overflow-hidden border border-gray-100 dark:border-gray-700`}>
+                   <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg shadow-sm bg-gray-50 dark:bg-gray-800 overflow-hidden border border-gray-100 dark:border-gray-700 p-1`}>
                       {tx.provider && PROVIDER_IMAGES[tx.provider] ? (
-                          <img src={PROVIDER_IMAGES[tx.provider]} alt={tx.provider} className="w-full h-full object-cover" />
+                          <img src={PROVIDER_IMAGES[tx.provider]} alt={tx.provider} className="w-full h-full object-contain" />
                       ) : (
                           <span className="text-xs text-gray-500">{tx.provider?.slice(0,2) || 'W'}</span>
                       )}
@@ -217,7 +217,7 @@ export const History: React.FC<HistoryProps> = ({ user, highlightId }) => {
                                  <span className="text-sm text-gray-500 dark:text-gray-400">Provider</span>
                                  <div className="flex items-center gap-2">
                                      {selectedTx.provider && PROVIDER_IMAGES[selectedTx.provider] && (
-                                         <img src={PROVIDER_IMAGES[selectedTx.provider]} alt="" className="w-6 h-6 rounded-full object-cover bg-white" />
+                                         <img src={PROVIDER_IMAGES[selectedTx.provider]} alt="" className="w-6 h-6 rounded-full object-contain bg-white" />
                                      )}
                                      <span className="font-bold text-gray-900 dark:text-white text-sm">{selectedTx.provider || 'Wallet'}</span>
                                  </div>
