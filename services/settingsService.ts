@@ -8,14 +8,14 @@ export type PushProvider = 'NONE' | 'FIREBASE' | 'ONESIGNAL';
 export interface AppSettings {
   appName: string;
   logoUrl: string;
-  faviconUrl: string; // New: Favicon
+  faviconUrl: string;
   supportEmail: string;
   supportPhone: string;
   maintenanceMode: boolean;
   
   // Service Status
   providerStatus: Record<string, boolean>;
-  providerStats: Record<string, number>; // Success rate percentage (0-100)
+  providerStats: Record<string, number>; 
   
   // API Integration Settings
   activeApiVendor: ApiVendor;
@@ -26,39 +26,40 @@ export interface AppSettings {
       ABBAPHANTAMI: string;
       SIMHOST: string;
   };
+  // Custom Base URLs for Vendors
+  apiBaseUrls: {
+      BILALSADA: string;
+      MASKAWA: string;
+      ALRAHUZ: string;
+      ABBAPHANTAMI: string;
+      SIMHOST: string;
+  };
 
-  // SMS Settings (Twilio)
+  // SMS & Notifications
   enableTwilio: boolean;
   twilioAccountSid: string;
   twilioAuthToken: string;
   twilioSenderId: string;
 
-  // Email Settings
   emailProvider: EmailProvider;
-  // SMTP
   smtpHost: string;
   smtpPort: number;
   smtpUser: string;
   smtpPass: string;
   emailFrom: string;
-  // Resend
   resendApiKey: string;
 
-  // Push Notifications
   pushProvider: PushProvider;
-  // Firebase
   firebaseServerKey: string;
   firebaseProjectId: string;
-  // OneSignal
   oneSignalAppId: string;
   oneSignalRestApiKey: string;
   
-  // Payments (Manual Funding)
+  // Payments
   bankName: string;
   accountNumber: string;
   accountName: string;
 
-  // Payment Gateways
   monnifyApiKey: string;
   monnifySecretKey: string;
   monnifyContractCode: string;
@@ -74,10 +75,17 @@ export interface AppSettings {
   
   // Referral
   enableReferral: boolean;
-  referralReward: number; // Amount in Naira
-  referralMinWithdrawal: number; // New field for withdrawal limit
+  referralReward: number;
+  referralMinWithdrawal: number;
   
-  // Landing Page & App Configuration
+  // Global Pricing Rules
+  servicePricing: {
+      airtimeCostPercentage: number; // e.g. 97 (Cost is 97% of face value)
+      airtimeSellingPercentage: number; // e.g. 100 (Sell at face value)
+      billServiceFee: number; // e.g. 100 Naira fee
+  };
+
+  // Landing Page
   landingHeroTitle: string;
   landingHeroSubtitle: string;
   landingStats: {
@@ -96,7 +104,6 @@ export interface AppSettings {
   mobileAppReleaseDate: string;
 }
 
-// Initial default settings
 const defaultSettings: AppSettings = {
   appName: 'JadanPay',
   logoUrl: 'https://cdn-icons-png.flaticon.com/512/8992/8992203.png',
@@ -125,6 +132,13 @@ const defaultSettings: AppSettings = {
       ALRAHUZ: '',
       ABBAPHANTAMI: '',
       SIMHOST: ''
+  },
+  apiBaseUrls: {
+      BILALSADA: 'https://app.bilalsadasub.com/api/v1',
+      MASKAWA: 'https://api.maskawasub.com/api/v1',
+      ALRAHUZ: 'https://alrahuzdata.com.ng/api/v1',
+      ABBAPHANTAMI: 'https://abbaphantami.com/api/v1',
+      SIMHOST: 'https://simhostng.com/api/v1'
   },
 
   enableTwilio: false,
@@ -167,6 +181,12 @@ const defaultSettings: AppSettings = {
   referralReward: 100,
   referralMinWithdrawal: 500,
   
+  servicePricing: {
+      airtimeCostPercentage: 97,
+      airtimeSellingPercentage: 100,
+      billServiceFee: 100
+  },
+  
   landingHeroTitle: "Stop Overpaying For Data.",
   landingHeroSubtitle: "Experience the future of VTU. Seamless top-ups, instant delivery, and reseller friendly rates.",
   landingStats: {
@@ -185,10 +205,8 @@ const defaultSettings: AppSettings = {
   mobileAppReleaseDate: new Date().toISOString()
 };
 
-// Key for localStorage
-const SETTINGS_STORAGE_KEY = 'jadanpay_settings_v2';
+const SETTINGS_STORAGE_KEY = 'jadanpay_settings_v3';
 
-// Initialize settings from localStorage or defaults
 let _settings: AppSettings = { ...defaultSettings };
 try {
   const stored = localStorage.getItem(SETTINGS_STORAGE_KEY);
@@ -197,7 +215,9 @@ try {
     _settings = { 
         ...defaultSettings, 
         ...parsed,
-        apiKeys: { ...defaultSettings.apiKeys, ...(parsed.apiKeys || {}) }
+        apiKeys: { ...defaultSettings.apiKeys, ...(parsed.apiKeys || {}) },
+        apiBaseUrls: { ...defaultSettings.apiBaseUrls, ...(parsed.apiBaseUrls || {}) },
+        servicePricing: { ...defaultSettings.servicePricing, ...(parsed.servicePricing || {}) }
     };
   }
 } catch (e) {
@@ -206,14 +226,12 @@ try {
 
 export const SettingsService = {
   getSettings: async (): Promise<AppSettings> => {
-    // Simulate network delay
     return new Promise(resolve => setTimeout(() => resolve({ ..._settings }), 200));
   },
 
   updateSettings: async (newSettings: Partial<AppSettings>): Promise<AppSettings> => {
     return new Promise(resolve => setTimeout(() => {
       _settings = { ..._settings, ...newSettings };
-      // Persist to local storage
       try {
         localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(_settings));
       } catch (e) {

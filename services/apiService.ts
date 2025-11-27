@@ -8,8 +8,8 @@ export interface ServiceResponse<T = any> {
     statusCode?: number;
 }
 
-// Vendor Configuration: Base URLs
-const VENDOR_URLS: Record<ApiVendor, string> = {
+// Default Fallback URLs if not configured
+const DEFAULT_URLS: Record<ApiVendor, string> = {
     BILALSADA: 'https://app.bilalsadasub.com/api/v1',
     MASKAWA: 'https://api.maskawasub.com/api/v1',
     ALRAHUZ: 'https://alrahuzdata.com.ng/api/v1',
@@ -24,14 +24,6 @@ export const ApiService = {
     getNetworkId: (provider: string, vendor: ApiVendor) => {
         const p = provider.toUpperCase();
         
-        // Most Nigerian VTU scripts use similar mappings
-        const map: Record<string, string> = {
-            'MTN': '1', // Common ID for MTN
-            'GLO': '2',
-            'AIRTEL': '3',
-            '9MOBILE': '4'
-        };
-        
         // Specific overrides if a vendor uses strings instead of IDs
         if (vendor === 'BILALSADA') {
             return {
@@ -41,6 +33,14 @@ export const ApiService = {
                 '9MOBILE': '9mobile'
             }[p] || p.toLowerCase();
         }
+
+        // Standard numeric IDs often used by others
+        const map: Record<string, string> = {
+            'MTN': '1', 
+            'GLO': '2',
+            'AIRTEL': '3',
+            '9MOBILE': '4'
+        };
 
         return map[p] || p.toLowerCase();
     },
@@ -52,16 +52,17 @@ export const ApiService = {
         const settings = await SettingsService.getSettings();
         const vendor = settings.activeApiVendor;
         const apiKey = settings.apiKeys[vendor];
-        const baseUrl = VENDOR_URLS[vendor];
+        
+        // Use configured base URL or default fallback
+        const baseUrl = settings.apiBaseUrls?.[vendor] || DEFAULT_URLS[vendor];
 
         console.log(`[${vendor} Integration] POST ${baseUrl}${endpoint}`);
         console.log("Payload:", payload);
 
         // DEMO MODE CHECK
-        // If no API key is present, we simulate a successful transaction for demo purposes.
         if (!apiKey) {
             console.warn(`[Demo Mode] No API Key for ${vendor}. Simulating success.`);
-            await new Promise(r => setTimeout(r, 1000)); // Faster demo
+            await new Promise(r => setTimeout(r, 1000));
             
             return { 
                 success: true, 
@@ -79,10 +80,8 @@ export const ApiService = {
         try {
             await new Promise(r => setTimeout(r, 1500)); // Simulate latency
 
-            // Simulate specific errors
             if (Math.random() < 0.05) throw new Error("Vendor Connection Timed Out");
             
-            // Mock response structure based on typical Nigerian VTU APIs
             return { 
                 success: true, 
                 data: { 
@@ -112,8 +111,8 @@ export const ApiService = {
         
         const payload = {
             network: networkId,
-            mobile_number: phone, // Standard param name
-            phone: phone, // Fallback param name
+            mobile_number: phone, 
+            phone: phone, 
             amount,
             Ported_number: true,
             airtime_type: 'VTU'
@@ -132,7 +131,7 @@ export const ApiService = {
             network: networkId,
             mobile_number: phone,
             phone: phone,
-            plan: planId, // Usually the API Plan ID
+            plan: planId,
             Ported_number: true
         };
         return ApiService._request('/data', payload);
@@ -143,8 +142,7 @@ export const ApiService = {
      */
     getBalance: async () => {
         const settings = await SettingsService.getSettings();
-        // Return mock balance if key is missing
         if (!settings.apiKeys[settings.activeApiVendor]) return { balance: 50000.00 }; 
-        return { balance: 54000.50 }; // Mocked balance
+        return { balance: 54000.50 };
     }
 };

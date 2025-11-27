@@ -3,8 +3,8 @@ import { Transaction, TransactionType, TransactionStatus, Provider, Bundle, User
 import { MockDB } from './mockDb';
 import { ApiService } from './apiService';
 import { NotificationService } from './notificationService';
+import { SettingsService } from './settingsService';
 
-// Helper to generate IDs
 const generateId = () => Math.random().toString(36).substr(2, 9);
 const generateRef = () => `REF-${Math.floor(Math.random() * 1000000000)}`;
 
@@ -13,14 +13,10 @@ const parseDataToGB = (amountStr: string): number => {
     if (!amountStr) return 0;
     const normalize = amountStr.toUpperCase().replace(/\s/g, '');
     const val = parseFloat(normalize);
-    
     if (isNaN(val)) return 0;
-    
     if (normalize.includes('TB')) return val * 1024;
     if (normalize.includes('GB')) return val;
     if (normalize.includes('MB')) return val / 1024;
-    
-    // Default assumption if no unit provided (risky, but usually GB for these plans)
     return val;
 };
 
@@ -31,19 +27,29 @@ export const processAirtimePurchase = async (
   phone: string,
   roundUpSavings: boolean
 ): Promise<Transaction> => {
+  const settings = await SettingsService.getSettings();
   
-  if (user.balance < amount) {
+  // Dynamic Pricing Logic from Settings
+  const sellingPercentage = settings.servicePricing?.airtimeSellingPercentage || 100;
+  const costPercentage = settings.servicePricing?.airtimeCostPercentage || 98;
+
+  // Calculate actual amounts
+  const sellingPrice = amount * (sellingPercentage / 100);
+  const costPrice = amount * (costPercentage / 100);
+  const profit = sellingPrice - costPrice;
+
+  if (user.balance < sellingPrice) {
     throw new Error("Insufficient wallet balance.");
   }
 
-  // Calculate Roundup
-  let finalDeduction = amount;
+  // Calculate Roundup based on Selling Price
+  let finalDeduction = sellingPrice;
   let savedAmount = 0;
   
   if (roundUpSavings) {
-    const nextHundred = Math.ceil(amount / 100) * 100;
-    if (nextHundred > amount) {
-        savedAmount = nextHundred - amount;
+    const nextHundred = Math.ceil(sellingPrice / 100) * 100;
+    if (nextHundred > sellingPrice) {
+        savedAmount = nextHundred - sellingPrice;
         finalDeduction = nextHundred;
     }
   }
@@ -52,10 +58,10 @@ export const processAirtimePurchase = async (
      throw new Error("Insufficient balance for transaction + savings roundup.");
   }
 
-  // --- API INTEGRATION START ---
+  // --- API INTEGRATION ---
   try {
+      // Pass the original amount (face value) to the API
       const apiResponse = await ApiService.buyAirtime(provider, phone, amount);
-      
       if (!apiResponse.success) {
           throw new Error(apiResponse.error || "Provider failed to process transaction");
       }
@@ -63,26 +69,20 @@ export const processAirtimePurchase = async (
       console.error("Service Integration Error:", error);
       throw new Error(error.message || "Service temporarily unavailable. Please try again later.");
   }
-  // --- API INTEGRATION END ---
 
   // Deduct Balance
   const updatedUser = await MockDB.updateUserBalance(user.id, -finalDeduction);
   
-  // Add to Savings if applicable
   if (savedAmount > 0) {
       await MockDB.updateUserSavings(user.id, savedAmount);
   }
-
-  // Calculate Profit for Airtime (Assume 2% profit margin for Airtime)
-  const costPrice = amount * 0.98;
-  const profit = amount - costPrice;
 
   const tx: Transaction = {
     id: generateId(),
     userId: user.id,
     type: TransactionType.AIRTIME,
     provider,
-    amount,
+    amount: sellingPrice, // Record what user paid
     costPrice,
     profit,
     destinationNumber: phone,
@@ -95,7 +95,6 @@ export const processAirtimePurchase = async (
 
   await MockDB.addTransaction(tx);
 
-  // Send SMS Notification
   const smsMsg = `JadanPay: ${provider} Airtime of N${amount} to ${phone} Successful. New Bal: N${updatedUser.balance.toFixed(2)}. Ref: ${tx.reference}`;
   await NotificationService.sendSms(user.phone, smsMsg);
 
@@ -108,14 +107,12 @@ export const processDataPurchase = async (
   phone: string,
   roundUpSavings: boolean
 ): Promise<Transaction> => {
-  
   const amount = bundle.price;
 
     if (user.balance < amount) {
     throw new Error("Insufficient wallet balance.");
   }
 
-  // Calculate Roundup
   let finalDeduction = amount;
   let savedAmount = 0;
   
@@ -131,15 +128,12 @@ export const processDataPurchase = async (
      throw new Error("Insufficient balance for transaction + savings roundup.");
   }
 
-  // --- API INTEGRATION START ---
   try {
-      // Validation: Check if API Plan ID exists
       if (!bundle.planId) {
           throw new Error("Configuration Error: This bundle is missing an API Plan ID. Please contact support.");
       }
       
       const apiResponse = await ApiService.buyData(bundle.provider as string, phone, bundle.planId);
-      
       if (!apiResponse.success) {
           throw new Error(apiResponse.error || "Data Provider failed to process transaction");
       }
@@ -147,22 +141,18 @@ export const processDataPurchase = async (
       console.error("Service Integration Error:", error);
       throw new Error(error.message || "Service temporarily unavailable. Please try again later.");
   }
-  // --- API INTEGRATION END ---
 
-  // Deduct Balance
   const updatedUser = await MockDB.updateUserBalance(user.id, -finalDeduction);
    if (savedAmount > 0) {
       await MockDB.updateUserSavings(user.id, savedAmount);
   }
 
-  // Credit Data to User's virtual total
   const gbAmount = parseDataToGB(bundle.dataAmount);
   if (gbAmount > 0) {
       await MockDB.updateUserDataBalance(user.id, gbAmount);
   }
 
-  // Calculate Profit from Bundle settings
-  const costPrice = bundle.costPrice || (bundle.price * 0.95); // Fallback to 5% margin if costPrice missing
+  const costPrice = bundle.costPrice || (bundle.price * 0.95);
   const profit = bundle.price - costPrice;
 
   const tx: Transaction = {
@@ -184,7 +174,6 @@ export const processDataPurchase = async (
 
   await MockDB.addTransaction(tx);
 
-  // Send SMS Notification
   const smsMsg = `JadanPay: ${bundle.dataAmount} Data sent to ${phone}. Plan: ${bundle.name}. New Bal: N${updatedUser.balance.toFixed(2)}.`;
   await NotificationService.sendSms(user.phone, smsMsg);
 
@@ -195,29 +184,30 @@ export const processBillPayment = async (
     user: User,
     type: TransactionType,
     provider: BillProvider,
-    number: string, // IUC or Meter
+    number: string,
     amount: number,
-    bundle?: Bundle // For Cable
+    bundle?: Bundle
 ): Promise<Transaction> => {
+    const settings = await SettingsService.getSettings();
+    // Use dynamic service fee from settings
+    const serviceFee = settings.servicePricing?.billServiceFee || 100;
+
+    const baseAmount = bundle ? bundle.price : amount;
+    // TotalDeduct passed from form usually includes fee, but let's recalculate to be safe
+    // Actually form passes totalDeduct directly. Let's assume amount passed IS the total to deduct.
+    // If logic changes, we might need to adjust.
+    // Standard: amount passed to this func is Total Payable by user.
     
-    if (user.balance < amount) {
-        throw new Error("Insufficient wallet balance.");
-    }
+    if (user.balance < amount) throw new Error("Insufficient wallet balance.");
 
-    // --- MOCK API CALL START ---
-    // In a real app, call ApiService.payBill()
-    // For now, we simulate a latency and success
     await new Promise(r => setTimeout(r, 1500));
-    // --- MOCK API CALL END ---
 
-    // Deduct Balance
     const updatedUser = await MockDB.updateUserBalance(user.id, -amount);
 
-    // Calculate Profit (Assume small fee or markup)
-    // For bills, usually there is a N100 fee, or we get a commission. 
-    // Let's assume we charge flat N50 profit on the price shown to user.
-    const costPrice = amount - 50; 
-    const profit = 50;
+    // Calculate Profit: Service Fee is profit. 
+    // Cost = Amount User Paid - Service Fee
+    const costPrice = amount - serviceFee; 
+    const profit = serviceFee;
 
     const tx: Transaction = {
         id: generateId(),
@@ -234,12 +224,11 @@ export const processBillPayment = async (
         reference: generateRef(),
         previousBalance: user.balance,
         newBalance: updatedUser.balance,
-        customerName: 'MOCKED CUSTOMER' // In real app, this comes from validation step
+        customerName: 'MOCKED CUSTOMER'
     };
 
     await MockDB.addTransaction(tx);
 
-    // Send SMS Notification
     const smsMsg = `JadanPay: Bill Payment (${provider}) for ${number} Successful. Amount: N${amount}. New Bal: N${updatedUser.balance.toFixed(2)}`;
     await NotificationService.sendSms(user.phone, smsMsg);
 
@@ -247,7 +236,6 @@ export const processBillPayment = async (
 };
 
 export const fundWallet = async (user: User, amount: number): Promise<Transaction> => {
-  // Mock Payment Gateway Success
   const updatedUser = await MockDB.updateUserBalance(user.id, amount);
   const ref = generateRef();
 
@@ -261,12 +249,11 @@ export const fundWallet = async (user: User, amount: number): Promise<Transactio
     reference: ref,
     previousBalance: user.balance,
     newBalance: updatedUser.balance,
-    paymentMethod: 'Bank Transfer' // Added default payment method for manual funding
+    paymentMethod: 'Bank Transfer'
   };
 
   await MockDB.addTransaction(tx);
 
-  // Send SMS Notification
   const smsMsg = `JadanPay: Wallet funded with N${amount} Successfully. New Bal: N${updatedUser.balance.toFixed(2)}. Ref: ${ref}`;
   await NotificationService.sendSms(user.phone, smsMsg);
 
