@@ -33,23 +33,23 @@ export const PROVIDER_LOGOS = {
 };
 
 export const PROVIDER_IMAGES: Record<string, string> = {
-  // Telcos - Using stable Wikimedia URLs for better reliability and CORS
+  // Telcos - Using stable Wikimedia SVG URLs for better quality and reliability
   [Provider.MTN]: 'https://upload.wikimedia.org/wikipedia/commons/9/93/MTN_Logo.svg',
-  [Provider.GLO]: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/Glo_logo.svg/512px-Glo_logo.svg.png',
-  [Provider.AIRTEL]: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Airtel_logo.svg/512px-Airtel_logo.svg.png',
-  [Provider.NMOBILE]: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/9mobile-Logo.svg/512px-9mobile-Logo.svg.png',
+  [Provider.GLO]: 'https://upload.wikimedia.org/wikipedia/commons/b/b8/Glo_logo.svg',
+  [Provider.AIRTEL]: 'https://upload.wikimedia.org/wikipedia/commons/2/22/Airtel_logo.svg',
+  [Provider.NMOBILE]: 'https://upload.wikimedia.org/wikipedia/commons/a/a0/9mobile-Logo.svg',
   
-  // Bills - Using stable Wikimedia URLs where possible
-  [BillProvider.DSTV]: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/DStv_logo.svg/512px-DStv_logo.svg.png',
-  [BillProvider.GOTV]: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/GOtv_logo.svg/512px-GOtv_logo.svg.png',
+  // Bills - Using stable Wikimedia SVG/PNG URLs
+  [BillProvider.DSTV]: 'https://upload.wikimedia.org/wikipedia/commons/5/5a/DStv_logo.svg',
+  [BillProvider.GOTV]: 'https://upload.wikimedia.org/wikipedia/commons/c/c2/GOtv_logo.svg',
   [BillProvider.STARTIMES]: 'https://upload.wikimedia.org/wikipedia/commons/e/e6/StarTimes_Logo.png',
   
-  // Electricity - using Wikimedia URLs to prevent CORS/hotlinking issues
-  [BillProvider.IKEDC]: 'https://upload.wikimedia.org/wikipedia/en/3/3b/Ikeja_Electric_logo.jpg',
-  [BillProvider.EKEDC]: 'https://upload.wikimedia.org/wikipedia/en/5/52/Eko_Electricity_Distribution_Company_logo.jpg',
-  [BillProvider.AEDC]: 'https://upload.wikimedia.org/wikipedia/en/9/92/Abuja_Electricity_Distribution_Company_logo.png',
-  [BillProvider.IBEDC]: 'https://upload.wikimedia.org/wikipedia/en/5/5d/Ibadan_Electricity_Distribution_Company_%28IBEDC%29_logo.jpg',
-  [BillProvider.KEDCO]: 'https://upload.wikimedia.org/wikipedia/en/3/3d/Kano_Electricity_Distribution_Company_logo.jpg',
+  // Electricity - Replaced Wikipedia "Fair Use" links with more reliable sources to fix broken images.
+  [BillProvider.IKEDC]: 'https://asset.brandfetch.io/id2Fd_t01j/idjW803s7s.svg',
+  [BillProvider.EKEDC]: 'https://www.ekedp.com/images/logo_main.png',
+  [BillProvider.AEDC]: 'https://www.aedc.com/assets/images/logo-dark.png',
+  [BillProvider.IBEDC]: 'https://ibedc.com/wp-content/uploads/2021/03/logo.png',
+  [BillProvider.KEDCO]: 'https://www.kedco.ng/images/logo.png',
 };
 
 // MOCK DATA FOR USERS
