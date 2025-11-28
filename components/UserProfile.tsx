@@ -1,8 +1,10 @@
 
+
 import React, { useState } from 'react';
 import { User, UserRole } from '../types';
 import { MockDB } from '../services/mockDb';
 import { Save, User as UserIcon, Phone, Mail, Shield, CheckCircle, Lock, Key, Briefcase, Clock, AlertCircle, Camera } from 'lucide-react';
+import { playNotification } from '../utils/audio';
 
 interface UserProfileProps {
   user: User;
@@ -21,6 +23,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdate }) => {
   const [pinData, setPinData] = useState({ oldPin: '', newPin: '' });
   const [pinLoading, setPinLoading] = useState(false);
   const [pinMessage, setPinMessage] = useState('');
+  const [forgotPinLoading, setForgotPinLoading] = useState(false);
 
   // Reseller Request State
   const [requestLoading, setRequestLoading] = useState(false);
@@ -70,6 +73,27 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdate }) => {
       } finally {
           setPinLoading(false);
       }
+  };
+
+  const handleForgotPin = async () => {
+    if (!window.confirm("Are you sure you want to reset your PIN? This will clear your current PIN, and you will need to create a new one.")) {
+        return;
+    }
+
+    setForgotPinLoading(true);
+    setPinMessage('');
+
+    try {
+        await MockDB.resetUserPin(user.id);
+        onUpdate();
+        setPinMessage("PIN has been successfully reset. Please create a new one.");
+        playNotification("PIN reset successfully. Please create a new one.");
+    } catch (error) {
+        setPinMessage("Failed to reset PIN. Please try again.");
+        playNotification("Failed to reset PIN.", "error");
+    } finally {
+        setForgotPinLoading(false);
+    }
   };
 
   const handleRequestUpgrade = async () => {
@@ -244,7 +268,17 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdate }) => {
             <form onSubmit={handlePinChange} className="space-y-6">
                 {user.transactionPin ? (
                     <div>
-                        <label className="block text-sm font-bold text-gray-500 dark:text-gray-300 mb-2">Old PIN</label>
+                        <div className="flex justify-between items-center mb-2">
+                            <label className="block text-sm font-bold text-gray-500 dark:text-gray-300">Old PIN</label>
+                            <button 
+                                type="button"
+                                onClick={handleForgotPin}
+                                disabled={forgotPinLoading}
+                                className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium disabled:opacity-50"
+                            >
+                                {forgotPinLoading ? 'Resetting...' : 'Forgot PIN?'}
+                            </button>
+                        </div>
                         <div className="relative">
                             <Key className="absolute left-3 top-3.5 text-gray-400" size={18}/>
                             <input 
@@ -279,15 +313,15 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdate }) => {
                 </div>
 
                 {pinMessage && (
-                    <div className={`p-3 rounded-xl text-sm font-bold ${pinMessage.includes('success') ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                    <div className={`p-3 rounded-xl text-sm font-bold ${pinMessage.includes('success') ? 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400'}`}>
                         {pinMessage}
                     </div>
                 )}
 
                 <button 
                     type="submit" 
-                    disabled={pinLoading}
-                    className="w-full py-4 bg-orange-600 text-white rounded-xl font-bold shadow-lg shadow-orange-200 dark:shadow-orange-900/20 hover:bg-orange-700 transition-all flex items-center justify-center gap-2"
+                    disabled={pinLoading || forgotPinLoading}
+                    className="w-full py-4 bg-orange-600 text-white rounded-xl font-bold shadow-lg shadow-orange-200 dark:shadow-orange-900/20 hover:bg-orange-700 transition-all flex items-center justify-center gap-2 disabled:opacity-60"
                 >
                     {pinLoading ? 'Updating...' : <><Key size={18}/> {user.transactionPin ? 'Change PIN' : 'Create PIN'}</>}
                 </button>

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { User, Ticket } from '../types';
 import { MockDB } from '../services/mockDb';
@@ -26,6 +25,17 @@ export const Support: React.FC<SupportProps> = ({ user }) => {
   // Reply State
   const [replyText, setReplyText] = useState('');
   const [replyAttachment, setReplyAttachment] = useState<File | null>(null);
+  
+  // Agent Status Simulation
+  const [isAgentOnline, setIsAgentOnline] = useState(false);
+
+  useEffect(() => {
+    // Simulate agent status toggling every 5 seconds for a "live" feel
+    const interval = setInterval(() => {
+      setIsAgentOnline(Math.random() > 0.4); // More likely to be online
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     if (user?.id) {
@@ -217,7 +227,15 @@ export const Support: React.FC<SupportProps> = ({ user }) => {
                                  <p className="text-xs text-gray-500 dark:text-gray-400 font-mono">Ticket #{selectedTicket.id}</p>
                              </div>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex gap-4 items-center">
+                            {selectedTicket.subject.includes('[SUPER]') && (
+                                <div className="flex items-center gap-2">
+                                    <div className={`w-2.5 h-2.5 rounded-full transition-colors ${isAgentOnline ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`}></div>
+                                    <span className={`text-xs font-bold transition-colors ${isAgentOnline ? 'text-green-600 dark:text-green-400' : 'text-gray-500'}`}>
+                                        Agent {isAgentOnline ? 'Online' : 'Offline'}
+                                    </span>
+                                </div>
+                            )}
                              <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${
                                 selectedTicket.priority === 'high' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' :
                                 selectedTicket.priority === 'medium' ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400' :

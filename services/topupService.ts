@@ -3,6 +3,7 @@ import { MockDB } from './mockDb';
 import { ApiService } from './apiService';
 import { NotificationService } from './notificationService';
 import { SettingsService } from './settingsService';
+import { playNotification } from '../utils/audio';
 
 const generateId = () => Math.random().toString(36).substr(2, 9);
 const generateRef = () => `REF-${Math.floor(Math.random() * 1000000000)}`;
@@ -107,6 +108,9 @@ export const processAirtimePurchase = async (
   };
 
   await MockDB.addTransaction(tx);
+  
+  const audioMsg = `${provider} airtime worth ₦${amount} has been sent to ${phone} successfully.`;
+  playNotification(audioMsg);
 
   const smsMsg = `JadanPay: ${provider} Airtime of N${amount} to ${phone} Successful. New Bal: N${updatedUser.balance.toFixed(2)}. Ref: ${tx.reference}`;
   await NotificationService.sendSms(user.phone, smsMsg);
@@ -181,6 +185,9 @@ export const processDataPurchase = async (
   };
 
   await MockDB.addTransaction(tx);
+  
+  const audioMsg = `Data plan ${bundle.name} has been sent to ${phone} successfully.`;
+  playNotification(audioMsg);
 
   const smsMsg = `JadanPay: ${bundle.dataAmount} Data sent to ${phone}. Plan: ${bundle.name}. New Bal: N${updatedUser.balance.toFixed(2)}.`;
   await NotificationService.sendSms(user.phone, smsMsg);
@@ -243,6 +250,9 @@ export const processBillPayment = async (
     };
 
     await MockDB.addTransaction(tx);
+    
+    const audioMsg = `${provider} bill payment for ${number} was successful.`;
+    playNotification(audioMsg);
 
     const smsMsg = `JadanPay: Bill Payment (${provider}) for ${number} of N${totalAmount} was successful. New Bal: N${updatedUser.balance.toFixed(2)}`;
     await NotificationService.sendSms(user.phone, smsMsg);
@@ -268,6 +278,9 @@ export const fundWallet = async (user: User, amount: number): Promise<Transactio
   };
 
   await MockDB.addTransaction(tx);
+  
+  const audioMsg = `Payment of ₦${amount.toLocaleString()} received successfully.`;
+  playNotification(audioMsg);
 
   const smsMsg = `JadanPay: Wallet funded with N${amount} Successfully. New Bal: N${updatedUser.balance.toFixed(2)}. Ref: ${ref}`;
   await NotificationService.sendSms(user.phone, smsMsg);

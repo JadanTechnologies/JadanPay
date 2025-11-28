@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Transaction, TransactionStatus, Provider, User } from '../types';
 import { MockDB } from '../services/mockDb';
-import { X, Share2, CheckCircle2, Download, RefreshCw, Check, Search, Calendar, Copy, Receipt, Link as LinkIcon, Smartphone, CreditCard, ExternalLink, QrCode, Clock } from 'lucide-react';
+import { X, Share2, CheckCircle2, Download, RefreshCw, Check, Search, Calendar, Copy, Receipt, Link as LinkIcon, Smartphone, CreditCard, ExternalLink, QrCode, Clock, Phone } from 'lucide-react';
 import { PROVIDER_LOGOS, PROVIDER_COLORS, PROVIDER_IMAGES } from '../constants';
 import { playNotification } from '../utils/audio';
 
@@ -224,8 +224,15 @@ export const History: React.FC<HistoryProps> = ({ user, highlightId }) => {
                              </div>
 
                              <div className="flex justify-between items-center">
-                                 <span className="text-sm text-gray-500 dark:text-gray-400">Recipient</span>
-                                 <span className="font-mono font-bold text-gray-900 dark:text-white text-sm">{selectedTx.destinationNumber || selectedTx.userId}</span>
+                                <span className="text-sm text-gray-500 dark:text-gray-400">Recipient</span>
+                                <div className="flex items-center gap-2">
+                                    <span className="font-mono font-bold text-gray-900 dark:text-white text-sm">{selectedTx.destinationNumber || selectedTx.userId}</span>
+                                    {selectedTx.destinationNumber && (
+                                        <a href={`tel:${selectedTx.destinationNumber}`} title={`Call ${selectedTx.destinationNumber}`} className="p-1 text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors">
+                                            <Phone size={14} />
+                                        </a>
+                                    )}
+                                </div>
                              </div>
                              
                              {selectedTx.bundleName && (
