@@ -5,7 +5,7 @@ import { processAirtimePurchase, processDataPurchase, processBillPayment } from 
 import { SettingsService } from '../services/settingsService';
 import { MockDB } from '../services/mockDb';
 import { playNotification } from '../utils/audio';
-import { Smartphone, Wifi, PiggyBank, Loader2, Sparkles, Star, Check, AlertTriangle, Info, Share2, Ban, Activity, ChevronDown, Tv, Zap, User as UserIcon, Phone, RefreshCw, X, Receipt, QrCode, BarChart3, Lock, Key } from 'lucide-react';
+import { Smartphone, Wifi, PiggyBank, Loader2, Sparkles, Star, Check, AlertTriangle, Info, Share2, Ban, Activity, ChevronDown, Tv, Zap, User as UserIcon, Phone, RefreshCw, X, Receipt, QrCode, BarChart3, Lock, Key, Eye, EyeOff } from 'lucide-react';
 
 interface TopUpFormProps {
   user: User;
@@ -39,6 +39,7 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
   const [showPinModal, setShowPinModal] = useState(false);
   const [pin, setPin] = useState('');
   const [pinError, setPinError] = useState<string | null>(null);
+  const [showPin, setShowPin] = useState(false);
 
 
   useEffect(() => {
@@ -163,7 +164,16 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
       setPin('');
       setLastTx(tx);
       setResultState('success');
-      playNotification("Transaction successful");
+      
+      // Play audio confirmation
+      let audioMsg = 'Transaction successful';
+      if (tx.type === TransactionType.AIRTIME) {
+        audioMsg = `${tx.provider} airtime worth ₦${Number(amount)} has been sent to ${phone} successfully.`;
+      } else if (tx.type === TransactionType.DATA) {
+        audioMsg = `Data plan ${tx.bundleName} has been sent to ${phone} successfully.`;
+      }
+      playNotification(audioMsg);
+
       onSuccess();
     } catch (err: any) {
       playNotification(err.message || "An error occurred", 'error');
@@ -380,14 +390,19 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
             <div className="bg-white dark:bg-gray-900 w-full max-w-sm rounded-2xl p-6 shadow-2xl animate-fade-in-up">
                 <h3 className="text-lg font-bold mb-2 text-gray-900 dark:text-white text-center">Enter Transaction PIN</h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400 text-center mb-6">Enter your 4-digit PIN to authorize this payment.</p>
-                <input
-                    type="password"
-                    value={pin}
-                    onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
-                    maxLength={4}
-                    className="w-full p-4 text-center text-3xl font-mono tracking-[1em] bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl outline-none focus:ring-2 focus:ring-green-500"
-                    autoFocus
-                />
+                <div className="relative">
+                    <input
+                        type={showPin ? 'text' : 'password'}
+                        value={pin}
+                        onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
+                        maxLength={4}
+                        className="w-full p-4 text-center text-3xl font-mono tracking-[1em] bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl outline-none focus:ring-2 focus:ring-green-500"
+                        autoFocus
+                    />
+                    <button type="button" onClick={() => setShowPin(!showPin)} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                        {showPin ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
+                </div>
                 {pinError && <p className="text-red-500 text-sm text-center mt-2">{pinError}</p>}
                 
                 <div className="flex gap-3 mt-6">
@@ -405,6 +420,40 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
                         Forgot PIN?
                     </button>
                 </div>
+            </div>
+        </div>
+      )}
+
+      {resultState === 'success' && lastTx && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-white dark:bg-gray-900 w-full max-w-sm rounded-2xl p-6 shadow-2xl animate-fade-in-up text-center">
+                <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto text-green-600 dark:text-green-400 animate-bounce">
+                    <Check size={32} />
+                </div>
+                <h3 className="text-xl font-bold mt-4 text-gray-900 dark:text-white">Transaction Successful!</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                    {lastTx.type === 'DATA' ? `${lastTx.bundleName} sent to ${lastTx.destinationNumber}` :
+                     lastTx.type === 'AIRTIME' ? `₦${(lastTx.amount - (serviceFees.airtime || 0)).toLocaleString()} airtime sent to ${lastTx.destinationNumber}` :
+                     'Your payment was successful.'}
+                </p>
+                <div className="flex gap-3 mt-6">
+                    <button onClick={() => onViewReceipt(lastTx.id)} className="flex-1 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-xl font-medium flex items-center justify-center gap-2">
+                        <Receipt size={16}/> View Receipt
+                    </button>
+                    <button onClick={() => {
+                        const shareText = `Transaction successful!\nRef: ${lastTx.reference}`;
+                        navigator.clipboard.writeText(shareText);
+                        playNotification("Receipt details copied!");
+                    }} className="flex-1 py-3 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-xl font-medium flex items-center justify-center gap-2">
+                        <Share2 size={16}/> Share
+                    </button>
+                    {(lastTx.type === 'DATA' || lastTx.type === 'AIRTIME') && (
+                        <a href={`tel:${lastTx.destinationNumber}`} className="p-3 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 rounded-xl">
+                           <Phone size={18}/>
+                        </a>
+                    )}
+                </div>
+                <button onClick={() => setResultState('idle')} className="w-full mt-4 text-sm text-gray-500 dark:text-gray-400 hover:underline">Done</button>
             </div>
         </div>
       )}

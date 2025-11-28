@@ -159,17 +159,13 @@ export const History: React.FC<HistoryProps> = ({ user, highlightId }) => {
         ))}
       </div>
 
-      {/* Enhanced Receipt Modal - FIXED SIZE & CLOSE BUTTON */}
       {selectedTx && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300 overflow-y-auto">
           <div className="w-full max-w-[380px] my-4 relative animate-in zoom-in-95 slide-in-from-bottom-8 duration-300 max-h-[90vh] flex flex-col">
              
-             {/* Receipt Card */}
              <div className="bg-white dark:bg-gray-800 rounded-3xl overflow-hidden shadow-2xl relative flex flex-col overflow-y-auto">
                  
-                 {/* Receipt Header Pattern */}
                  <div className="bg-green-600 p-6 pt-8 text-center relative shrink-0">
-                     {/* FIX: Moved close button inside for accessibility */}
                      <button 
                         onClick={() => setSelectedTx(null)}
                         className="absolute top-4 right-4 p-2 bg-white/20 hover:bg-white/30 text-white rounded-full transition-colors z-50"
@@ -193,7 +189,6 @@ export const History: React.FC<HistoryProps> = ({ user, highlightId }) => {
                      </div>
                  </div>
 
-                 {/* Receipt Body */}
                  <div className="px-8 pb-8 bg-white dark:bg-gray-800 text-center flex-1 overflow-y-auto">
                       <div className="mb-6">
                           <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Total Paid</p>
@@ -202,14 +197,13 @@ export const History: React.FC<HistoryProps> = ({ user, highlightId }) => {
                           </h1>
                       </div>
 
-                      {/* Transaction Details */}
                       <div className="bg-gray-50 dark:bg-gray-700/30 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden text-left">
                          <div className="p-4 border-b border-gray-200 dark:border-gray-600 flex justify-between items-center bg-gray-100/50 dark:bg-gray-800/50">
                              <div>
                                  <span className="block text-[10px] font-bold text-gray-400 uppercase">Reference</span>
                                  <span className="font-mono font-bold text-gray-700 dark:text-gray-200 text-xs">{selectedTx.reference}</span>
                              </div>
-                             <button onClick={() => handleCopyRef(selectedTx.reference)} className="text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors"><Copy size={14}/></button>
+                             <button onClick={() => handleCopyRef(selectedTx.reference)} className="p-1.5 text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors rounded-md hover:bg-gray-200 dark:hover:bg-gray-700"><Copy size={14}/></button>
                          </div>
 
                          <div className="p-4 space-y-3">

@@ -1,9 +1,8 @@
-
-
 import React, { useState } from 'react';
-import { User, UserRole } from '../types';
+import { User, UserRole, KycStatus } from '../types';
 import { MockDB } from '../services/mockDb';
-import { Save, User as UserIcon, Phone, Mail, Shield, CheckCircle, Lock, Key, Briefcase, Clock, AlertCircle, Camera } from 'lucide-react';
+import { VerificationModal } from './VerificationModal';
+import { Save, User as UserIcon, Phone, Mail, Shield, CheckCircle, Lock, Key, Briefcase, Clock, AlertCircle, Camera, UserCheck } from 'lucide-react';
 import { playNotification } from '../utils/audio';
 
 interface UserProfileProps {
@@ -18,6 +17,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdate }) => {
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
 
   // PIN State
   const [pinData, setPinData] = useState({ oldPin: '', newPin: '' });
@@ -58,7 +58,6 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdate }) => {
           return;
       }
 
-      // If user has an existing PIN, old pin is required
       if (user.transactionPin && pinData.oldPin !== user.transactionPin) {
           setPinMessage("Incorrect Old PIN.");
           setPinMessageType('error');
@@ -132,9 +131,21 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdate }) => {
       }
   };
 
+  const KycStatusPill: React.FC<{ status?: KycStatus }> = ({ status }) => {
+    switch (status) {
+      case KycStatus.VERIFIED:
+        return <span className="px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"><CheckCircle size={12}/> Verified</span>;
+      case KycStatus.PENDING:
+        return <span className="px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400"><Clock size={12}/> Pending</span>;
+      case KycStatus.REJECTED:
+        return <span className="px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400"><AlertCircle size={12}/> Rejected</span>;
+      default:
+        return <span className="px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300"><AlertCircle size={12}/> Unverified</span>;
+    }
+  };
+
   return (
     <div className="max-w-2xl mx-auto space-y-6 animate-fade-in pb-20">
-        {/* Header Card */}
         <div className="bg-white dark:bg-gray-800 p-8 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm relative overflow-hidden transition-colors">
             <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-r from-green-600 to-teal-600"></div>
             
@@ -153,14 +164,29 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdate }) => {
                     <span className={`px-3 py-1 rounded-full text-xs font-bold capitalize flex items-center gap-1 ${user.role === UserRole.RESELLER ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-300' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}`}>
                         <Shield size={12}/> {user.role}
                     </span>
-                    <span className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 ${user.isVerified ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400'}`}>
-                        <CheckCircle size={12}/> {user.isVerified ? 'Verified' : 'Unverified'}
-                    </span>
+                    <KycStatusPill status={user.kycStatus} />
                 </div>
             </div>
         </div>
 
-        {/* Reseller Upgrade Section */}
+        <div className="bg-white dark:bg-gray-800 p-8 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm">
+             <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2">
+                <UserCheck size={20} className="text-blue-600 dark:text-blue-400"/> Identity Verification
+            </h3>
+            <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700">
+                <div>
+                    <p className="text-sm font-bold text-gray-800 dark:text-white">Verification Status</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Complete verification to lift limits.</p>
+                </div>
+                <KycStatusPill status={user.kycStatus} />
+            </div>
+            {user.kycStatus !== KycStatus.VERIFIED && (
+                <button onClick={() => setShowVerifyModal(true)} className="w-full mt-4 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700">
+                    {user.kycStatus === KycStatus.REJECTED ? 'Re-submit Verification' : 'Verify Now'}
+                </button>
+            )}
+        </div>
+
         {user.role === UserRole.USER && (
             <div className="bg-gradient-to-r from-purple-800 to-indigo-900 p-6 rounded-3xl shadow-lg text-white relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
@@ -202,7 +228,6 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdate }) => {
             </div>
         )}
 
-        {/* Personal Info */}
         <div className="bg-white dark:bg-gray-800 p-8 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm transition-colors">
             <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2">
                 <UserIcon size={20} className="text-green-600 dark:text-green-400"/> Edit Profile
@@ -268,7 +293,6 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdate }) => {
             </form>
         </div>
 
-        {/* Security Section */}
         <div className="bg-white dark:bg-gray-800 p-8 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm transition-colors">
             <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2">
                 <Lock size={20} className="text-orange-600 dark:text-orange-400"/> Security
@@ -336,6 +360,8 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdate }) => {
                 </button>
             </form>
         </div>
+
+        {showVerifyModal && <VerificationModal user={user} onClose={() => setShowVerifyModal(false)} onSuccess={() => { onUpdate(); setShowVerifyModal(false); }} />}
     </div>
   );
 };

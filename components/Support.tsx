@@ -8,6 +8,25 @@ interface SupportProps {
   user: User;
 }
 
+const generateAutoReply = (message: string): string => {
+    const lowerMessage = message.toLowerCase();
+    
+    if (lowerMessage.includes('balance') || lowerMessage.includes('wallet')) {
+        return "Thanks for reaching out! If your wallet balance isn't reflecting a recent payment, please allow up to 15 minutes for bank transfers. If it's still missing, please provide the transaction reference number.";
+    }
+    if (lowerMessage.includes('pin')) {
+        return "If you've forgotten your transaction PIN, you can reset it from your Profile page under the 'Security' section. For your security, we cannot reset it for you.";
+    }
+    if (lowerMessage.includes('data') || lowerMessage.includes('airtime')) {
+        return "We've received your query about a data or airtime transaction. Can you please provide the transaction reference number and the destination phone number so we can investigate?";
+    }
+    if (lowerMessage.includes('fail') || lowerMessage.includes('error')) {
+        return "We're sorry to hear you're experiencing an issue. To help us resolve this quickly, please provide a screenshot of the error message and the transaction reference if you have one.";
+    }
+
+    return "Thanks for contacting support! We've received your message and will connect you to the next available agent shortly.";
+};
+
 export const Support: React.FC<SupportProps> = ({ user }) => {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
@@ -30,9 +49,8 @@ export const Support: React.FC<SupportProps> = ({ user }) => {
   const [isAgentOnline, setIsAgentOnline] = useState(false);
 
   useEffect(() => {
-    // Simulate agent status toggling every 5 seconds for a "live" feel
     const interval = setInterval(() => {
-      setIsAgentOnline(Math.random() > 0.4); // More likely to be online
+      setIsAgentOnline(Math.random() > 0.4);
     }, 5000);
     return () => clearInterval(interval);
   }, []);
@@ -47,7 +65,7 @@ export const Support: React.FC<SupportProps> = ({ user }) => {
     setLoading(true);
     try {
         const data = await MockDB.getTickets(user.id);
-        setTickets(data || []); // Ensure data is array
+        setTickets(data || []);
     } catch (e) {
         console.error("Failed to load tickets", e);
         setTickets([]);
@@ -62,7 +80,6 @@ export const Support: React.FC<SupportProps> = ({ user }) => {
     
     setIsSubmitting(true);
     try {
-        // If Super Ticket, force high priority and tag subject
         const finalSubject = isSuperTicket ? `[SUPER] ${newSubject}` : newSubject;
         const finalPriority = isSuperTicket ? 'high' : newPriority;
 
@@ -75,11 +92,11 @@ export const Support: React.FC<SupportProps> = ({ user }) => {
 
         const ticket = await MockDB.createTicket(user.id, finalSubject, newMessage, finalPriority, attachUrl, attachName);
         
-        if (isSuperTicket) {
-            playNotification("Super Ticket created! An agent will be with you shortly.");
-        } else {
-            playNotification("Support ticket created successfully.");
-        }
+        // Add automated reply
+        const autoReplyText = generateAutoReply(newMessage);
+        await MockDB.replyTicket(ticket.id, autoReplyText, true);
+
+        playNotification(isSuperTicket ? "Super Ticket created! An agent will be with you shortly." : "Support ticket created successfully.");
 
         setShowCreateModal(false);
         setNewSubject('');
@@ -89,8 +106,10 @@ export const Support: React.FC<SupportProps> = ({ user }) => {
         setNewPriority('medium');
         
         // Refresh and select
-        await loadTickets();
-        setSelectedTicket(ticket);
+        const updatedTickets = await MockDB.getTickets(user.id);
+        setTickets(updatedTickets);
+        const newTicketWithReply = updatedTickets.find(t => t.id === ticket.id);
+        setSelectedTicket(newTicketWithReply || null);
     } catch (error) {
         alert("Failed to create ticket");
     } finally {
@@ -114,7 +133,6 @@ export const Support: React.FC<SupportProps> = ({ user }) => {
         setReplyText('');
         setReplyAttachment(null);
         
-        // Refresh local data
         const updated = await MockDB.getTickets(user.id);
         setTickets(updated);
         const current = updated.find(t => t.id === selectedTicket.id);
@@ -135,9 +153,8 @@ export const Support: React.FC<SupportProps> = ({ user }) => {
       }
   };
 
-  // Helper to safely get last message with defensive check
   const getLastMessage = (ticket: Ticket) => {
-      if (ticket && ticket.messages && Array.isArray(ticket.messages) && ticket.messages.length > 0) {
+      if (ticket?.messages?.length > 0) {
           return ticket.messages[ticket.messages.length - 1].text;
       }
       return 'No messages';
@@ -146,7 +163,6 @@ export const Support: React.FC<SupportProps> = ({ user }) => {
   return (
     <div className="space-y-6 animate-fade-in h-[calc(100vh-140px)] flex gap-6">
        
-       {/* Left: Ticket List */}
        <div className={`w-full md:w-1/3 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col overflow-hidden transition-colors ${selectedTicket ? 'hidden md:flex' : 'flex'}`}>
            <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-900">
                <h2 className="font-bold text-gray-800 dark:text-white flex items-center gap-2">
@@ -211,11 +227,9 @@ export const Support: React.FC<SupportProps> = ({ user }) => {
            </div>
        </div>
 
-       {/* Right: Conversation */}
        <div className={`w-full md:w-2/3 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col overflow-hidden transition-colors ${!selectedTicket ? 'hidden md:flex' : 'flex'}`}>
             {selectedTicket ? (
                 <>
-                    {/* Chat Header */}
                     <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-900">
                         <div className="flex items-center gap-2">
                              <button onClick={() => setSelectedTicket(null)} className="md:hidden p-2 mr-1 bg-white dark:bg-gray-800 rounded-full border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400"><X size={16}/></button>
@@ -246,14 +260,13 @@ export const Support: React.FC<SupportProps> = ({ user }) => {
                         </div>
                     </div>
 
-                    {/* Messages */}
                     <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50/30 dark:bg-gray-900/30">
                         {selectedTicket.messages && selectedTicket.messages.map(msg => (
-                            <div key={msg.id} className={`flex ${!msg.isAdmin ? 'justify-end' : 'justify-start'}`}>
+                            <div key={msg.id} className={`flex ${msg.isAdmin ? 'justify-start' : 'justify-end'}`}>
                                 <div className={`max-w-[85%] p-3 rounded-2xl text-sm shadow-sm ${
-                                    !msg.isAdmin 
-                                    ? 'bg-green-600 text-white rounded-br-none' 
-                                    : 'bg-white dark:bg-gray-700 text-gray-800 dark:text-white border border-gray-200 dark:border-gray-600 rounded-bl-none'
+                                    msg.isAdmin 
+                                    ? 'bg-white dark:bg-gray-700 text-gray-800 dark:text-white border border-gray-200 dark:border-gray-600 rounded-bl-none'
+                                    : 'bg-green-600 text-white rounded-br-none' 
                                 }`}>
                                     <p className="leading-relaxed whitespace-pre-wrap">{msg.text}</p>
                                     {msg.attachmentUrl && (
@@ -264,7 +277,7 @@ export const Support: React.FC<SupportProps> = ({ user }) => {
                                             </a>
                                         </div>
                                     )}
-                                    <p className={`text-[9px] mt-1 text-right ${!msg.isAdmin ? 'text-green-200' : 'text-gray-400 dark:text-gray-300'}`}>
+                                    <p className={`text-[9px] mt-1 text-right ${msg.isAdmin ? 'text-gray-400 dark:text-gray-300' : 'text-green-200'}`}>
                                         {new Date(msg.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                                     </p>
                                 </div>
@@ -272,7 +285,6 @@ export const Support: React.FC<SupportProps> = ({ user }) => {
                         ))}
                     </div>
 
-                    {/* Reply Box */}
                     {selectedTicket.status !== 'closed' ? (
                         <form onSubmit={handleReply} className="p-4 border-t border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800">
                             {replyAttachment && (
@@ -318,7 +330,6 @@ export const Support: React.FC<SupportProps> = ({ user }) => {
             )}
        </div>
 
-       {/* Create Modal */}
        {showCreateModal && (
             <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
                 <div className="bg-white dark:bg-gray-800 w-full max-w-md rounded-2xl p-6 shadow-2xl animate-fade-in-up border dark:border-gray-700">
@@ -329,7 +340,6 @@ export const Support: React.FC<SupportProps> = ({ user }) => {
                     
                     <form onSubmit={handleCreateTicket} className="space-y-4">
                         
-                        {/* Super Ticket Toggle */}
                         <div 
                             onClick={() => setIsSuperTicket(!isSuperTicket)}
                             className={`p-4 rounded-xl border cursor-pointer transition-all flex items-center gap-3 ${

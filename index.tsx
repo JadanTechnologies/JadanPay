@@ -2,7 +2,6 @@ import React, { ReactNode, ErrorInfo } from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 
-// Fix: Explicitly define `children` prop to avoid potential type inference issues.
 interface ErrorBoundaryProps {
   children: ReactNode;
 }
@@ -12,9 +11,10 @@ interface ErrorBoundaryState {
   error: Error | null;
 }
 
-// Simple Error Boundary to catch crashes and prevent white screen
 class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  // Fix: Initialized state as a class property to simplify the component and resolve type errors related to state and props access.
+  // FIX: Replaced the constructor with a state class property.
+  // This is a more modern approach for React class components in TypeScript
+  // and resolves errors where `this.state` and `this.props` were not being recognized.
   state: ErrorBoundaryState = { hasError: false, error: null };
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
@@ -26,7 +26,6 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
   }
 
   handleReset = () => {
-      // Clear all potentially corrupt data and reload.
       localStorage.clear();
       window.location.reload();
   };
@@ -120,7 +119,6 @@ const renderApp = () => {
     }
 };
 
-// Ensure DOM is ready before rendering to prevent "Target container is not a DOM element" errors
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', renderApp);
 } else {
