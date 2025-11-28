@@ -1,9 +1,7 @@
-
-
 import React, { useState, useEffect } from 'react';
 import { User, UserRole } from '../types';
-import { Home, History, LogOut, Briefcase, User as UserIcon, LayoutDashboard, Settings, Users, MessageSquare, Lock, Megaphone, CreditCard, LifeBuoy, ChevronLeft, ChevronRight, ShieldAlert, Code2 } from 'lucide-react';
-import { SettingsService } from '../services/settingsService';
+import { Home, History, LogOut, Briefcase, User as UserIcon, LayoutDashboard, Settings, Users, MessageSquare, Lock, Megaphone, CreditCard, LifeBuoy, ChevronLeft, ChevronRight, ShieldAlert, Code2, AlertTriangle, Info, X } from 'lucide-react';
+import { SettingsService, AppSettings, ServiceAlert } from '../services/settingsService';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -15,8 +13,9 @@ interface LayoutProps {
 
 export const Layout: React.FC<LayoutProps> = ({ children, user, activeTab, onTabChange, onLogout }) => {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const [logoUrl, setLogoUrl] = useState('');
-  const [appName, setAppName] = useState('JadanPay');
+  const [settings, setSettings] = useState<AppSettings | null>(null);
+  const [serviceAlert, setServiceAlert] = useState<ServiceAlert | null>(null);
+  const [isAlertDismissed, setIsAlertDismissed] = useState(false);
   
   // Persist collapsed state
   const [isCollapsed, setIsCollapsed] = useState(() => {
@@ -26,8 +25,10 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, activeTab, onTab
 
   useEffect(() => {
       SettingsService.getSettings().then(s => {
-          setLogoUrl(s.logoUrl);
-          setAppName(s.appName);
+          setSettings(s);
+          if (s.serviceAlert?.isActive) {
+              setServiceAlert(s.serviceAlert);
+          }
       });
   }, []);
 
@@ -44,6 +45,26 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, activeTab, onTab
   const confirmLogout = () => {
     setShowLogoutConfirm(false);
     onLogout();
+  };
+  
+  const AlertBanner = () => {
+      if (!serviceAlert || isAlertDismissed) return null;
+      
+      const alertStyles = {
+          info: 'bg-blue-500 text-white',
+          warning: 'bg-yellow-500 text-black',
+          critical: 'bg-red-600 text-white',
+      };
+      
+      const Icon = serviceAlert.type === 'critical' ? ShieldAlert : AlertTriangle;
+      
+      return (
+          <div className={`w-full p-3 text-sm font-medium flex items-center justify-center gap-4 ${alertStyles[serviceAlert.type]}`}>
+              <Icon size={20} className="shrink-0" />
+              <p className="flex-1 text-center">{serviceAlert.message}</p>
+              <button onClick={() => setIsAlertDismissed(true)} className="p-1 rounded-full hover:bg-white/20"><X size={18}/></button>
+          </div>
+      );
   };
 
   const NavItem = ({ id, icon: Icon, label, mobile = false }: { id: string; icon: any; label: string, mobile?: boolean }) => (
@@ -64,6 +85,9 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, activeTab, onTab
       {mobile && <span className="text-[10px] font-medium">{label}</span>}
     </button>
   );
+
+  const appName = settings?.appName || 'JadanPay';
+  const logoUrl = settings?.logoUrl;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col md:flex-row font-sans transition-colors duration-300">
@@ -149,6 +173,8 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, activeTab, onTab
       {/* Main Content Area */}
       <div className={`flex-1 flex flex-col min-w-0 h-screen transition-all duration-300 ease-in-out ${isCollapsed ? 'md:ml-20' : 'md:ml-64'}`}>
         
+        <AlertBanner />
+
         {/* Mobile Header */}
         <header className="md:hidden bg-white dark:bg-black px-4 py-3 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center sticky top-0 z-20 shadow-sm transition-colors duration-300">
             <div className="flex items-center gap-2">

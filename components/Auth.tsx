@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect } from 'react';
 import { login, register } from '../services/authService';
 import { User } from '../types';
@@ -63,6 +61,14 @@ export const Auth: React.FC<AuthProps> = ({ onAuthSuccess, onBack }) => {
     } finally {
       setLoading(false);
     }
+  };
+  
+  const handleForgotPassword = () => {
+    if (!email) {
+      alert("Please enter your email address first.");
+      return;
+    }
+    alert(`A password reset link has been sent to ${email} (simulation).`);
   };
 
   return (
@@ -150,7 +156,12 @@ export const Auth: React.FC<AuthProps> = ({ onAuthSuccess, onBack }) => {
             </div>
 
             <div>
-                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Password</label>
+                 <div className="flex justify-between items-center mb-1">
+                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300">Password</label>
+                    {isLogin && (
+                        <button type="button" onClick={handleForgotPassword} className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium">Forgot Password?</button>
+                    )}
+                 </div>
                 <input 
                     type="password" 
                     className="w-full p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-green-500 outline-none text-gray-900 dark:text-white transition-colors" 

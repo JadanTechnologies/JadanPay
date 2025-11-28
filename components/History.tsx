@@ -15,7 +15,14 @@ export const History: React.FC<HistoryProps> = ({ user, highlightId }) => {
   const [loading, setLoading] = useState(true);
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
   const [shareState, setShareState] = useState<'idle' | 'copied' | 'shared'>('idle');
+  
+  // Filtering State
   const [searchTerm, setSearchTerm] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+  const [filterType, setFilterType] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
+  const [filterStartDate, setFilterStartDate] = useState('');
+  const [filterEndDate, setFilterEndDate] = useState('');
 
   useEffect(() => {
     loadData();
@@ -85,11 +92,29 @@ export const History: React.FC<HistoryProps> = ({ user, highlightId }) => {
       navigator.clipboard.writeText(token);
       playNotification("Token copied");
   };
+  
+  const resetFilters = () => {
+      setFilterType('');
+      setFilterStatus('');
+      setFilterStartDate('');
+      setFilterEndDate('');
+      setSearchTerm('');
+  };
 
-  const filteredTransactions = transactions.filter(t => 
-      t.reference.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (t.destinationNumber && t.destinationNumber.includes(searchTerm))
-  );
+  const filteredTransactions = transactions.filter(t => {
+      const searchMatch = searchTerm === '' ||
+          t.reference.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (t.destinationNumber && t.destinationNumber.includes(searchTerm));
+      
+      const typeMatch = filterType === '' || t.type === filterType;
+      const statusMatch = filterStatus === '' || t.status === filterStatus;
+      
+      const txDate = new Date(t.date);
+      const startDateMatch = filterStartDate === '' || txDate >= new Date(filterStartDate);
+      const endDateMatch = filterEndDate === '' || txDate <= new Date(new Date(filterEndDate).setHours(23, 59, 59, 999));
+      
+      return searchMatch && typeMatch && statusMatch && startDateMatch && endDateMatch;
+  });
 
   return (
     <div className="space-y-6 animate-fade-in pb-20">
@@ -109,11 +134,38 @@ export const History: React.FC<HistoryProps> = ({ user, highlightId }) => {
                     className="w-full pl-9 pr-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 outline-none transition-colors"
                 />
             </div>
+             <button onClick={() => setShowFilters(!showFilters)} className="p-2 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                <Calendar size={20} />
+            </button>
             <button onClick={loadData} className="p-2 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
                 <RefreshCw size={20} className={loading ? "animate-spin" : ""} />
             </button>
         </div>
       </div>
+      
+      {showFilters && (
+          <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm animate-in fade-in slide-in-from-top-4">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <input type="date" value={filterStartDate} onChange={e => setFilterStartDate(e.target.value)} className="input-field" />
+                  <input type="date" value={filterEndDate} onChange={e => setFilterEndDate(e.target.value)} className="input-field" />
+                  <select value={filterType} onChange={e => setFilterType(e.target.value)} className="input-field">
+                      <option value="">All Types</option>
+                      <option value="AIRTIME">Airtime</option>
+                      <option value="DATA">Data</option>
+                      <option value="CABLE">Cable TV</option>
+                      <option value="ELECTRICITY">Electricity</option>
+                      <option value="WALLET_FUND">Wallet Funding</option>
+                  </select>
+                  <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="input-field">
+                      <option value="">All Statuses</option>
+                      <option value="SUCCESS">Success</option>
+                      <option value="FAILED">Failed</option>
+                      <option value="PENDING">Pending</option>
+                  </select>
+              </div>
+              <button onClick={resetFilters} className="mt-4 text-xs text-red-500 font-bold hover:underline">Reset Filters</button>
+          </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredTransactions.map((tx) => (
@@ -284,3 +336,18 @@ export const History: React.FC<HistoryProps> = ({ user, highlightId }) => {
     </div>
   );
 };
+
+// Simple helper class for input fields in the filter
+const InputField: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <div className="bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-700 rounded-xl focus-within:ring-2 focus-within:ring-green-500 transition-all">
+    {children}
+  </div>
+);
+
+// Add this style to your index.html's <style> tag or a CSS file
+// .input-field {
+//   @apply w-full p-2 bg-transparent outline-none text-sm;
+// }
+// This is added via Tailwind JIT, so no style changes needed. The className is applied directly.
+// But for this environment, we'll define it locally.
+const inputFieldClass = "w-full p-2 bg-gray-100 dark:bg-gray-700 rounded-lg text-sm text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600 focus:ring-1 focus:ring-green-500 focus:border-green-500 outline-none";

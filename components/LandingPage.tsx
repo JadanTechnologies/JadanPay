@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Smartphone, Zap, Shield, ArrowRight, Star, ChevronDown, Activity, Wifi, Box, CheckCircle, Moon, Sun, Quote, X, Mail, MapPin, Phone, Code2 } from 'lucide-react';
 import { SettingsService, AppSettings } from '../services/settingsService';
@@ -48,109 +47,27 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
   };
 
   const renderInfoModal = () => {
-      if (!activeInfoModal) return null;
+      if (!activeInfoModal || !settings) return null;
       
       let title = "";
-      let content = null;
-      const appName = settings?.appName || 'JadanPay';
+      let content = "";
 
       switch(activeInfoModal) {
         case 'about':
           title = "About Us";
-          content = (
-            <div className="space-y-4 text-gray-700 dark:text-gray-200 leading-relaxed text-base">
-              <p>Welcome to <strong className="text-gray-900 dark:text-white">{appName}</strong>, Nigeria's most reliable digital top-up platform.</p>
-              <p>Our mission is to bridge the digital divide by providing affordable, reliable, and instant telecommunication services to every Nigerian. We understand that in today's world, staying connected is not a luxury—it's a necessity.</p>
-              <p>Founded with a vision to simplify payments, we have grown from a small reseller into a robust platform serving thousands of users daily. We pride ourselves on our automated delivery systems, bank-grade security, and exceptional customer support.</p>
-              <p>Whether you are an individual looking for cheap data or a business looking to resell VTU services, we have the infrastructure to support your needs.</p>
-            </div>
-          );
+          content = settings.aboutUsContent;
           break;
         case 'contact':
           title = "Contact Us";
-          content = (
-            <div className="space-y-6 text-gray-700 dark:text-gray-200 text-base">
-               <p>We are here to help 24/7. Reach out to us through any of the channels below.</p>
-               
-               <div className="space-y-4">
-                   <div className="bg-gray-100 dark:bg-gray-800 p-5 rounded-2xl flex items-center gap-4 border border-gray-200 dark:border-gray-700">
-                      <div className="bg-green-100 dark:bg-green-900/50 p-3 rounded-full text-green-700 dark:text-green-400">
-                          <Mail size={24} />
-                      </div>
-                      <div>
-                          <p className="font-bold text-gray-900 dark:text-white">Email Support</p>
-                          <p className="text-sm font-medium">{settings?.supportEmail || 'help@jadanpay.com'}</p>
-                      </div>
-                   </div>
-
-                   <div className="bg-gray-100 dark:bg-gray-800 p-5 rounded-2xl flex items-center gap-4 border border-gray-200 dark:border-gray-700">
-                      <div className="bg-blue-100 dark:bg-blue-900/50 p-3 rounded-full text-blue-700 dark:text-blue-400">
-                          <Phone size={24} />
-                      </div>
-                      <div>
-                          <p className="font-bold text-gray-900 dark:text-white">Phone / Whatsapp</p>
-                          <p className="text-sm font-medium">{settings?.supportPhone || '0800-JADANPAY'}</p>
-                      </div>
-                   </div>
-
-                   <div className="bg-gray-100 dark:bg-gray-800 p-5 rounded-2xl flex items-center gap-4 border border-gray-200 dark:border-gray-700">
-                      <div className="bg-purple-100 dark:bg-purple-900/50 p-3 rounded-full text-purple-700 dark:text-purple-400">
-                          <MapPin size={24} />
-                      </div>
-                      <div>
-                          <p className="font-bold text-gray-900 dark:text-white">Head Office</p>
-                          <p className="text-sm font-medium">12 Innovation Drive, Yaba, Lagos State, Nigeria.</p>
-                      </div>
-                   </div>
-               </div>
-            </div>
-          );
+          // Contact is special, it has structured data
           break;
         case 'privacy':
           title = "Privacy Policy";
-          content = (
-            <div className="space-y-5 text-gray-700 dark:text-gray-200 text-sm leading-relaxed">
-               <div>
-                   <strong className="block text-gray-900 dark:text-white text-base mb-1">1. Information Collection</strong>
-                   <p>We collect information you provide directly to us, such as when you create an account, update your profile, or communicate with us. This includes your name, email, phone number, and payment information.</p>
-               </div>
-               <div>
-                   <strong className="block text-gray-900 dark:text-white text-base mb-1">2. Use of Information</strong>
-                   <p>We use the information we collect to provide, maintain, and improve our services, process transactions, send you technical notices, and communicate with you about products, services, offers, and events.</p>
-               </div>
-               <div>
-                   <strong className="block text-gray-900 dark:text-white text-base mb-1">3. Data Security</strong>
-                   <p>We implement appropriate technical and organizational measures to protect your personal data against unauthorized access, alteration, disclosure, or destruction.</p>
-               </div>
-               <div>
-                   <strong className="block text-gray-900 dark:text-white text-base mb-1">4. Third-Party Sharing</strong>
-                   <p>We do not sell your personal data. We may share data with service providers who need access to such information to carry out work on our behalf (e.g., payment processors).</p>
-               </div>
-            </div>
-          );
+          content = settings.privacyPolicyContent;
           break;
          case 'terms':
           title = "Terms of Service";
-          content = (
-            <div className="space-y-5 text-gray-700 dark:text-gray-200 text-sm leading-relaxed">
-               <div>
-                   <strong className="block text-gray-900 dark:text-white text-base mb-1">1. Acceptance of Terms</strong>
-                   <p>By accessing or using our Services, you agree to be bound by these Terms. If you do not agree to these Terms, do not use our Services.</p>
-               </div>
-               <div>
-                   <strong className="block text-gray-900 dark:text-white text-base mb-1">2. Account Security</strong>
-                   <p>You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account. You must immediately notify us of any unauthorized use.</p>
-               </div>
-               <div>
-                   <strong className="block text-gray-900 dark:text-white text-base mb-1">3. Transactions</strong>
-                   <p>All transactions performed on our platform are final once successful. Please ensure you enter the correct beneficiary details (Phone Number, Meter Number, IUC) before confirming any purchase.</p>
-               </div>
-               <div>
-                   <strong className="block text-gray-900 dark:text-white text-base mb-1">4. Service Availability</strong>
-                   <p>While we strive for 100% uptime, network providers may experience occasional downtime. We are not liable for delays caused by third-party network providers.</p>
-               </div>
-            </div>
-          );
+          content = settings.termsOfServiceContent;
           break;
       }
 
@@ -165,7 +82,27 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
               </button>
               <h2 className="text-2xl font-black mb-6 text-gray-900 dark:text-white pr-10 border-b border-gray-100 dark:border-gray-800 pb-4">{title}</h2>
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                {content}
+                {activeInfoModal === 'contact' ? (
+                     <div className="space-y-6 text-gray-700 dark:text-gray-200 text-base">
+                       <p>We are here to help 24/7. Reach out to us through any of the channels below.</p>
+                       <div className="space-y-4">
+                           <div className="bg-gray-100 dark:bg-gray-800 p-5 rounded-2xl flex items-center gap-4 border border-gray-200 dark:border-gray-700">
+                              <div className="bg-green-100 dark:bg-green-900/50 p-3 rounded-full text-green-700 dark:text-green-400"><Mail size={24} /></div>
+                              <div><p className="font-bold text-gray-900 dark:text-white">Email Support</p><p className="text-sm font-medium">{settings?.supportEmail}</p></div>
+                           </div>
+                           <div className="bg-gray-100 dark:bg-gray-800 p-5 rounded-2xl flex items-center gap-4 border border-gray-200 dark:border-gray-700">
+                              <div className="bg-blue-100 dark:bg-blue-900/50 p-3 rounded-full text-blue-700 dark:text-blue-400"><Phone size={24} /></div>
+                              <div><p className="font-bold text-gray-900 dark:text-white">Phone / Whatsapp</p><p className="text-sm font-medium">{settings?.supportPhone}</p></div>
+                           </div>
+                           <div className="bg-gray-100 dark:bg-gray-800 p-5 rounded-2xl flex items-center gap-4 border border-gray-200 dark:border-gray-700">
+                              <div className="bg-purple-100 dark:bg-purple-900/50 p-3 rounded-full text-purple-700 dark:text-purple-400"><MapPin size={24} /></div>
+                              <div><p className="font-bold text-gray-900 dark:text-white">Head Office</p><p className="text-sm font-medium">{settings.officeAddress}</p></div>
+                           </div>
+                       </div>
+                    </div>
+                ) : (
+                    <div className="prose prose-sm dark:prose-invert max-w-none leading-relaxed" dangerouslySetInnerHTML={{ __html: content.replace(/\n/g, '<br/>') }}></div>
+                )}
               </div>
               <div className="mt-8 pt-6 border-t border-gray-100 dark:border-gray-800">
                   <button 
@@ -486,21 +423,4 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
               
               <div className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-800 flex flex-col items-center">
                   <p className="text-gray-500 text-xs mb-2">
-                      &copy; {new Date().getFullYear()} {appName}. All rights reserved.
-                  </p>
-                  <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-full border border-gray-200 dark:border-gray-700">
-                      <Code2 size={12} className="text-gray-400" />
-                      <span className="text-[10px] text-gray-500">Developed by</span>
-                      <span className="text-xs font-bold text-gray-900 dark:text-white">Jadan Technologies</span>
-                  </div>
-              </div>
-          </div>
-      </footer>
-      
-      {/* Info Modal Overlay */}
-      {renderInfoModal()}
-      
-      <div className="hidden"><CheckCircle size={0} /></div>
-    </div>
-  );
-};
+                      &copy; {new Date().getFullYear()} {appName}. All rights reserved

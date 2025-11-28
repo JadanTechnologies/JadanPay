@@ -5,12 +5,19 @@ export type ApiVendor = 'BILALSADA' | 'MASKAWA' | 'ALRAHUZ' | 'ABBAPHANTAMI' | '
 export type EmailProvider = 'SMTP' | 'RESEND';
 export type PushProvider = 'NONE' | 'FIREBASE' | 'ONESIGNAL';
 
+export interface ServiceAlert {
+    isActive: boolean;
+    message: string;
+    type: 'info' | 'warning' | 'critical';
+}
+
 export interface AppSettings {
   appName: string;
   logoUrl: string;
   faviconUrl: string;
   supportEmail: string;
   supportPhone: string;
+  officeAddress: string; // Added for contact modal
   maintenanceMode: boolean;
   
   // Service Status
@@ -21,11 +28,16 @@ export interface AppSettings {
   // API Integration Settings
   activeApiVendor: ApiVendor;
   apiKeys: Record<ApiVendor, string>;
-  webhookUrls: Record<ApiVendor, string>; // Added for webhooks
-  apiLastConnection: Record<ApiVendor, string>; // Added for connection status
+  webhookUrls: Record<ApiVendor, string>; 
+  apiLastConnection: Record<ApiVendor, string>;
 
   // Custom Base URLs for Vendors
   apiBaseUrls: Record<ApiVendor, string>;
+  
+  // SMS Balance Alerts
+  enableSmsBalanceAlerts: boolean;
+  smsBalanceThreshold: number;
+  smsAlertRecipient: string;
 
   // SMS & Notifications
   enableTwilio: boolean;
@@ -80,8 +92,8 @@ export interface AppSettings {
   
   // Global Pricing Rules
   servicePricing: {
-      airtimeCostPercentage: number; // e.g. 97 (Cost is 97% of face value)
-      airtimeSellingPercentage: number; // e.g. 100 (Sell at face value)
+      airtimeCostPercentage: number; 
+      airtimeSellingPercentage: number; 
   };
 
   // Landing Page
@@ -101,6 +113,14 @@ export interface AppSettings {
   mobileAppUrl: string;
   mobileAppVersion: string;
   mobileAppReleaseDate: string;
+
+  // Info Pages Content
+  aboutUsContent: string;
+  privacyPolicyContent: string;
+  termsOfServiceContent: string;
+
+  // Service Alert
+  serviceAlert: ServiceAlert;
 }
 
 const defaultSettings: AppSettings = {
@@ -109,6 +129,7 @@ const defaultSettings: AppSettings = {
   faviconUrl: '',
   supportEmail: 'help@jadanpay.com',
   supportPhone: '0800-JADANPAY',
+  officeAddress: '12 Innovation Drive, Yaba, Lagos State, Nigeria.',
   maintenanceMode: false,
   
   providerStatus: {
@@ -138,7 +159,7 @@ const defaultSettings: AppSettings = {
       ABBAPHANTAMI: '',
       SIMHOST: ''
   },
-  webhookUrls: { // Added default webhook URLs
+  webhookUrls: { 
       BILALSADA: '',
       MASKAWA: '',
       ALRAHUZ: '',
@@ -159,6 +180,10 @@ const defaultSettings: AppSettings = {
       ABBAPHANTAMI: 'https://abbaphantami.com/api/v1',
       SIMHOST: 'https://simhostng.com/api/v1'
   },
+  
+  enableSmsBalanceAlerts: false,
+  smsBalanceThreshold: 5000,
+  smsAlertRecipient: '',
 
   enableTwilio: false,
   twilioAccountSid: '',
@@ -227,7 +252,17 @@ const defaultSettings: AppSettings = {
   },
   mobileAppUrl: "",
   mobileAppVersion: "1.0.0",
-  mobileAppReleaseDate: new Date().toISOString()
+  mobileAppReleaseDate: new Date().toISOString(),
+  
+  aboutUsContent: "Welcome to JadanPay, Nigeria's most reliable digital top-up platform. Our mission is to bridge the digital divide by providing affordable, reliable, and instant telecommunication services to every Nigerian.",
+  privacyPolicyContent: "We collect information you provide directly to us, such as when you create an account. We use this information to provide, maintain, and improve our services.",
+  termsOfServiceContent: "By accessing or using our Services, you agree to be bound by these Terms. All transactions performed on our platform are final once successful.",
+
+  serviceAlert: {
+    isActive: false,
+    message: 'We are currently undergoing scheduled maintenance. Some services may be temporarily unavailable.',
+    type: 'warning'
+  }
 };
 
 const SETTINGS_STORAGE_KEY = 'jadanpay_settings_v3';
@@ -241,12 +276,15 @@ try {
         ...defaultSettings, 
         ...parsed,
         apiKeys: { ...defaultSettings.apiKeys, ...(parsed.apiKeys || {}) },
-        webhookUrls: { ...defaultSettings.webhookUrls, ...(parsed.webhookUrls || {}) }, // Merge webhooks
+        webhookUrls: { ...defaultSettings.webhookUrls, ...(parsed.webhookUrls || {}) }, 
         apiLastConnection: { ...defaultSettings.apiLastConnection, ...(parsed.apiLastConnection || {}) },
         apiBaseUrls: { ...defaultSettings.apiBaseUrls, ...(parsed.apiBaseUrls || {}) },
         serviceFees: { ...defaultSettings.serviceFees, ...(parsed.serviceFees || {}) },
         servicePricing: { ...defaultSettings.servicePricing, ...(parsed.servicePricing || {}) },
-        providerNetworkIds: { ...defaultSettings.providerNetworkIds, ...(parsed.providerNetworkIds || {}) }
+        providerNetworkIds: { ...defaultSettings.providerNetworkIds, ...(parsed.providerNetworkIds || {}) },
+        landingStats: { ...defaultSettings.landingStats, ...(parsed.landingStats || {}) },
+        socialLinks: { ...defaultSettings.socialLinks, ...(parsed.socialLinks || {}) },
+        serviceAlert: { ...defaultSettings.serviceAlert, ...(parsed.serviceAlert || {}) },
     };
   }
 } catch (e) {

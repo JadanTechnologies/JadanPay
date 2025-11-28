@@ -1,11 +1,11 @@
-
 import React, { useState, useEffect } from 'react';
 import { MockDB } from '../services/mockDb';
 import { Announcement, CommunicationTemplate } from '../types';
+import { SettingsService, ServiceAlert } from '../services/settingsService';
 import { Megaphone, Mail, MessageSquare, Bell, Plus, Trash2, Edit2, Send, Save, CheckCircle, AlertTriangle, Info } from 'lucide-react';
 
 export const AdminCommunication: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'broadcast' | 'announcements' | 'templates'>('broadcast');
+  const [activeTab, setActiveTab] = useState<'broadcast' | 'announcements' | 'templates' | 'alert'>('broadcast');
   
   // Announcement State
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
@@ -23,6 +23,9 @@ export const AdminCommunication: React.FC = () => {
   const [broadcastSubject, setBroadcastSubject] = useState('');
   const [broadcastMessage, setBroadcastMessage] = useState('');
   const [sending, setSending] = useState(false);
+  
+  // Service Alert State
+  const [serviceAlert, setServiceAlert] = useState<ServiceAlert>({ isActive: false, message: '', type: 'info' });
 
   useEffect(() => {
       loadData();
@@ -31,6 +34,14 @@ export const AdminCommunication: React.FC = () => {
   const loadData = async () => {
       setAnnouncements(await MockDB.getAnnouncements());
       setTemplates(await MockDB.getTemplates());
+      const settings = await SettingsService.getSettings();
+      setServiceAlert(settings.serviceAlert);
+  };
+  
+  const handleSaveAlert = async () => {
+      const settings = await SettingsService.getSettings();
+      await SettingsService.updateSettings({ ...settings, serviceAlert });
+      alert("Service alert updated!");
   };
 
   // --- Announcement Handlers ---
@@ -117,6 +128,7 @@ export const AdminCommunication: React.FC = () => {
                     { id: 'broadcast', label: 'Broadcast', icon: Send },
                     { id: 'announcements', label: 'Announcements', icon: Bell },
                     { id: 'templates', label: 'Templates', icon: Edit2 },
+                    { id: 'alert', label: 'Alert', icon: AlertTriangle },
                 ].map(tab => (
                     <button 
                         key={tab.id}
@@ -132,6 +144,36 @@ export const AdminCommunication: React.FC = () => {
                 ))}
             </div>
         </div>
+        
+        {/* --- SERVICE ALERT TAB --- */}
+        {activeTab === 'alert' && (
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
+                <h3 className="font-bold text-gray-800 dark:text-white mb-4">System-Wide Service Alert</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Display a prominent banner to all logged-in users. Useful for maintenance or downtime notices.</p>
+                <div className="space-y-4">
+                    <label className="flex items-center gap-4 cursor-pointer">
+                        <input type="checkbox" checked={serviceAlert.isActive} onChange={e => setServiceAlert({...serviceAlert, isActive: e.target.checked})} className="w-5 h-5 accent-green-600"/>
+                        <span className="font-bold text-lg text-gray-800 dark:text-white">{serviceAlert.isActive ? 'Alert is Active' : 'Alert is Inactive'}</span>
+                    </label>
+                    <textarea 
+                        value={serviceAlert.message}
+                        onChange={e => setServiceAlert({...serviceAlert, message: e.target.value})}
+                        className="w-full h-24 p-3 bg-gray-50 dark:bg-gray-900 border rounded-xl"
+                        placeholder="Enter alert message..."
+                    />
+                    <select
+                        value={serviceAlert.type}
+                        onChange={e => setServiceAlert({...serviceAlert, type: e.target.value as any})}
+                        className="w-full p-3 bg-gray-50 dark:bg-gray-900 border rounded-xl"
+                    >
+                        <option value="info">Info (Blue)</option>
+                        <option value="warning">Warning (Yellow)</option>
+                        <option value="critical">Critical (Red)</option>
+                    </select>
+                    <button onClick={handleSaveAlert} className="w-full py-3 bg-green-700 text-white rounded-xl font-bold">Save Alert Settings</button>
+                </div>
+            </div>
+        )}
 
         {/* --- BROADCAST TAB --- */}
         {activeTab === 'broadcast' && (

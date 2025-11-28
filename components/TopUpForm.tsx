@@ -437,7 +437,7 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
                      'Your payment was successful.'}
                 </p>
                 <div className="flex gap-3 mt-6">
-                    <button onClick={() => onViewReceipt(lastTx.id)} className="flex-1 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-xl font-medium flex items-center justify-center gap-2">
+                    <button onClick={() => { setResultState('idle'); onViewReceipt(lastTx.id); }} className="flex-1 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-xl font-medium flex items-center justify-center gap-2">
                         <Receipt size={16}/> View Receipt
                     </button>
                     <button onClick={() => {

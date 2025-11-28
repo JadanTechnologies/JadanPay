@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Save, Globe, Server, CreditCard, Database, Plus, Trash2, Edit2, Check, X, Upload, Mail, Phone, AlertTriangle, Key, Users, Trophy, Gift, MessageSquare, Bell, Send, Smartphone, Activity, Link as LinkIcon, Download, Wifi, Clock, Play, Pause, Lock, DollarSign, Image as ImageIcon, Power, Loader2, ArrowDown, ArrowUp, Zap } from 'lucide-react';
+import { Save, Globe, Server, CreditCard, Database, Plus, Trash2, Edit2, Check, X, Upload, Mail, Phone, AlertTriangle, Key, Users, Trophy, Gift, MessageSquare, Bell, Send, Smartphone, Activity, Link as LinkIcon, Download, Wifi, Clock, Play, Pause, Lock, DollarSign, ImageIcon, Power, Loader2, ArrowDown, ArrowUp, Zap } from 'lucide-react';
 import { Provider, Bundle, PlanType, User, CronJob } from '../types';
 import { PROVIDER_LOGOS } from '../constants';
 import { SettingsService, AppSettings, ApiVendor, EmailProvider, PushProvider } from '../services/settingsService';
@@ -136,18 +136,21 @@ export const AdminSettings: React.FC = () => {
   }, [autoRefresh, testProvider]);
 
 
-  const handleTestPush = async () => {
-        if(!settings) return;
+  const handleTestSms = async () => {
+        if(!settings?.smsAlertRecipient) {
+            alert("Please enter a recipient phone number first.");
+            return;
+        }
         setIsSaving(true);
         try {
-            await NotificationService.sendPush('test', 'Test Notification', 'This is a test message.');
-            alert("Test notification sent!");
+            await NotificationService.sendSms(settings.smsAlertRecipient, "This is a test alert from JadanPay.");
+            alert("Test SMS sent!");
         } catch(e) {
             alert("Failed to send test.");
         } finally {
             setIsSaving(false);
         }
-    };
+  };
 
   const toggleCron = async (id: string) => {
       await MockDB.toggleCronJob(id);
@@ -344,6 +347,7 @@ export const AdminSettings: React.FC = () => {
                     <InputField label="App Name" value={settings.appName} onChange={e => handleSettingChange('appName', e.target.value)} />
                     <InputField label="Support Email" value={settings.supportEmail} onChange={e => handleSettingChange('supportEmail', e.target.value)} />
                     <InputField label="Support Phone" value={settings.supportPhone} onChange={e => handleSettingChange('supportPhone', e.target.value)} />
+                    <InputField label="Office Address" value={settings.officeAddress} onChange={e => handleSettingChange('officeAddress', e.target.value)} />
                 </SettingsCard>
              )}
 
@@ -425,11 +429,13 @@ export const AdminSettings: React.FC = () => {
                             ))}
                         </div>
                     </SettingsCard>
-                     <SettingsCard title="SMS (Twilio)" icon={MessageSquare}>
-                        <ToggleSwitch label="Enable Twilio SMS" enabled={settings.enableTwilio} onChange={e => handleSettingChange('enableTwilio', e.target.checked)} />
-                        <InputField label="Account SID" value={settings.twilioAccountSid} onChange={e => handleSettingChange('twilioAccountSid', e.target.value)} />
-                        <InputField label="Auth Token" value={settings.twilioAuthToken} onChange={e => handleSettingChange('twilioAuthToken', e.target.value)} />
-                        <InputField label="Sender ID" value={settings.twilioSenderId} onChange={e => handleSettingChange('twilioSenderId', e.target.value)} />
+                     <SettingsCard title="API Balance Alerts" icon={Bell}>
+                        <ToggleSwitch label="Enable SMS Balance Alerts" enabled={settings.enableSmsBalanceAlerts} onChange={e => handleSettingChange('enableSmsBalanceAlerts', e.target.checked)} />
+                        <InputField label="Balance Threshold (₦)" type="number" value={settings.smsBalanceThreshold} onChange={e => handleSettingChange('smsBalanceThreshold', Number(e.target.value))} />
+                        <InputField label="Recipient Phone Number" value={settings.smsAlertRecipient} onChange={e => handleSettingChange('smsAlertRecipient', e.target.value)} placeholder="e.g., 08012345678" />
+                        <button onClick={handleTestSms} disabled={isSaving} className="w-full flex justify-center items-center gap-2 px-4 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-lg text-sm font-bold hover:bg-blue-200 dark:hover:bg-blue-900/50">
+                            <Send size={16}/> Send Test Alert
+                        </button>
                     </SettingsCard>
                 </>
             )}
@@ -487,18 +493,55 @@ export const AdminSettings: React.FC = () => {
                       <div className="flex items-center gap-4">
                         <img src={settings.logoUrl} className="w-16 h-16 rounded-xl bg-gray-100 dark:bg-gray-700 object-contain p-1" />
                         <div className="flex-1">
-                          <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">Logo URL</label>
-                          <input type="file" accept="image/*" onChange={handleLogoUpload} className="text-xs" />
+                          <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">App Logo</label>
+                          <input type="file" accept="image/*" onChange={handleLogoUpload} className="text-xs w-full file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100" />
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <img src={settings.faviconUrl || settings.logoUrl} className="w-16 h-16 rounded-xl bg-gray-100 dark:bg-gray-700 object-contain p-1" />
+                        <div className="flex-1">
+                          <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">Favicon</label>
+                          <input type="file" accept="image/*" onChange={handleFaviconUpload} className="text-xs w-full file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100" />
                         </div>
                       </div>
                   </SettingsCard>
-                  <SettingsCard title="Landing Page" icon={Globe}>
+                  
+                  <SettingsCard title="Mobile App" icon={Smartphone}>
+                    <InputField label="App Download URL" value={settings.mobileAppUrl} onChange={e => handleSettingChange('mobileAppUrl', e.target.value)} />
+                    <div className="grid grid-cols-2 gap-4">
+                        <InputField label="App Version" value={settings.mobileAppVersion} onChange={e => handleSettingChange('mobileAppVersion', e.target.value)} />
+                        <InputField label="Release Date" type="date" value={new Date(settings.mobileAppReleaseDate).toISOString().split('T')[0]} onChange={e => handleSettingChange('mobileAppReleaseDate', new Date(e.target.value).toISOString())} />
+                    </div>
+                  </SettingsCard>
+                  
+                  <SettingsCard title="Landing Page Content" icon={Globe}>
                        <InputField label="Hero Title" value={settings.landingHeroTitle} onChange={e => handleSettingChange('landingHeroTitle', e.target.value)} />
+                        <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">Hero Subtitle</label>
                        <textarea
                             value={settings.landingHeroSubtitle}
                             onChange={e => handleSettingChange('landingHeroSubtitle', e.target.value)}
-                            className="w-full p-3 h-24 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-green-500 outline-none text-gray-900 dark:text-white"
+                            className="w-full p-3 h-24 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-xl"
                         />
+                        <div className="grid grid-cols-2 gap-4">
+                            <InputField label="Stat: Active Users" value={settings.landingStats.activeUsers} onChange={e => handleNestedChange('landingStats', 'activeUsers', e.target.value)} />
+                            <InputField label="Stat: Transactions" value={settings.landingStats.dailyTransactions} onChange={e => handleNestedChange('landingStats', 'dailyTransactions', e.target.value)} />
+                            <InputField label="Stat: Uptime" value={settings.landingStats.uptime} onChange={e => handleNestedChange('landingStats', 'uptime', e.target.value)} />
+                            <InputField label="Stat: Support" value={settings.landingStats.support} onChange={e => handleNestedChange('landingStats', 'support', e.target.value)} />
+                        </div>
+                        <div className="grid grid-cols-3 gap-4">
+                            <InputField label="Twitter Link" value={settings.socialLinks.twitter} onChange={e => handleNestedChange('socialLinks', 'twitter', e.target.value)} />
+                            <InputField label="Instagram Link" value={settings.socialLinks.instagram} onChange={e => handleNestedChange('socialLinks', 'instagram', e.target.value)} />
+                            <InputField label="Facebook Link" value={settings.socialLinks.facebook} onChange={e => handleNestedChange('socialLinks', 'facebook', e.target.value)} />
+                        </div>
+                  </SettingsCard>
+
+                  <SettingsCard title="Info Page Content" icon={MessageSquare}>
+                        <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">About Us</label>
+                        <textarea value={settings.aboutUsContent} onChange={e => handleSettingChange('aboutUsContent', e.target.value)} className="w-full p-3 h-24 bg-gray-50 dark:bg-gray-900 border rounded-xl" />
+                        <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">Privacy Policy</label>
+                        <textarea value={settings.privacyPolicyContent} onChange={e => handleSettingChange('privacyPolicyContent', e.target.value)} className="w-full p-3 h-24 bg-gray-50 dark:bg-gray-900 border rounded-xl" />
+                        <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">Terms of Service</label>
+                        <textarea value={settings.termsOfServiceContent} onChange={e => handleSettingChange('termsOfServiceContent', e.target.value)} className="w-full p-3 h-24 bg-gray-50 dark:bg-gray-900 border rounded-xl" />
                   </SettingsCard>
                 </>
             )}
