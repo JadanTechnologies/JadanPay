@@ -21,6 +21,7 @@ export interface AppSettings {
   activeApiVendor: ApiVendor;
   apiKeys: Record<ApiVendor, string>;
   webhookUrls: Record<ApiVendor, string>; // Added for webhooks
+  apiLastConnection: Record<ApiVendor, string>; // Added for connection status
 
   // Custom Base URLs for Vendors
   apiBaseUrls: Record<ApiVendor, string>;
@@ -143,6 +144,13 @@ const defaultSettings: AppSettings = {
       ABBAPHANTAMI: '',
       SIMHOST: ''
   },
+  apiLastConnection: {
+      BILALSADA: '',
+      MASKAWA: '',
+      ALRAHUZ: '',
+      ABBAPHANTAMI: '',
+      SIMHOST: ''
+  },
   apiBaseUrls: {
       BILALSADA: 'https://app.bilalsadasub.com/api/v1',
       MASKAWA: 'https://api.maskawasub.com/api/v1',
@@ -233,6 +241,7 @@ try {
         ...parsed,
         apiKeys: { ...defaultSettings.apiKeys, ...(parsed.apiKeys || {}) },
         webhookUrls: { ...defaultSettings.webhookUrls, ...(parsed.webhookUrls || {}) }, // Merge webhooks
+        apiLastConnection: { ...defaultSettings.apiLastConnection, ...(parsed.apiLastConnection || {}) },
         apiBaseUrls: { ...defaultSettings.apiBaseUrls, ...(parsed.apiBaseUrls || {}) },
         serviceFees: { ...defaultSettings.serviceFees, ...(parsed.serviceFees || {}) },
         servicePricing: { ...defaultSettings.servicePricing, ...(parsed.servicePricing || {}) },

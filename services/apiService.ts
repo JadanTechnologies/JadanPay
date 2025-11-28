@@ -1,4 +1,3 @@
-
 import { SettingsService, ApiVendor } from './settingsService';
 
 export interface ServiceResponse<T = any> {
@@ -15,6 +14,20 @@ const DEFAULT_URLS: Record<ApiVendor, string> = {
     ALRAHUZ: 'https://alrahuzdata.com.ng/api/v1',
     ABBAPHANTAMI: 'https://abbaphantami.com/api/v1',
     SIMHOST: 'https://simhostng.com/api/v1'
+};
+
+const recordSuccessfulConnection = async (vendor: ApiVendor) => {
+    try {
+        const currentSettings = await SettingsService.getSettings();
+        const updatedConnections = {
+// FIX: Removed unnecessary `|| {}` which was causing a TypeScript inference issue where properties were becoming optional. `apiLastConnection` is a required property and will always exist.
+            ...currentSettings.apiLastConnection,
+            [vendor]: new Date().toISOString()
+        };
+        await SettingsService.updateSettings({ apiLastConnection: updatedConnections });
+    } catch (e) {
+        console.error("Failed to update last connection time", e);
+    }
 };
 
 export const ApiService = {
@@ -64,6 +77,9 @@ export const ApiService = {
             console.warn(`[Demo Mode] API Key for ${vendor} is missing or empty. Simulating success.`);
             await new Promise(r => setTimeout(r, 1000));
             
+            // Record successful connection even in demo mode for UI feedback
+            await recordSuccessfulConnection(vendor);
+            
             return { 
                 success: true, 
                 data: { 
@@ -81,6 +97,9 @@ export const ApiService = {
             await new Promise(r => setTimeout(r, 1500)); // Simulate latency
 
             if (Math.random() < 0.05) throw new Error("Vendor Connection Timed Out");
+
+            // Record successful connection
+            await recordSuccessfulConnection(vendor);
             
             return { 
                 success: true, 

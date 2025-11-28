@@ -242,6 +242,40 @@ export const AdminSettings: React.FC = () => {
       }
   };
 
+  const formatRelativeTime = (isoString: string) => {
+    if (!isoString) return 'Never connected';
+    const date = new Date(isoString);
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const seconds = Math.floor(diff / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    if (days > 1) return `${days} days ago`;
+    if (days === 1) return `1 day ago`;
+    if (hours > 1) return `${hours} hours ago`;
+    if (hours === 1) return `1 hour ago`;
+    if (minutes > 1) return `${minutes} minutes ago`;
+    if (minutes === 1) return `1 minute ago`;
+    return 'Just now';
+  };
+
+  const handleRegenerateKey = (vendor: ApiVendor) => {
+    if (!settings) return;
+    if (!window.confirm(`Are you sure you want to regenerate the API key for ${vendor}? The old key will stop working immediately.`)) return;
+
+    const newKey = 'jp_live_' + Math.random().toString(36).substr(2, 30) + Date.now().toString(36);
+    
+    const updatedKeys = {
+        ...settings.apiKeys,
+        [vendor]: newKey
+    };
+    
+    setSettings({ ...settings, apiKeys: updatedKeys });
+  };
+
+
   const SettingsCard: React.FC<{title: string, icon: any, children: React.ReactNode}> = ({ title, icon: Icon, children }) => (
     <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
       <h3 className="font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2">
@@ -375,6 +409,17 @@ export const AdminSettings: React.FC = () => {
                                             value={settings.webhookUrls[vendor as ApiVendor]}
                                             onChange={e => handleNestedChange('webhookUrls', vendor, e.target.value)}
                                         />
+                                    </div>
+                                    <div className="mt-4">
+                                        <button
+                                            onClick={() => handleRegenerateKey(vendor as ApiVendor)}
+                                            className="w-full justify-center flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg text-xs font-bold hover:bg-gray-200 dark:hover:bg-gray-600"
+                                        >
+                                            <Key size={14}/> Regenerate Key
+                                        </button>
+                                    </div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
+                                        Last connection: <span className="font-bold">{formatRelativeTime(settings.apiLastConnection?.[vendor as ApiVendor])}</span>
                                     </div>
                                 </div>
                             ))}
