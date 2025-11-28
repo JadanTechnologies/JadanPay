@@ -44,12 +44,12 @@ export const PROVIDER_IMAGES: Record<string, string> = {
   [BillProvider.GOTV]: 'https://upload.wikimedia.org/wikipedia/commons/c/c2/GOtv_logo.svg',
   [BillProvider.STARTIMES]: 'https://upload.wikimedia.org/wikipedia/commons/e/e6/StarTimes_Logo.png',
   
-  // Electricity - Replaced Wikipedia "Fair Use" links with more reliable sources to fix broken images.
+  // Electricity - Replaced direct website links with more reliable CDN/Wikimedia sources to fix broken images.
   [BillProvider.IKEDC]: 'https://asset.brandfetch.io/id2Fd_t01j/idjW803s7s.svg',
-  [BillProvider.EKEDC]: 'https://www.ekedp.com/images/logo_main.png',
-  [BillProvider.AEDC]: 'https://www.aedc.com/assets/images/logo-dark.png',
-  [BillProvider.IBEDC]: 'https://ibedc.com/wp-content/uploads/2021/03/logo.png',
-  [BillProvider.KEDCO]: 'https://www.kedco.ng/images/logo.png',
+  [BillProvider.EKEDC]: 'https://asset.brandfetch.io/id5CK5m9s-/idY-M33L0n.svg',
+  [BillProvider.AEDC]: 'https://asset.brandfetch.io/idV4d3p_dZ/id0qB7jL3X.svg',
+  [BillProvider.IBEDC]: 'https://images.vconnect.com/profile/p/2/38622/picture_1586518774.png',
+  [BillProvider.KEDCO]: 'https://upload.wikimedia.org/wikipedia/commons/e/e4/KEDCO_logo.png',
 };
 
 // MOCK DATA FOR USERS
