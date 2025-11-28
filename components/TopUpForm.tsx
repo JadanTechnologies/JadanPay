@@ -182,6 +182,11 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
       setLoading(false);
     }
   };
+
+  const handleForgotPin = () => {
+    setShowPinModal(false);
+    alert("To reset your transaction PIN, please go to your Profile page and look for the 'Security' section.");
+  };
   
   const getTransactionDetails = () => {
      let cost = 0, desc = "";
@@ -384,10 +389,20 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
                     autoFocus
                 />
                 {pinError && <p className="text-red-500 text-sm text-center mt-2">{pinError}</p>}
+                
                 <div className="flex gap-3 mt-6">
                     <button onClick={() => setShowPinModal(false)} className="flex-1 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-xl font-medium">Cancel</button>
                     <button onClick={executeTransaction} disabled={loading || pin.length !== 4} className="flex-1 py-3 bg-green-700 text-white rounded-xl font-bold flex items-center justify-center gap-2 disabled:opacity-50">
                         {loading ? <Loader2 className="animate-spin"/> : 'Confirm Purchase'}
+                    </button>
+                </div>
+                <div className="text-center mt-4">
+                    <button 
+                        type="button" 
+                        onClick={handleForgotPin}
+                        className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium"
+                    >
+                        Forgot PIN?
                     </button>
                 </div>
             </div>
