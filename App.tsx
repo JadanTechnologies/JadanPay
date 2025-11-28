@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect } from 'react';
 import { Layout } from './components/Layout';
 import { Dashboard } from './components/Dashboard';
@@ -13,6 +14,7 @@ import { AdminStaff } from './components/AdminStaff';
 import { AdminCommunication } from './components/AdminCommunication';
 import { AdminPayments } from './components/AdminPayments';
 import { AdminAccessControl } from './components/AdminAccessControl';
+import { AdminAuditLog } from './components/AdminAuditLog';
 import { ResellerZone } from './components/ResellerZone';
 import { DeveloperApi } from './components/DeveloperApi';
 import { LandingPage } from './components/LandingPage';
@@ -179,6 +181,8 @@ export default function App() {
          return <AdminStaff />;
       case 'admin-access':
          return <AdminAccessControl />;
+      case 'admin-audit':
+         return <AdminAuditLog />;
       case 'admin-settings':
          return <AdminSettings />;
       case 'reseller':

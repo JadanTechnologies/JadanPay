@@ -1,6 +1,6 @@
 
 
-import { User, Transaction, TransactionType, TransactionStatus, UserRole, Provider, Ticket, UserStatus, Staff, Role, Announcement, CommunicationTemplate, Bundle, AppNotification, AccessRule, KycStatus, CronJob } from '../types';
+import { User, Transaction, TransactionType, TransactionStatus, UserRole, Provider, Ticket, UserStatus, Staff, Role, Announcement, CommunicationTemplate, Bundle, AppNotification, AccessRule, KycStatus, CronJob, AuditLog } from '../types';
 import { MOCK_USERS_DATA, SAMPLE_BUNDLES } from '../constants';
 import { SettingsService, AppSettings } from './settingsService';
 import { NotificationService } from './notificationService';
@@ -21,6 +21,7 @@ interface DatabaseSchema {
     settings: AppSettings | null;
     accessRules: AccessRule[];
     cronJobs: CronJob[];
+    auditLogs: AuditLog[];
 }
 
 // Default Data
@@ -61,7 +62,8 @@ let db: DatabaseSchema = {
     notifications: [],
     settings: null,
     accessRules: [],
-    cronJobs: []
+    cronJobs: [],
+    auditLogs: []
 };
 
 // --- DATA SANITIZATION ---
@@ -128,7 +130,8 @@ const loadDatabase = () => {
                 notifications: Array.isArray(parsed.notifications) ? parsed.notifications : [],
                 settings: parsed.settings || null,
                 accessRules: Array.isArray(parsed.accessRules) ? parsed.accessRules : [],
-                cronJobs: Array.isArray(parsed.cronJobs) ? parsed.cronJobs : DEFAULT_CRON_JOBS
+                cronJobs: Array.isArray(parsed.cronJobs) ? parsed.cronJobs : DEFAULT_CRON_JOBS,
+                auditLogs: Array.isArray(parsed.auditLogs) ? parsed.auditLogs : []
             };
             
             console.log("Database loaded and sanitized.");
@@ -171,8 +174,35 @@ try {
     console.error("Fatal MockDB Init Error", e);
 }
 
+const _getCurrentAdmin = () => {
+    return db.users.find(u => u.role === UserRole.ADMIN && u.email === 'admin@jadanpay.com') || { id: 'system', name: 'System' };
+};
+
 
 export const MockDB = {
+  // --- AUDIT LOGS ---
+  addAuditLog: async (action: string, description: string, targetType?: string, targetId?: string) => {
+      await delay(50);
+      const admin = _getCurrentAdmin();
+      const logEntry: AuditLog = {
+          id: Math.random().toString(36),
+          timestamp: new Date().toISOString(),
+          adminId: admin.id,
+          adminName: admin.name,
+          action,
+          targetType,
+          targetId,
+          description
+      };
+      db.auditLogs.unshift(logEntry);
+      saveDatabase();
+  },
+
+  getAuditLogs: async () => {
+      await delay(200);
+      return [...db.auditLogs];
+  },
+
   // --- BACKUP & RESTORE ---
   getDatabaseDump: async () => {
       await delay(500);
@@ -409,6 +439,7 @@ export const MockDB = {
               message: 'Your account has been verified. You now have unlimited access and a dedicated Virtual Account Number.',
               type: 'success'
           });
+          MockDB.addAuditLog('KYC_APPROVED', `Approved KYC for user ${user.name} (${user.email}).`, 'USER', userId);
           saveDatabase();
           return { ...user };
       }
@@ -428,6 +459,7 @@ export const MockDB = {
               message: 'Your verification documents were rejected. Please try again with clear images.',
               type: 'error'
           });
+          MockDB.addAuditLog('KYC_REJECTED', `Rejected KYC for user ${user.name} (${user.email}).`, 'USER', userId);
           saveDatabase();
           return { ...user };
       }
@@ -555,6 +587,12 @@ export const MockDB = {
     if (!user) throw new Error("User not found");
     
     user.status = status;
+    MockDB.addAuditLog(
+        `USER_STATUS_${status.toUpperCase()}`,
+        `Changed status of ${user.name} to ${status}.`,
+        'USER',
+        userId
+    );
     saveDatabase();
     return { ...user };
   },
@@ -580,6 +618,10 @@ export const MockDB = {
 
   deleteUser: async (userId: string) => {
       await delay(400);
+      const user = db.users.find(u => u.id === userId);
+      if (user) {
+          MockDB.addAuditLog('USER_DELETED', `Deleted user ${user.name} (${user.email}).`, 'USER', userId);
+      }
       db.users = db.users.filter(u => u.id !== userId);
       saveDatabase();
   },
@@ -643,6 +685,8 @@ export const MockDB = {
             message: `Your manual funding of ₦${tx.amount.toLocaleString()} has been approved.`,
             type: 'success'
           });
+          
+          MockDB.addAuditLog('PAYMENT_APPROVED', `Approved manual payment of ₦${tx.amount} for ${user.name}.`, 'TRANSACTION', txId);
 
           // SEND SMS
           await NotificationService.sendSms(
@@ -662,6 +706,11 @@ export const MockDB = {
 
       tx.status = TransactionStatus.DECLINED;
       tx.adminActionDate = new Date().toISOString();
+      
+      const user = db.users.find(u => u.id === tx.userId);
+      if (user) {
+          MockDB.addAuditLog('PAYMENT_DECLINED', `Declined manual payment of ₦${tx.amount} for ${user.name}.`, 'TRANSACTION', txId);
+      }
 
       MockDB.addNotification({
           userId: tx.userId,
@@ -764,6 +813,10 @@ export const MockDB = {
       return staff;
   },
   deleteStaff: async (id: string) => {
+      const staffMember = db.staffMembers.find(s => s.id === id);
+      if (staffMember) {
+          MockDB.addAuditLog('STAFF_DELETED', `Deleted staff member ${staffMember.name}.`, 'STAFF', id);
+      }
       db.staffMembers = db.staffMembers.filter(s => s.id !== id);
       saveDatabase();
   },
@@ -789,6 +842,10 @@ export const MockDB = {
       return a;
   },
   deleteAnnouncement: async (id: string) => {
+      const announcement = db.announcements.find(a => a.id === id);
+       if (announcement) {
+          MockDB.addAuditLog('ANNOUNCEMENT_DELETED', `Deleted announcement: "${announcement.title}".`, 'ANNOUNCEMENT', id);
+      }
       db.announcements = db.announcements.filter(a => a.id !== id);
       saveDatabase();
   },
@@ -827,6 +884,10 @@ export const MockDB = {
       return b;
   },
   deleteBundle: async (id: string) => {
+      const bundle = db.bundles.find(b => b.id === id);
+      if (bundle) {
+          MockDB.addAuditLog('BUNDLE_DELETED', `Deleted data bundle: "${bundle.name}".`, 'BUNDLE', id);
+      }
       db.bundles = db.bundles.filter(b => b.id !== id);
       saveDatabase();
   },
@@ -842,6 +903,10 @@ export const MockDB = {
       return rule;
   },
   deleteAccessRule: async (id: string) => {
+      const rule = db.accessRules.find(r => r.id === id);
+      if (rule) {
+          MockDB.addAuditLog('ACCESS_RULE_DELETED', `Deleted access rule for value "${rule.value}".`, 'ACCESS_RULE', id);
+      }
       db.accessRules = db.accessRules.filter(r => r.id !== id);
       saveDatabase();
   },

@@ -1,3 +1,4 @@
+
 import React, { ReactNode, ErrorInfo } from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
@@ -14,9 +15,7 @@ interface ErrorBoundaryState {
 
 // Simple Error Boundary to catch crashes and prevent white screen
 class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  // FIX: Use class property for state initialization. This is a more modern syntax and can
-  // sometimes resolve obscure type inference issues with linters that were causing errors about 'state' and 'props'
-  // not existing on the component instance.
+  // Fix: Initialize state as a class property to resolve type errors. This removes the need for a constructor.
   state: ErrorBoundaryState = { hasError: false, error: null };
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {

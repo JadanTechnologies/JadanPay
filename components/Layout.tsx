@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect } from 'react';
 import { User, UserRole } from '../types';
 import { Home, History, LogOut, Briefcase, User as UserIcon, LayoutDashboard, Settings, Users, MessageSquare, Lock, Megaphone, CreditCard, LifeBuoy, ChevronLeft, ChevronRight, ShieldAlert, Code2 } from 'lucide-react';
@@ -91,6 +92,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, activeTab, onTab
                     <NavItem id="admin-communication" icon={Megaphone} label="Comm." />
                     <NavItem id="admin-staff" icon={Lock} label="Staff" />
                     <NavItem id="admin-access" icon={ShieldAlert} label="Access" />
+                    <NavItem id="admin-audit" icon={History} label="Audit Log" />
                     <NavItem id="admin-settings" icon={Settings} label="Settings" />
                 </>
             ) : (

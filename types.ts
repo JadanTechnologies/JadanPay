@@ -29,7 +29,9 @@ export enum BillProvider {
   EKEDC = 'EKEDC',
   AEDC = 'AEDC',
   IBEDC = 'IBEDC',
-  KEDCO = 'KEDCO'
+  KEDCO = 'KEDCO',
+  PHED = 'PHED',
+  JOS = 'JOS'
 }
 
 export enum PlanType {
@@ -230,4 +232,15 @@ export interface CronJob {
     lastRun: string;
     nextRun: string;
     description: string;
+}
+
+export interface AuditLog {
+  id: string;
+  timestamp: string;
+  adminId: string;
+  adminName: string;
+  action: string;
+  targetType?: string;
+  targetId?: string;
+  description: string;
 }

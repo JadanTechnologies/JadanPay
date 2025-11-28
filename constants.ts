@@ -14,6 +14,8 @@ export const PROVIDER_COLORS = {
   [BillProvider.AEDC]: 'bg-yellow-500 text-white',
   [BillProvider.IBEDC]: 'bg-blue-800 text-white',
   [BillProvider.KEDCO]: 'bg-green-700 text-white',
+  [BillProvider.PHED]: 'bg-cyan-600 text-white',
+  [BillProvider.JOS]: 'bg-orange-600 text-white',
 };
 
 export const PROVIDER_LOGOS = {
@@ -30,6 +32,8 @@ export const PROVIDER_LOGOS = {
   [BillProvider.AEDC]: 'Abuja Electric',
   [BillProvider.IBEDC]: 'Ibadan Electric',
   [BillProvider.KEDCO]: 'Kano Electric',
+  [BillProvider.PHED]: 'Port Harcourt Electric',
+  [BillProvider.JOS]: 'Jos Electric',
 };
 
 export const PROVIDER_IMAGES: Record<string, string> = {
@@ -50,6 +54,8 @@ export const PROVIDER_IMAGES: Record<string, string> = {
   [BillProvider.AEDC]: 'https://asset.brandfetch.io/idV4d3p_dZ/id0qB7jL3X.svg',
   [BillProvider.IBEDC]: 'https://images.vconnect.com/profile/p/2/38622/picture_1586518774.png',
   [BillProvider.KEDCO]: 'https://upload.wikimedia.org/wikipedia/commons/e/e4/KEDCO_logo.png',
+  [BillProvider.PHED]: 'https://asset.brandfetch.io/id8yC7pC45/idg3t9a0Qp.svg',
+  [BillProvider.JOS]: 'https://www.jedplc.com/images/logo.png',
 };
 
 // MOCK DATA FOR USERS
@@ -120,5 +126,5 @@ export const CABLE_PLANS: Bundle[] = [
 // BILL PROVIDER CATEGORIES
 export const BILL_PROVIDERS = {
     CABLE: [BillProvider.DSTV, BillProvider.GOTV, BillProvider.STARTIMES],
-    ELECTRICITY: [BillProvider.IKEDC, BillProvider.EKEDC, BillProvider.AEDC, BillProvider.IBEDC, BillProvider.KEDCO]
+    ELECTRICITY: [BillProvider.IKEDC, BillProvider.EKEDC, BillProvider.AEDC, BillProvider.IBEDC, BillProvider.KEDCO, BillProvider.PHED, BillProvider.JOS]
 };

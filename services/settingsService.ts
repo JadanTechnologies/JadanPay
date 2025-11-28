@@ -1,4 +1,5 @@
 import { Provider } from '../types';
+import { MockDB } from './mockDb';
 
 export type ApiVendor = 'BILALSADA' | 'MASKAWA' | 'ALRAHUZ' | 'ABBAPHANTAMI' | 'SIMHOST';
 export type EmailProvider = 'SMTP' | 'RESEND';
@@ -258,10 +259,11 @@ export const SettingsService = {
   },
 
   updateSettings: async (newSettings: Partial<AppSettings>): Promise<AppSettings> => {
-    return new Promise(resolve => setTimeout(() => {
+    return new Promise(resolve => setTimeout(async () => {
       _settings = { ..._settings, ...newSettings };
       try {
         localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(_settings));
+        await MockDB.addAuditLog('SETTINGS_UPDATED', 'Administrator updated application settings.');
       } catch (e) {
         console.warn("Failed to save settings to storage");
       }
