@@ -565,6 +565,12 @@ export const MockDB = {
       if (index !== -1) {
           // Merge existing data with updates to prevent data loss
           const mergedUser = { ...db.users[index], ...updatedData };
+          
+          // Add default PIN if user is a regular user and has no PIN
+          if (mergedUser.role === UserRole.USER && !mergedUser.transactionPin) {
+              mergedUser.transactionPin = '0000';
+          }
+          
           db.users[index] = mergedUser;
           saveDatabase();
           return { ...mergedUser };
