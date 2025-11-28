@@ -23,6 +23,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdate }) => {
   const [pinData, setPinData] = useState({ oldPin: '', newPin: '' });
   const [pinLoading, setPinLoading] = useState(false);
   const [pinMessage, setPinMessage] = useState('');
+  const [pinMessageType, setPinMessageType] = useState<'success' | 'error' | ''>('');
   const [forgotPinLoading, setForgotPinLoading] = useState(false);
 
   // Reseller Request State
@@ -49,15 +50,18 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdate }) => {
   const handlePinChange = async (e: React.FormEvent) => {
       e.preventDefault();
       setPinMessage('');
+      setPinMessageType('');
       
       if (pinData.newPin.length !== 4) {
           setPinMessage("New PIN must be 4 digits.");
+          setPinMessageType('error');
           return;
       }
 
       // If user has an existing PIN, old pin is required
       if (user.transactionPin && pinData.oldPin !== user.transactionPin) {
           setPinMessage("Incorrect Old PIN.");
+          setPinMessageType('error');
           return;
       }
 
@@ -67,9 +71,11 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdate }) => {
           onUpdate(); 
           user.transactionPin = pinData.newPin; 
           setPinMessage("PIN updated successfully!");
+          setPinMessageType('success');
           setPinData({ oldPin: '', newPin: '' });
       } catch (e) {
           setPinMessage("Failed to update PIN.");
+          setPinMessageType('error');
       } finally {
           setPinLoading(false);
       }
@@ -82,14 +88,17 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdate }) => {
 
     setForgotPinLoading(true);
     setPinMessage('');
+    setPinMessageType('');
 
     try {
         await MockDB.resetUserPin(user.id);
         onUpdate();
         setPinMessage("PIN has been successfully reset. Please create a new one.");
+        setPinMessageType('success');
         playNotification("PIN reset successfully. Please create a new one.");
     } catch (error) {
         setPinMessage("Failed to reset PIN. Please try again.");
+        setPinMessageType('error');
         playNotification("Failed to reset PIN.", "error");
     } finally {
         setForgotPinLoading(false);
@@ -313,7 +322,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdate }) => {
                 </div>
 
                 {pinMessage && (
-                    <div className={`p-3 rounded-xl text-sm font-bold ${pinMessage.includes('success') ? 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400'}`}>
+                    <div className={`p-3 rounded-xl text-sm font-bold ${pinMessageType === 'success' ? 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400'}`}>
                         {pinMessage}
                     </div>
                 )}

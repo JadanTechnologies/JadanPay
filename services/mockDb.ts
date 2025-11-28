@@ -399,8 +399,8 @@ export const MockDB = {
           
           MockDB.addNotification({
               userId: userId,
-              title: 'Security: PIN Reset',
-              message: 'Your transaction PIN has been reset. Please create a new one to secure your account.',
+              title: 'PIN Successfully Reset',
+              message: 'Your transaction PIN has been cleared for security. You can now create a new PIN.',
               type: 'success'
           });
           
