@@ -1,9 +1,9 @@
-import React, { ReactNode, ErrorInfo } from 'react';
+import React, { ReactNode, ErrorInfo, PropsWithChildren } from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 
 interface ErrorBoundaryProps {
-  children?: ReactNode;
+  // children is now provided by PropsWithChildren for better type safety.
 }
 
 interface ErrorBoundaryState {
@@ -12,12 +12,9 @@ interface ErrorBoundaryState {
 }
 
 // Simple Error Boundary to catch crashes and prevent white screen
-class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  // FIX: Replaced direct state initialization with a constructor to correctly initialize props and state, resolving the "Property 'props' does not exist" error. The previous attempt to fix this by removing the constructor was incorrect.
-  constructor(props: ErrorBoundaryProps) {
-    super(props);
-    this.state = { hasError: false, error: null };
-  }
+// Fix: Use PropsWithChildren to explicitly type the `children` prop, resolving a potential type inference issue.
+class ErrorBoundary extends React.Component<PropsWithChildren<ErrorBoundaryProps>, ErrorBoundaryState> {
+  state: ErrorBoundaryState = { hasError: false, error: null };
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     return { hasError: true, error };

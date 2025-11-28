@@ -1,25 +1,22 @@
 
+
 import { User } from '../types';
 import { MockDB } from './mockDb';
 
-export const login = async (email: string, otp: string): Promise<User> => {
-  // Mock OTP check: for demo, any 4 digit OTP works if email exists
+export const login = async (email: string, password: string): Promise<User> => {
   const user = await MockDB.getUserByEmail(email);
   if (!user) {
     throw new Error("User not found. Please register.");
   }
-  if (otp.length !== 4) {
-    throw new Error("Invalid OTP");
+  if (user.password !== password) {
+    throw new Error("Incorrect password.");
   }
   return user;
 };
 
-export const register = async (name: string, email: string, phone: string, otp: string, referralCode?: string): Promise<User> => {
-   // Mock registration
-   if (otp.length !== 4) throw new Error("Invalid OTP");
-   
+export const register = async (name: string, email: string, phone: string, password: string, referralCode?: string): Promise<User> => {
    // This calls the MockDB which performs duplicate checks
-   return await MockDB.registerUser(name, email, phone, referralCode);
+   return await MockDB.registerUser(name, email, phone, password, referralCode);
 };
 
 export const logout = async () => {

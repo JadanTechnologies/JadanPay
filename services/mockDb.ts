@@ -1,4 +1,5 @@
 
+
 import { User, Transaction, TransactionType, TransactionStatus, UserRole, Provider, Ticket, UserStatus, Staff, Role, Announcement, CommunicationTemplate, Bundle, AppNotification, AccessRule, KycStatus, CronJob } from '../types';
 import { MOCK_USERS_DATA, SAMPLE_BUNDLES } from '../constants';
 import { SettingsService, AppSettings } from './settingsService';
@@ -77,6 +78,7 @@ const sanitizeUser = (u: any): User => {
         id: u.id || Math.random().toString(36),
         name: u.name || 'Unknown User',
         email: u.email || 'missing@email.com',
+        password: u.password,
         phone: u.phone || '',
         role: role,
         balance: typeof u.balance === 'number' ? u.balance : 0,
@@ -277,7 +279,7 @@ export const MockDB = {
     return user ? { ...user } : undefined;
   },
 
-  registerUser: async (name: string, email: string, phone: string, referrerCode?: string): Promise<User> => {
+  registerUser: async (name: string, email: string, phone: string, password: string, referrerCode?: string): Promise<User> => {
       await delay(600);
       const settings = await SettingsService.getSettings();
       
@@ -320,6 +322,7 @@ export const MockDB = {
           id: Math.random().toString(36).substr(2, 9),
           name,
           email,
+          password,
           phone,
           role: UserRole.USER,
           balance: 0,

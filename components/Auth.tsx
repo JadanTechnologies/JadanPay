@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect } from 'react';
 import { login, register } from '../services/authService';
 import { User } from '../types';
@@ -22,7 +23,8 @@ export const Auth: React.FC<AuthProps> = ({ onAuthSuccess, onBack }) => {
 
   // Form State
   const [email, setEmail] = useState('tunde@example.com');
-  const [otp, setOtp] = useState('1234');
+  const [password, setPassword] = useState('user123');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [referralCode, setReferralCode] = useState('');
@@ -41,10 +43,13 @@ export const Auth: React.FC<AuthProps> = ({ onAuthSuccess, onBack }) => {
 
     try {
       if (isLogin) {
-        const user = await login(email, otp);
+        const user = await login(email, password);
         onAuthSuccess(user);
       } else {
-        const user = await register(name, email, phone, otp, referralCode);
+        if (password !== confirmPassword) {
+            throw new Error("Passwords do not match.");
+        }
+        const user = await register(name, email, phone, password, referralCode);
         
         // Success Audio
         const welcomeText = `Welcome to the ${appName} family, ${name}. We are glad to have you on board.`;
@@ -145,28 +150,39 @@ export const Auth: React.FC<AuthProps> = ({ onAuthSuccess, onBack }) => {
             </div>
 
             <div>
-                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">OTP (Demo: 1234)</label>
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Password</label>
                 <input 
-                    type="text" 
-                    className="w-full p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-green-500 outline-none font-mono tracking-widest text-center text-lg text-gray-900 dark:text-white transition-colors" 
-                    value={otp}
-                    onChange={e => setOtp(e.target.value)}
-                    maxLength={4}
+                    type="password" 
+                    className="w-full p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-green-500 outline-none text-gray-900 dark:text-white transition-colors" 
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
                     required
                 />
             </div>
             
             {!isLogin && (
-                <div>
-                     <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Referral Code (Optional)</label>
-                     <input 
-                        type="text" 
-                        className="w-full p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-green-500 outline-none uppercase font-mono tracking-wider text-gray-900 dark:text-white transition-colors" 
-                        value={referralCode}
-                        onChange={e => setReferralCode(e.target.value.toUpperCase())}
-                        placeholder="e.g. TUND123"
-                    />
-                </div>
+                <>
+                    <div>
+                        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Confirm Password</label>
+                        <input 
+                            type="password" 
+                            className="w-full p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-green-500 outline-none text-gray-900 dark:text-white transition-colors" 
+                            value={confirmPassword}
+                            onChange={e => setConfirmPassword(e.target.value)}
+                            required
+                        />
+                    </div>
+                    <div>
+                         <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Referral Code (Optional)</label>
+                         <input 
+                            type="text" 
+                            className="w-full p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-green-500 outline-none uppercase font-mono tracking-wider text-gray-900 dark:text-white transition-colors" 
+                            value={referralCode}
+                            onChange={e => setReferralCode(e.target.value.toUpperCase())}
+                            placeholder="e.g. TUND123"
+                        />
+                    </div>
+                </>
             )}
 
             {error && <p className="text-red-500 text-sm bg-red-50 dark:bg-red-900/20 p-2 rounded border border-red-100 dark:border-red-900/50">{error}</p>}
@@ -182,8 +198,8 @@ export const Auth: React.FC<AuthProps> = ({ onAuthSuccess, onBack }) => {
         
         <div className="mt-6 text-center text-xs text-gray-400">
             <p>Demo Credentials:</p>
-            <p>User: tunde@example.com / 1234</p>
-            <p>Admin: admin@jadanpay.com / 1234</p>
+            <p>User: tunde@example.com / user123</p>
+            <p>Admin: admin@jadanpay.com / admin123</p>
         </div>
       </div>
     </div>
