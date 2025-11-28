@@ -13,8 +13,6 @@ interface TopUpFormProps {
   onViewReceipt: (txId: string) => void;
 }
 
-const BILL_SERVICE_FEE = 100; // This can be moved to settings later
-
 export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewReceipt }) => {
   const [activeTab, setActiveTab] = useState<'airtime' | 'data' | 'data_refill' | 'cable' | 'power'>('airtime');
   const [type, setType] = useState<TransactionType>(TransactionType.AIRTIME);
@@ -24,6 +22,7 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
   const [amount, setAmount] = useState<number | ''>('');
   const [selectedBundle, setSelectedBundle] = useState<Bundle | null>(null);
   const [bundles, setBundles] = useState<Bundle[]>([]);
+  const [serviceFees, setServiceFees] = useState<any>({});
   
   // Bill Payment State
   const [isValidating, setIsValidating] = useState(false);
@@ -50,6 +49,8 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
       try {
         const dbBundles = await MockDB.getBundles();
         setBundles(dbBundles);
+        const settings = await SettingsService.getSettings();
+        setServiceFees(settings.serviceFees || {});
       } catch (e) { console.error("Failed to load top-up data", e); }
   };
   
@@ -155,8 +156,7 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
         tx = await processDataPurchase(user, selectedBundle!, phone, false, pin);
       } else {
         const baseAmt = type === TransactionType.CABLE ? selectedBundle!.price : Number(amount);
-        const totalDeduct = baseAmt + BILL_SERVICE_FEE;
-        tx = await processBillPayment(user, type, provider as BillProvider, phone, totalDeduct, pin, selectedBundle || undefined);
+        tx = await processBillPayment(user, type, provider as BillProvider, phone, baseAmt, pin, selectedBundle || undefined);
       }
       
       setShowPinModal(false);
@@ -184,21 +184,25 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
   };
   
   const getTransactionDetails = () => {
-     let cost = 0, desc = "", serviceFee = 0;
+     let cost = 0, desc = "";
+     let serviceFee = 0;
+
      if (type === TransactionType.AIRTIME) {
          cost = Number(amount);
          desc = `${provider} Airtime`;
+         serviceFee = serviceFees.airtime || 0;
      } else if (type === TransactionType.ELECTRICITY) {
          cost = Number(amount);
          desc = "Electricity Top-up";
-         serviceFee = BILL_SERVICE_FEE;
+         serviceFee = serviceFees.electricity || 0;
      } else if (type === TransactionType.DATA) {
          cost = selectedBundle?.price || 0;
          desc = selectedBundle?.name || 'Data';
+         serviceFee = serviceFees.data || 0;
      } else if (type === TransactionType.CABLE) {
          cost = selectedBundle?.price || 0;
          desc = selectedBundle ? `Cable - ${selectedBundle.name}` : 'Cable';
-         serviceFee = BILL_SERVICE_FEE;
+         serviceFee = serviceFees.cable || 0;
      }
      return { cost, desc, total: cost + serviceFee, serviceFee };
   };
@@ -353,7 +357,8 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
                 <div className="flex justify-between text-sm"><span className="text-gray-500 dark:text-gray-400">Service:</span><span className="font-medium text-gray-900 dark:text-white text-right">{details.desc}</span></div>
                 {customerName && <div className="flex justify-between text-sm"><span className="text-gray-500 dark:text-gray-400">Name:</span><span className="font-medium text-gray-900 dark:text-white">{customerName}</span></div>}
                 <div className="flex justify-between text-sm"><span className="text-gray-500 dark:text-gray-400">To:</span><span className="font-mono text-gray-900 dark:text-white">{phone}</span></div>
-                {details.serviceFee > 0 && <div className="flex justify-between text-sm"><span className="text-gray-500 dark:text-gray-400">Service Fee:</span><span className="font-mono text-gray-900 dark:text-white">₦{details.serviceFee}</span></div>}
+                <div className="flex justify-between text-sm"><span className="text-gray-500 dark:text-gray-400">Amount:</span><span className="font-mono text-gray-900 dark:text-white">₦{details.cost.toLocaleString()}</span></div>
+                {details.serviceFee > 0 && <div className="flex justify-between text-sm"><span className="text-gray-500 dark:text-gray-400">Service Fee:</span><span className="font-mono text-gray-900 dark:text-white">₦{details.serviceFee.toLocaleString()}</span></div>}
                 <div className="h-px bg-gray-200 dark:bg-gray-700 my-2"></div>
                 <div className="flex justify-between font-bold text-lg"><span className="text-gray-800 dark:text-white">Total to Pay:</span><span className="text-green-700 dark:text-green-400">₦{details.total.toLocaleString()}</span></div>
              </div>

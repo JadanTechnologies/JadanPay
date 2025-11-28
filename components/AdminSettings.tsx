@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Save, Globe, Server, CreditCard, Database, Plus, Trash2, Edit2, Check, X, Upload, Mail, Phone, AlertTriangle, Key, Users, Trophy, Gift, MessageSquare, Bell, Send, Smartphone, Activity, Link as LinkIcon, Download, Wifi, Clock, Play, Pause, Lock, DollarSign, Image as ImageIcon, Power, Loader2, ArrowDown, ArrowUp, Zap } from 'lucide-react';
 import { Provider, Bundle, PlanType, User, CronJob } from '../types';
@@ -335,6 +334,11 @@ export const AdminSettings: React.FC = () => {
                                     <p className="text-xs text-gray-500 dark:text-gray-400">₦{b.price} | Cost: ₦{b.costPrice}</p>
                                 </div>
                                 <div className="flex gap-2">
+                                    <ToggleSwitch label="" enabled={!!b.isAvailable} onChange={async (e) => {
+                                      const updatedBundle = {...b, isAvailable: e.target.checked };
+                                      await MockDB.saveBundle(updatedBundle);
+                                      loadBundles();
+                                    }}/>
                                     <button onClick={() => {setEditingBundle(b); setShowBundleModal(true);}} className="p-2 text-gray-400 hover:text-blue-500"><Edit2 size={16}/></button>
                                     <button onClick={() => handleBundleDelete(b.id)} className="p-2 text-gray-400 hover:text-red-500"><Trash2 size={16}/></button>
                                 </div>
@@ -386,6 +390,15 @@ export const AdminSettings: React.FC = () => {
             )}
 
             {activeTab === 'payment' && (
+              <>
+                <SettingsCard title="Service Fees (₦)" icon={DollarSign}>
+                    <div className="grid grid-cols-2 gap-4">
+                        <InputField label="Airtime Fee" type="number" value={settings.serviceFees.airtime} onChange={e => handleNestedChange('serviceFees', 'airtime', e.target.value, true)} />
+                        <InputField label="Data Fee" type="number" value={settings.serviceFees.data} onChange={e => handleNestedChange('serviceFees', 'data', e.target.value, true)} />
+                        <InputField label="Cable TV Fee" type="number" value={settings.serviceFees.cable} onChange={e => handleNestedChange('serviceFees', 'cable', e.target.value, true)} />
+                        <InputField label="Electricity Fee" type="number" value={settings.serviceFees.electricity} onChange={e => handleNestedChange('serviceFees', 'electricity', e.target.value, true)} />
+                    </div>
+                </SettingsCard>
                 <SettingsCard title="Payment Gateways" icon={CreditCard}>
                     <h4 className="text-sm font-bold border-b dark:border-gray-700 pb-2 mb-2 text-gray-700 dark:text-gray-200">Manual Bank Transfer</h4>
                     <InputField label="Bank Name" value={settings.bankName} onChange={e => handleSettingChange('bankName', e.target.value)} />
@@ -397,6 +410,7 @@ export const AdminSettings: React.FC = () => {
                     <InputField label="Public Key" value={settings.paystackPublicKey} onChange={e => handleSettingChange('paystackPublicKey', e.target.value)} />
                     <InputField label="Secret Key" value={settings.paystackSecretKey} onChange={e => handleSettingChange('paystackSecretKey', e.target.value)} />
                 </SettingsCard>
+              </>
             )}
 
             {activeTab === 'referrals' && (

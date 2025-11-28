@@ -1,4 +1,3 @@
-
 import { Provider } from '../types';
 
 export type ApiVendor = 'BILALSADA' | 'MASKAWA' | 'ALRAHUZ' | 'ABBAPHANTAMI' | 'SIMHOST';
@@ -68,12 +67,19 @@ export interface AppSettings {
   enableReferral: boolean;
   referralReward: number;
   referralMinWithdrawal: number;
+
+  // Service Fees
+  serviceFees: {
+      airtime: number;
+      data: number;
+      cable: number;
+      electricity: number;
+  };
   
   // Global Pricing Rules
   servicePricing: {
       airtimeCostPercentage: number; // e.g. 97 (Cost is 97% of face value)
       airtimeSellingPercentage: number; // e.g. 100 (Sell at face value)
-      billServiceFee: number; // e.g. 100 Naira fee
   };
 
   // Landing Page
@@ -185,10 +191,16 @@ const defaultSettings: AppSettings = {
   referralReward: 100,
   referralMinWithdrawal: 500,
   
+  serviceFees: {
+      airtime: 10,
+      data: 20,
+      cable: 100,
+      electricity: 100
+  },
+
   servicePricing: {
       airtimeCostPercentage: 97,
       airtimeSellingPercentage: 100,
-      billServiceFee: 100
   },
   
   landingHeroTitle: "Stop Overpaying For Data.",
@@ -222,6 +234,7 @@ try {
         apiKeys: { ...defaultSettings.apiKeys, ...(parsed.apiKeys || {}) },
         webhookUrls: { ...defaultSettings.webhookUrls, ...(parsed.webhookUrls || {}) }, // Merge webhooks
         apiBaseUrls: { ...defaultSettings.apiBaseUrls, ...(parsed.apiBaseUrls || {}) },
+        serviceFees: { ...defaultSettings.serviceFees, ...(parsed.serviceFees || {}) },
         servicePricing: { ...defaultSettings.servicePricing, ...(parsed.servicePricing || {}) },
         providerNetworkIds: { ...defaultSettings.providerNetworkIds, ...(parsed.providerNetworkIds || {}) }
     };

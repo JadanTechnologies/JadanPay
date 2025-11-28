@@ -1,9 +1,10 @@
-import React, { ReactNode, ErrorInfo, PropsWithChildren } from 'react';
+import React, { ReactNode, ErrorInfo } from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 
+// Fix: Explicitly define `children` prop to avoid potential type inference issues.
 interface ErrorBoundaryProps {
-  // children is now provided by PropsWithChildren for better type safety.
+  children: ReactNode;
 }
 
 interface ErrorBoundaryState {
@@ -12,8 +13,7 @@ interface ErrorBoundaryState {
 }
 
 // Simple Error Boundary to catch crashes and prevent white screen
-// Fix: Use PropsWithChildren to explicitly type the `children` prop, resolving a potential type inference issue.
-class ErrorBoundary extends React.Component<PropsWithChildren<ErrorBoundaryProps>, ErrorBoundaryState> {
+class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
   state: ErrorBoundaryState = { hasError: false, error: null };
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
