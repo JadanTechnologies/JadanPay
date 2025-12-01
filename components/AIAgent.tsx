@@ -10,34 +10,62 @@ export const AIAgent: React.FC = () => {
   const [knowledgeBase, setKnowledgeBase] = useState<KnowledgeBaseItem[]>([]);
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const recognitionRef = useRef<any>(null);
+  const speechTimeoutRef = useRef<number | null>(null);
 
   const speak = (text: string, onEnd?: () => void) => {
-    if ('speechSynthesis' in window && settings) {
-      window.speechSynthesis.cancel(); // Stop any previous speech
-      const utterance = new SpeechSynthesisUtterance(text);
-
-      // Apply custom voice settings from admin
-      const voices = window.speechSynthesis.getVoices();
-      const selectedVoice = voices.find(v => v.name === settings.aiAgentSettings.voiceName);
-      if (selectedVoice) {
-          utterance.voice = selectedVoice;
-      }
-      utterance.rate = settings.aiAgentSettings.voiceRate || 1.0;
-      utterance.pitch = settings.aiAgentSettings.voicePitch || 1.0;
-      
-      utterance.onstart = () => setStatus('speaking');
-      utterance.onend = () => {
-        setStatus('idle');
-        if (onEnd) onEnd();
-      };
-      window.speechSynthesis.speak(utterance);
+    if (!('speechSynthesis' in window) || !settings) {
+      console.error("Speech synthesis not supported or settings not loaded.");
+      if (onEnd) onEnd();
+      return;
     }
+
+    // Clear any existing timeout
+    if (speechTimeoutRef.current) {
+      clearTimeout(speechTimeoutRef.current);
+    }
+
+    window.speechSynthesis.cancel(); // Stop any previous speech
+    const utterance = new SpeechSynthesisUtterance(text);
+
+    // Apply custom voice settings from admin
+    const voices = window.speechSynthesis.getVoices();
+    const selectedVoice = voices.find(v => v.name === settings.aiAgentSettings.voiceName);
+    if (selectedVoice) {
+      utterance.voice = selectedVoice;
+    }
+    utterance.rate = settings.aiAgentSettings.voiceRate || 1.0;
+    utterance.pitch = settings.aiAgentSettings.voicePitch || 1.0;
+
+    const cleanupAndCallback = () => {
+      if (speechTimeoutRef.current) {
+        clearTimeout(speechTimeoutRef.current);
+      }
+      setStatus('idle');
+      if (onEnd) onEnd();
+    };
+
+    utterance.onstart = () => setStatus('speaking');
+    utterance.onend = cleanupAndCallback;
+    utterance.onerror = (event) => {
+      console.error("Speech synthesis error:", event.error);
+      cleanupAndCallback(); // Ensure loop continues even on error
+    };
+    
+    // Fallback timer: If speech doesn't end in 10s, force it.
+    speechTimeoutRef.current = window.setTimeout(cleanupAndCallback, 10000);
+
+    window.speechSynthesis.speak(utterance);
   };
 
   const startListening = () => {
     if (recognitionRef.current && status !== 'listening') {
-      setStatus('listening');
-      recognitionRef.current.start();
+      try {
+        setStatus('listening');
+        recognitionRef.current.start();
+      } catch(e) {
+        console.error("Speech recognition could not start:", e);
+        setStatus('idle');
+      }
     }
   };
 
@@ -79,18 +107,21 @@ export const AIAgent: React.FC = () => {
 
   useEffect(() => {
     if (isOpen && status === 'connecting' && settings) {
-      speak(settings.aiAgentSettings.welcomeMessage, () => {
-        startListening();
-      });
+      // Small delay to ensure voices are loaded
+      setTimeout(() => {
+          speak(settings.aiAgentSettings.welcomeMessage, () => {
+            startListening();
+          });
+      }, 200);
     }
   }, [isOpen, status, settings]);
 
   const findAnswer = (query: string): string => {
-    const lowerQuery = query.toLowerCase();
+    const lowerQuery = query.toLowerCase().trim();
     
     // Prioritize exact or near-exact matches
     for (const item of knowledgeBase) {
-      if (lowerQuery.includes(item.question.toLowerCase())) {
+      if (lowerQuery.includes(item.question.toLowerCase().trim())) {
         return item.answer;
       }
     }

@@ -34,10 +34,16 @@ export const AdminSettings: React.FC = () => {
   
   useEffect(() => {
     const populateVoices = () => {
-        setAvailableVoices(window.speechSynthesis.getVoices());
+        // HACK: Sometimes voices are not loaded immediately.
+        const voices = window.speechSynthesis.getVoices();
+        if (voices.length > 0) {
+            setAvailableVoices(voices);
+        }
     };
-    populateVoices();
+    
+    // Voices may load asynchronously
     window.speechSynthesis.onvoiceschanged = populateVoices;
+    populateVoices(); // Initial attempt
 
     loadSettings();
     loadBundles();
