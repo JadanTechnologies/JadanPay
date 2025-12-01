@@ -1,18 +1,24 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Save, Globe, Server, CreditCard, Database, Plus, Trash2, Edit2, Check, X, Upload, Mail, Phone, AlertTriangle, Key, Users, Trophy, Gift, MessageSquare, Bell, Send, Smartphone, Activity, Link as LinkIcon, Download, Wifi, Clock, Play, Pause, Lock, DollarSign, ImageIcon, Power, Loader2, ArrowDown, ArrowUp, Zap } from 'lucide-react';
-import { Provider, Bundle, PlanType, User, CronJob } from '../types';
+import { Save, Globe, Server, CreditCard, Database, Plus, Trash2, Edit2, Check, X, Upload, Mail, Phone, AlertTriangle, Key, Users, Trophy, Gift, MessageSquare, Bell, Send, Smartphone, Activity, Link as LinkIcon, Download, Wifi, Clock, Play, Pause, Lock, DollarSign, ImageIcon, Power, Loader2, ArrowDown, ArrowUp, Zap, Bot } from 'lucide-react';
+import { Provider, Bundle, PlanType, User, CronJob, KnowledgeBaseItem } from '../types';
 import { PROVIDER_LOGOS } from '../constants';
 import { SettingsService, AppSettings, ApiVendor, EmailProvider, PushProvider } from '../services/settingsService';
 import { MockDB } from '../services/mockDb';
 import { NotificationService } from '../services/notificationService';
 
 export const AdminSettings: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'general' | 'services' | 'api' | 'payment' | 'referrals' | 'backup' | 'app' | 'health' | 'automation'>('general');
+  const [activeTab, setActiveTab] = useState<'general' | 'services' | 'api' | 'payment' | 'referrals' | 'backup' | 'app' | 'health' | 'automation' | 'ai'>('general');
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [bundles, setBundles] = useState<Bundle[]>([]);
   const [topReferrers, setTopReferrers] = useState<User[]>([]);
   const [cronJobs, setCronJobs] = useState<CronJob[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+
+  // AI Agent State
+  const [knowledgeBase, setKnowledgeBase] = useState<KnowledgeBaseItem[]>([]);
+  const [showKbModal, setShowKbModal] = useState(false);
+  const [editingKbItem, setEditingKbItem] = useState<Partial<KnowledgeBaseItem>>({});
+  const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
 
   // Bundle Modal State
   const [showBundleModal, setShowBundleModal] = useState(false);
@@ -27,6 +33,12 @@ export const AdminSettings: React.FC = () => {
   const intervalRef = useRef<number | null>(null);
   
   useEffect(() => {
+    const populateVoices = () => {
+        setAvailableVoices(window.speechSynthesis.getVoices());
+    };
+    populateVoices();
+    window.speechSynthesis.onvoiceschanged = populateVoices;
+
     loadSettings();
     loadBundles();
     loadCronJobs();
@@ -35,6 +47,9 @@ export const AdminSettings: React.FC = () => {
   useEffect(() => {
       if (activeTab === 'referrals') {
           loadTopReferrers();
+      }
+      if (activeTab === 'ai') {
+          loadKnowledgeBase();
       }
   }, [activeTab]);
 
@@ -46,6 +61,11 @@ export const AdminSettings: React.FC = () => {
   const loadBundles = async () => {
       const data = await MockDB.getBundles();
       setBundles(data);
+  };
+  
+  const loadKnowledgeBase = async () => {
+      const data = await MockDB.getKnowledgeBase();
+      setKnowledgeBase(data);
   };
 
   const loadTopReferrers = async () => {
@@ -208,6 +228,30 @@ export const AdminSettings: React.FC = () => {
           loadBundles();
       }
   };
+  
+  const handleKbSave = async () => {
+      if (!editingKbItem.question || !editingKbItem.answer) {
+          alert("Question and Answer fields are required.");
+          return;
+      }
+      
+      const item: KnowledgeBaseItem = {
+          id: editingKbItem.id || `kb_${Date.now()}`,
+          question: editingKbItem.question,
+          answer: editingKbItem.answer
+      };
+
+      await MockDB.saveKnowledgeBaseItem(item);
+      setShowKbModal(false);
+      loadKnowledgeBase();
+  };
+  
+  const handleKbDelete = async (id: string) => {
+      if (window.confirm("Are you sure you want to delete this knowledge base item?")) {
+          await MockDB.deleteKnowledgeBaseItem(id);
+          loadKnowledgeBase();
+      }
+  };
 
   const handleBackupDownload = async () => {
       const dump = await MockDB.getDatabaseDump();
@@ -330,6 +374,7 @@ export const AdminSettings: React.FC = () => {
                 { id: 'automation', label: 'Automation', icon: Clock },
                 { id: 'app', label: 'App', icon: Smartphone },
                 { id: 'health', label: 'Health', icon: Activity },
+                { id: 'ai', label: 'AI Agent', icon: Bot },
             ].map(tab => (
                 <button key={tab.id} onClick={() => setActiveTab(tab.id as any)} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${activeTab === tab.id ? 'bg-white dark:bg-gray-600 shadow text-green-700 dark:text-green-300' : 'text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-100'}`}>
                     <tab.icon size={16}/> {tab.label}
@@ -663,6 +708,56 @@ export const AdminSettings: React.FC = () => {
                       </div>
                   </div>
               )}
+              
+              {/* --- AI AGENT TAB --- */}
+              {activeTab === 'ai' && (
+                  <>
+                    <SettingsCard title="AI Agent Settings" icon={Bot}>
+                       <ToggleSwitch label="Enable AI Voice Agent" enabled={settings.aiAgentSettings.enabled} onChange={e => handleNestedChange('aiAgentSettings', 'enabled', e.target.checked)} />
+                       <InputField label="Welcome Message" value={settings.aiAgentSettings.welcomeMessage} onChange={e => handleNestedChange('aiAgentSettings', 'welcomeMessage', e.target.value)} />
+                       
+                       <h4 className="text-sm font-bold text-gray-500 dark:text-gray-400 pt-4 border-t dark:border-gray-700">Voice Customization</h4>
+                       <div>
+                           <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">Voice</label>
+                           <select 
+                               value={settings.aiAgentSettings.voiceName || ''}
+                               onChange={e => handleNestedChange('aiAgentSettings', 'voiceName', e.target.value)}
+                               className="w-full p-3 bg-gray-50 dark:bg-gray-900 border rounded-xl"
+                           >
+                               <option value="">Browser Default</option>
+                               {availableVoices.map(voice => (
+                                   <option key={voice.name} value={voice.name}>{voice.name} ({voice.lang})</option>
+                               ))}
+                           </select>
+                       </div>
+                       <div>
+                           <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">Speech Rate ({settings.aiAgentSettings.voiceRate || 1})</label>
+                           <input type="range" min="0.5" max="2" step="0.1" value={settings.aiAgentSettings.voiceRate || 1} onChange={e => handleNestedChange('aiAgentSettings', 'voiceRate', parseFloat(e.target.value))} className="w-full"/>
+                       </div>
+                       <div>
+                           <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">Speech Pitch ({settings.aiAgentSettings.voicePitch || 1})</label>
+                           <input type="range" min="0" max="2" step="0.1" value={settings.aiAgentSettings.voicePitch || 1} onChange={e => handleNestedChange('aiAgentSettings', 'voicePitch', parseFloat(e.target.value))} className="w-full"/>
+                       </div>
+                    </SettingsCard>
+                    <SettingsCard title="Knowledge Base" icon={Database}>
+                        <button onClick={() => { setEditingKbItem({}); setShowKbModal(true); }} className="flex items-center gap-2 px-4 py-2 bg-green-700 text-white rounded-lg text-sm font-bold w-full justify-center">
+                            <Plus size={16}/> Add Q&A
+                        </button>
+                         <div className="max-h-96 overflow-y-auto space-y-2 pr-2">
+                            {knowledgeBase.map(item => (
+                                <div key={item.id} className="p-3 border dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900">
+                                    <p className="font-bold text-sm text-gray-800 dark:text-white">Q: {item.question}</p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">A: {item.answer}</p>
+                                    <div className="flex gap-2 mt-2 justify-end">
+                                        <button onClick={() => {setEditingKbItem(item); setShowKbModal(true);}} className="p-2 text-gray-400 hover:text-blue-500"><Edit2 size={16}/></button>
+                                        <button onClick={() => handleKbDelete(item.id)} className="p-2 text-gray-400 hover:text-red-500"><Trash2 size={16}/></button>
+                                    </div>
+                                </div>
+                            ))}
+                         </div>
+                    </SettingsCard>
+                  </>
+              )}
           </div>
 
           <div className="lg:col-span-1 space-y-6">
@@ -683,6 +778,26 @@ export const AdminSettings: React.FC = () => {
           </div>
       </div>
       
+      {/* Knowledge Base Modal */}
+      {showKbModal && (
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+               <div className="bg-white dark:bg-gray-800 w-full max-w-lg rounded-2xl p-6 shadow-2xl animate-fade-in-up">
+                    <h3 className="font-bold text-lg mb-4">{editingKbItem.id ? 'Edit' : 'Add'} Knowledge Base Item</h3>
+                    <div className="space-y-4">
+                        <InputField label="Question" value={editingKbItem.question || ''} onChange={e => setEditingKbItem({...editingKbItem, question: e.target.value})} placeholder="e.g. How do I fund my wallet?" />
+                        <div>
+                           <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">Answer</label>
+                           <textarea value={editingKbItem.answer || ''} onChange={e => setEditingKbItem({...editingKbItem, answer: e.target.value})} className="w-full h-24 p-3 bg-gray-50 dark:bg-gray-900 border rounded-xl" />
+                        </div>
+                    </div>
+                    <div className="flex gap-3 mt-6 pt-4 border-t dark:border-gray-700">
+                        <button onClick={() => setShowKbModal(false)} className="flex-1 py-3 bg-gray-100 dark:bg-gray-700 rounded-xl font-bold">Cancel</button>
+                        <button onClick={handleKbSave} className="flex-1 py-3 bg-green-700 text-white rounded-xl font-bold">Save Item</button>
+                    </div>
+               </div>
+          </div>
+      )}
+
       {/* Bundle Modal */}
       {showBundleModal && (
           <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">

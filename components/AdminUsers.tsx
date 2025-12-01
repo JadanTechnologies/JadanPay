@@ -380,7 +380,7 @@ export const AdminUsers: React.FC = () => {
                                         <td className="p-3 font-mono">₦{tx.amount.toLocaleString()}</td>
                                         <td className="p-3">{new Date(tx.date).toLocaleDateString()}</td>
                                         <td className="p-3">
-                                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${tx.status === TransactionStatus.SUCCESS ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${tx.status === TransactionStatus.SUCCESS ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'}`}>
                                                 {tx.status}
                                             </span>
                                         </td>

@@ -126,6 +126,9 @@ export interface AppSettings {
   aiAgentSettings: {
     enabled: boolean;
     welcomeMessage: string;
+    voiceName?: string;
+    voiceRate?: number;
+    voicePitch?: number;
   };
 }
 
@@ -272,7 +275,10 @@ const defaultSettings: AppSettings = {
 
   aiAgentSettings: {
     enabled: true,
-    welcomeMessage: "Hello! I am JadanPay's AI assistant. How can I help you today? You can ask me about our services."
+    welcomeMessage: "Hello! I am JadanPay's AI assistant. How can I help you today? You can ask me about our services.",
+    voiceName: undefined,
+    voiceRate: 1,
+    voicePitch: 1,
   }
 };
 

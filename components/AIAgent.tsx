@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Mic, Bot, PhoneOff, Loader2, Volume2 } from 'lucide-react';
-import { SettingsService } from '../services/settingsService';
+import { SettingsService, AppSettings } from '../services/settingsService';
 import { MockDB } from '../services/mockDb';
 import { KnowledgeBaseItem } from '../types';
 
@@ -8,15 +8,23 @@ export const AIAgent: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [status, setStatus] = useState<'idle' | 'connecting' | 'listening' | 'speaking' | 'thinking'>('idle');
   const [knowledgeBase, setKnowledgeBase] = useState<KnowledgeBaseItem[]>([]);
-  const [welcomeMessage, setWelcomeMessage] = useState("Hello! How can I help you today?");
+  const [settings, setSettings] = useState<AppSettings | null>(null);
   const recognitionRef = useRef<any>(null);
 
   const speak = (text: string, onEnd?: () => void) => {
-    if ('speechSynthesis' in window) {
+    if ('speechSynthesis' in window && settings) {
       window.speechSynthesis.cancel(); // Stop any previous speech
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 1.0;
-      utterance.pitch = 1.0;
+
+      // Apply custom voice settings from admin
+      const voices = window.speechSynthesis.getVoices();
+      const selectedVoice = voices.find(v => v.name === settings.aiAgentSettings.voiceName);
+      if (selectedVoice) {
+          utterance.voice = selectedVoice;
+      }
+      utterance.rate = settings.aiAgentSettings.voiceRate || 1.0;
+      utterance.pitch = settings.aiAgentSettings.voicePitch || 1.0;
+      
       utterance.onstart = () => setStatus('speaking');
       utterance.onend = () => {
         setStatus('idle');
@@ -42,12 +50,10 @@ export const AIAgent: React.FC = () => {
   
   useEffect(() => {
     const loadData = async () => {
-        const settings = await SettingsService.getSettings();
+        const s = await SettingsService.getSettings();
         const kb = await MockDB.getKnowledgeBase();
+        setSettings(s);
         setKnowledgeBase(kb);
-        if (settings.aiAgentSettings?.welcomeMessage) {
-            setWelcomeMessage(settings.aiAgentSettings.welcomeMessage);
-        }
     };
     loadData();
 
@@ -72,12 +78,12 @@ export const AIAgent: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (isOpen && status === 'connecting') {
-      speak(welcomeMessage, () => {
+    if (isOpen && status === 'connecting' && settings) {
+      speak(settings.aiAgentSettings.welcomeMessage, () => {
         startListening();
       });
     }
-  }, [isOpen, status]);
+  }, [isOpen, status, settings]);
 
   const findAnswer = (query: string): string => {
     const lowerQuery = query.toLowerCase();
