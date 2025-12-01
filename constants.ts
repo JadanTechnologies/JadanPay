@@ -48,14 +48,14 @@ export const PROVIDER_IMAGES: Record<string, string> = {
   [BillProvider.GOTV]: 'https://upload.wikimedia.org/wikipedia/commons/c/c2/GOtv_logo.svg',
   [BillProvider.STARTIMES]: 'https://upload.wikimedia.org/wikipedia/commons/e/e6/StarTimes_Logo.png',
   
-  // Electricity - Replaced direct website links with more reliable CDN/Wikimedia sources to fix broken images.
-  [BillProvider.IKEDC]: 'https://asset.brandfetch.io/id2Fd_t01j/idjW803s7s.svg',
-  [BillProvider.EKEDC]: 'https://asset.brandfetch.io/id5CK5m9s-/idY-M33L0n.svg',
-  [BillProvider.AEDC]: 'https://asset.brandfetch.io/idV4d3p_dZ/id0qB7jL3X.svg',
-  [BillProvider.IBEDC]: 'https://asset.brandfetch.io/idBJ2rQk4i/id_9nJ939w.svg', // Corrected Link
+  // Electricity - Replaced all brandfetch.io links with more reliable sources to fix broken images.
+  [BillProvider.IKEDC]: 'https://upload.wikimedia.org/wikipedia/en/2/2b/Ikeja_Electric_Plc_Logo.png',
+  [BillProvider.EKEDC]: 'https://upload.wikimedia.org/wikipedia/commons/1/1b/Eko_Electricity_Distribution_Company_Logo.svg',
+  [BillProvider.AEDC]: 'https://upload.wikimedia.org/wikipedia/commons/a/a2/Abuja_Electricity_Distribution_Company_Logo.svg',
+  [BillProvider.IBEDC]: 'https://upload.wikimedia.org/wikipedia/en/f/f3/Ibadan_Electricity_Distribution_Company_%28IBEDC%29_Plc_logo.svg',
   [BillProvider.KEDCO]: 'https://upload.wikimedia.org/wikipedia/commons/e/e4/KEDCO_logo.png',
-  [BillProvider.PHED]: 'https://asset.brandfetch.io/id8yC7pC45/idg3t9a0Qp.svg',
-  [BillProvider.JOS]: 'https://asset.brandfetch.io/id7rW_H-k4/idS307F-b0.svg', // Corrected Link
+  [BillProvider.PHED]: 'https://upload.wikimedia.org/wikipedia/en/d/d7/PHED_Plc_logo.svg',
+  [BillProvider.JOS]: 'https://jedplc.com/images/logo.png',
 };
 
 // MOCK DATA FOR USERS
