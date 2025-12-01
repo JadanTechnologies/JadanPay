@@ -1,14 +1,21 @@
 {
-  "name": "jadanpay-network-api",
+  "name": "jadanpay-app",
   "version": "1.0.0",
-  "description": "A simple API to simulate network performance tests for the JadanPay application.",
+  "description": "Premium Airtime & Data Top-up platform for Nigeria with Admin & Reseller dashboards.",
   "main": "network-api.js",
   "scripts": {
-    "start": "node network-api.js"
+    "start": "node network-api.js",
+    "dev": "vite"
   },
   "dependencies": {
     "body-parser": "^1.20.2",
     "cors": "^2.8.5",
     "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "typescript": "^5.0.4",
+    "vite": "^5.0.0"
   }
 }
