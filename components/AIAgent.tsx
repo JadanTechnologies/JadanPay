@@ -1,12 +1,29 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Mic, Bot, PhoneOff, Loader2, Volume2 } from 'lucide-react';
+import { Mic, Bot, PhoneOff, Loader2, Volume2, PhoneForwarded } from 'lucide-react';
 import { SettingsService, AppSettings } from '../services/settingsService';
 import { MockDB } from '../services/mockDb';
 import { KnowledgeBaseItem } from '../types';
 
+// Helper function to process text into a set of keywords
+const stopWords = new Set([
+    'a', 'an', 'the', 'is', 'what', 'how', 'do', 'i', 'to', 'for', 'of', 'in', 'on', 'can', 'my', 'your', 'about', 'pay',
+    'jadanpay', 'me', 'tell', 'want', 'please', 'and'
+]);
+
+const getKeywords = (text: string): Set<string> => {
+    if (!text) return new Set();
+    const words = text
+        .toLowerCase()
+        .replace(/[^\w\s]/g, '') // remove punctuation
+        .split(/\s+/)
+        .filter(word => !stopWords.has(word) && word.length > 2); // remove stop words and short words
+    return new Set(words);
+};
+
+
 export const AIAgent: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [status, setStatus] = useState<'idle' | 'connecting' | 'listening' | 'speaking' | 'thinking'>('idle');
+  const [status, setStatus] = useState<'idle' | 'connecting' | 'listening' | 'speaking' | 'thinking' | 'handoff'>('idle');
   const [knowledgeBase, setKnowledgeBase] = useState<KnowledgeBaseItem[]>([]);
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const recognitionRef = useRef<any>(null);
@@ -19,15 +36,13 @@ export const AIAgent: React.FC = () => {
       return;
     }
 
-    // Clear any existing timeout
     if (speechTimeoutRef.current) {
       clearTimeout(speechTimeoutRef.current);
     }
 
-    window.speechSynthesis.cancel(); // Stop any previous speech
+    window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
 
-    // Apply custom voice settings from admin
     const voices = window.speechSynthesis.getVoices();
     const selectedVoice = voices.find(v => v.name === settings.aiAgentSettings.voiceName);
     if (selectedVoice) {
@@ -40,7 +55,9 @@ export const AIAgent: React.FC = () => {
       if (speechTimeoutRef.current) {
         clearTimeout(speechTimeoutRef.current);
       }
-      setStatus('idle');
+      if (status !== 'handoff') {
+          setStatus('idle');
+      }
       if (onEnd) onEnd();
     };
 
@@ -48,10 +65,9 @@ export const AIAgent: React.FC = () => {
     utterance.onend = cleanupAndCallback;
     utterance.onerror = (event) => {
       console.error("Speech synthesis error:", event.error);
-      cleanupAndCallback(); // Ensure loop continues even on error
+      cleanupAndCallback();
     };
     
-    // Fallback timer: If speech doesn't end in 10s, force it.
     speechTimeoutRef.current = window.setTimeout(cleanupAndCallback, 10000);
 
     window.speechSynthesis.speak(utterance);
@@ -68,14 +84,75 @@ export const AIAgent: React.FC = () => {
       }
     }
   };
+  
+  const findAnswer = (query: string): string => {
+    if (!query || !knowledgeBase.length) {
+        return "HANDOFF_TO_AGENT";
+    }
 
-  const stopListening = () => {
-    if (recognitionRef.current && status === 'listening') {
-      recognitionRef.current.stop();
-      setStatus('idle');
+    const queryKeywords = getKeywords(query);
+    if (queryKeywords.size === 0) {
+        return "I'm sorry, I didn't quite understand that. Could you please rephrase your question?";
+    }
+    
+    let bestMatch = {
+      score: 0,
+      answer: "HANDOFF_TO_AGENT"
+    };
+
+    for (const item of knowledgeBase) {
+      const kbQuestionKeywords = getKeywords(item.question);
+      if (kbQuestionKeywords.size === 0) continue;
+      
+      const intersection = new Set([...queryKeywords].filter(x => kbQuestionKeywords.has(x)));
+      const union = new Set([...queryKeywords, ...kbQuestionKeywords]);
+      
+      const score = union.size > 0 ? intersection.size / union.size : 0;
+      
+      if (score > bestMatch.score) {
+        bestMatch = { score, answer: item.answer };
+      }
+    }
+    
+    const CONFIDENCE_THRESHOLD = 0.20; 
+
+    if (bestMatch.score >= CONFIDENCE_THRESHOLD) {
+      return bestMatch.answer;
+    } else {
+      return "HANDOFF_TO_AGENT";
     }
   };
   
+  const handleLiveAgentHandoff = () => {
+      setStatus('handoff');
+      const handoffMessage = "I'm sorry, I couldn't find a clear answer for that. Let me connect you to a live support agent who can help.";
+      speak(handoffMessage, () => {
+          if (settings?.supportPhone) {
+              window.location.href = `tel:${settings.supportPhone}`;
+              // Close the agent window after initiating the call
+              setTimeout(() => handleClose(), 500);
+          } else {
+              console.warn("No support phone number configured for agent handoff.");
+              startListening(); // Go back to listening if no number is set
+          }
+      });
+  };
+
+  const handleUserQuery = (text: string) => {
+    setStatus('thinking');
+    const answerOrAction = findAnswer(text);
+    
+    setTimeout(() => {
+        if (answerOrAction === "HANDOFF_TO_AGENT") {
+            handleLiveAgentHandoff();
+        } else {
+            speak(answerOrAction, () => {
+                startListening();
+            });
+        }
+    }, 500);
+  };
+
   useEffect(() => {
     const loadData = async () => {
         const s = await SettingsService.getSettings();
@@ -107,7 +184,6 @@ export const AIAgent: React.FC = () => {
 
   useEffect(() => {
     if (isOpen && status === 'connecting' && settings) {
-      // Small delay to ensure voices are loaded
       setTimeout(() => {
           speak(settings.aiAgentSettings.welcomeMessage, () => {
             startListening();
@@ -115,38 +191,6 @@ export const AIAgent: React.FC = () => {
       }, 200);
     }
   }, [isOpen, status, settings]);
-
-  const findAnswer = (query: string): string => {
-    const lowerQuery = query.toLowerCase().trim();
-    
-    // Prioritize exact or near-exact matches
-    for (const item of knowledgeBase) {
-      if (lowerQuery.includes(item.question.toLowerCase().trim())) {
-        return item.answer;
-      }
-    }
-
-    // Keyword matching as fallback
-    for (const item of knowledgeBase) {
-      const keywords = item.question.toLowerCase().split(' ').filter(k => k.length > 3); // Simple keyword filter
-      if (keywords.some(keyword => lowerQuery.includes(keyword))) {
-        return item.answer;
-      }
-    }
-
-    return "I'm not sure how to answer that. For complex issues, I will connect you to a live support agent shortly.";
-  };
-
-  const handleUserQuery = (text: string) => {
-    setStatus('thinking');
-    const answer = findAnswer(text);
-    setTimeout(() => {
-        speak(answer, () => {
-            // After speaking, go back to listening
-            startListening();
-        });
-    }, 500);
-  };
 
   const handleOpen = () => {
     setIsOpen(true);
@@ -156,7 +200,7 @@ export const AIAgent: React.FC = () => {
   const handleClose = () => {
     window.speechSynthesis.cancel();
     if (recognitionRef.current) {
-      recognitionRef.current.stop();
+      recognitionRef.current.abort();
     }
     setIsOpen(false);
     setStatus('idle');
@@ -172,6 +216,8 @@ export const AIAgent: React.FC = () => {
         return <><Volume2 size={20} /> JadanPay Speaking...</>;
       case 'thinking':
         return <><Loader2 size={20} className="animate-spin" /> Thinking...</>;
+      case 'handoff':
+        return <><PhoneForwarded size={20} /> Connecting to Agent...</>;
       default:
         return 'Ready';
     }
@@ -206,7 +252,11 @@ export const AIAgent: React.FC = () => {
                    <Mic size={48} className={`transition-colors duration-300 ${status === 'listening' ? 'text-green-300' : 'text-gray-500'}`} />
                 </div>
             </div>
-            <div className={`mt-6 px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 transition-colors ${status === 'speaking' ? 'bg-blue-500/20 text-blue-300' : 'bg-gray-800 text-gray-400'}`}>
+            <div className={`mt-6 px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 transition-colors ${
+                status === 'speaking' ? 'bg-blue-500/20 text-blue-300' :
+                status === 'handoff' ? 'bg-yellow-500/20 text-yellow-300' :
+                'bg-gray-800 text-gray-400'
+            }`}>
                 <StatusIndicator />
             </div>
         </main>
