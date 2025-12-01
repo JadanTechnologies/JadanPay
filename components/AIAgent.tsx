@@ -28,6 +28,18 @@ export const AIAgent: React.FC = () => {
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const recognitionRef = useRef<any>(null);
   const speechTimeoutRef = useRef<number | null>(null);
+  
+  // Prime the speech synthesis engine on component open to prevent silent failures
+  useEffect(() => {
+    if (isOpen && 'speechSynthesis' in window) {
+        // This is a common workaround to "wake up" the speech synthesis engine on some browsers,
+        // especially on first user interaction.
+        window.speechSynthesis.cancel();
+        const primer = new SpeechSynthesisUtterance('');
+        primer.volume = 0;
+        window.speechSynthesis.speak(primer);
+    }
+  }, [isOpen]);
 
   const speak = (text: string, onEnd?: () => void) => {
     if (!('speechSynthesis' in window) || !settings) {
@@ -124,6 +136,11 @@ export const AIAgent: React.FC = () => {
   };
   
   const handleLiveAgentHandoff = () => {
+      if (!settings) {
+        console.error("AI Agent: Handoff initiated before settings were loaded. Aborting.");
+        setStatus('idle');
+        return;
+      }
       setStatus('handoff');
       const handoffMessage = "I'm sorry, I couldn't find a clear answer for that. Let me connect you to a live support agent who can help.";
       speak(handoffMessage, () => {
@@ -139,6 +156,11 @@ export const AIAgent: React.FC = () => {
   };
 
   const handleUserQuery = (text: string) => {
+    if (!settings) {
+        console.error("AI Agent: Query handled before settings were loaded. Aborting.");
+        setStatus('idle');
+        return;
+    }
     setStatus('thinking');
     const answerOrAction = findAnswer(text);
     
