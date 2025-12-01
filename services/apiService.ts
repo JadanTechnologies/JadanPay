@@ -20,7 +20,6 @@ const recordSuccessfulConnection = async (vendor: ApiVendor) => {
     try {
         const currentSettings = await SettingsService.getSettings();
         const updatedConnections = {
-// FIX: Removed unnecessary `|| {}` which was causing a TypeScript inference issue where properties were becoming optional. `apiLastConnection` is a required property and will always exist.
             ...currentSettings.apiLastConnection,
             [vendor]: new Date().toISOString()
         };

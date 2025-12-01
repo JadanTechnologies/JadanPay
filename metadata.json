@@ -1,5 +1,7 @@
 {
   "name": "JadanPay web App",
   "description": "Premium Airtime & Data Top-up platform for Nigeria with Admin & Reseller dashboards.",
-  "requestFramePermissions": []
+  "requestFramePermissions": [
+    "microphone"
+  ]
 }

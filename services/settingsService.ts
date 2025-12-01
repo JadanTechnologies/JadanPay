@@ -121,6 +121,12 @@ export interface AppSettings {
 
   // Service Alert
   serviceAlert: ServiceAlert;
+
+  // AI Agent Settings
+  aiAgentSettings: {
+    enabled: boolean;
+    welcomeMessage: string;
+  };
 }
 
 const defaultSettings: AppSettings = {
@@ -262,6 +268,11 @@ const defaultSettings: AppSettings = {
     isActive: false,
     message: 'We are currently undergoing scheduled maintenance. Some services may be temporarily unavailable.',
     type: 'warning'
+  },
+
+  aiAgentSettings: {
+    enabled: true,
+    welcomeMessage: "Hello! I am JadanPay's AI assistant. How can I help you today? You can ask me about our services."
   }
 };
 
@@ -285,6 +296,7 @@ try {
         landingStats: { ...defaultSettings.landingStats, ...(parsed.landingStats || {}) },
         socialLinks: { ...defaultSettings.socialLinks, ...(parsed.socialLinks || {}) },
         serviceAlert: { ...defaultSettings.serviceAlert, ...(parsed.serviceAlert || {}) },
+        aiAgentSettings: { ...defaultSettings.aiAgentSettings, ...(parsed.aiAgentSettings || {}) }
     };
   }
 } catch (e) {

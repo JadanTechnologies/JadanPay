@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Smartphone, Zap, Shield, ArrowRight, Star, ChevronDown, Activity, Wifi, Box, CheckCircle, Moon, Sun, Quote, X, Mail, MapPin, Phone, Code2 } from 'lucide-react';
 import { SettingsService, AppSettings } from '../services/settingsService';
+import { AIAgent } from './AIAgent';
 
 interface LandingPageProps {
   onGetStarted: () => void;
@@ -423,4 +424,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
               
               <div className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-800 flex flex-col items-center">
                   <p className="text-gray-500 text-xs mb-2">
-                      &copy; {new Date().getFullYear()} {appName}. All rights reserved
+                      &copy; {new Date().getFullYear()} {appName}. All rights reserved.
+                  </p>
+              </div>
+          </div>
+      </footer>
+      
+      {/* AI Agent */}
+      {settings?.aiAgentSettings?.enabled && <AIAgent />}
+      
+      {activeInfoModal && renderInfoModal()}
+    </div>
+  );
+};

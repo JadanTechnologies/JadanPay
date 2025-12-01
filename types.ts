@@ -244,3 +244,9 @@ export interface AuditLog {
   targetId?: string;
   description: string;
 }
+
+export interface KnowledgeBaseItem {
+  id: string;
+  question: string;
+  answer: string;
+}

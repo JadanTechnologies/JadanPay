@@ -13,12 +13,22 @@ interface TopUpFormProps {
   onViewReceipt: (txId: string) => void;
 }
 
+const validateNigerianPhoneNumber = (phone: string): string | null => {
+    if (!phone) return null; // Don't show error for empty input
+    const pattern = /^(070|080|081|090|091)\d{8}$/;
+    if (!pattern.test(phone)) {
+        return "Please enter a valid 11-digit Nigerian phone number.";
+    }
+    return null;
+};
+
 export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewReceipt }) => {
   const [activeTab, setActiveTab] = useState<'airtime' | 'data' | 'data_refill' | 'cable' | 'power'>('airtime');
   const [type, setType] = useState<TransactionType>(TransactionType.AIRTIME);
   
   const [provider, setProvider] = useState<string>(Provider.MTN);
   const [phone, setPhone] = useState<string>(''); // Also used for meter/IUC
+  const [phoneError, setPhoneError] = useState<string | null>(null);
   const [amount, setAmount] = useState<number | ''>('');
   const [selectedBundle, setSelectedBundle] = useState<Bundle | null>(null);
   const [bundles, setBundles] = useState<Bundle[]>([]);
@@ -42,10 +52,6 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
   const [showPin, setShowPin] = useState(false);
 
 
-  useEffect(() => {
-      loadData();
-  }, []);
-
   const loadData = async () => {
       try {
         const dbBundles = await MockDB.getBundles();
@@ -54,13 +60,28 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
         setServiceFees(settings.serviceFees || {});
       } catch (e) { console.error("Failed to load top-up data", e); }
   };
+
+  useEffect(() => {
+      loadData();
+  }, []);
+
+  const handlePhoneChange = (value: string) => {
+    const cleaned = value.replace(/\D/g, '');
+    setPhone(cleaned);
+    if (type === TransactionType.AIRTIME || type === TransactionType.DATA) {
+        setPhoneError(validateNigerianPhoneNumber(cleaned));
+    } else {
+        setPhoneError(null);
+    }
+  };
   
-  const handleTabChange = (newTab: 'airtime' | 'data' | 'data_refill' | 'cable' | 'power') => {
+  const handleTabChange = (newTab: 'airtime' | 'data' | 'data_refill' | 'cable' | 'power'>) => {
       setActiveTab(newTab);
       setPhone('');
       setAmount('');
       setSelectedBundle(null);
       setError(null);
+      setPhoneError(null);
       setResultState('idle');
       setCustomerName(null);
       setValidationError(null);
@@ -118,6 +139,11 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
     e.preventDefault();
     setError(null);
     setResultState('idle');
+    
+    if (phoneError) {
+        setError(phoneError);
+        return;
+    }
 
     if (!phone) {
         setError("Please enter the account/meter/phone number.");
@@ -272,11 +298,12 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
               <input
                 type="tel"
                 value={phone}
-                onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
+                onChange={(e) => handlePhoneChange(e.target.value)}
                 placeholder={isBillPayment ? 'Enter number...' : '080...'}
-                className="w-full p-3 bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-green-500 outline-none transition-all font-mono text-lg text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:text-gray-500"
+                className={`w-full p-3 bg-gray-50 dark:bg-gray-950 border rounded-xl focus:ring-2 outline-none transition-all font-mono text-lg text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:text-gray-500 ${phoneError ? 'border-red-500 focus:ring-red-500' : 'border-gray-200 dark:border-gray-700 focus:ring-green-500'}`}
                 required
                 disabled={activeTab === 'data_refill'}
+                maxLength={isBillPayment ? undefined : 11}
               />
               {isBillPayment && (
                   <button type="button" onClick={handleVerifyCustomer} disabled={isValidating || !phone} className="px-4 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white rounded-xl font-bold text-sm disabled:opacity-50 flex items-center justify-center">
@@ -284,6 +311,7 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
                   </button>
               )}
           </div>
+          {phoneError && <p className="text-red-500 text-xs mt-1">{phoneError}</p>}
           {validationError && <p className="text-red-500 text-xs mt-1">{validationError}</p>}
           {customerName && <div className="mt-2 p-2 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 text-sm rounded-lg flex items-center gap-2"><UserIcon size={16} /> {customerName}</div>}
         </div>
@@ -359,7 +387,7 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
         
         {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
         
-        <button type="submit" disabled={loading || (isBillPayment && !customerName)} className="w-full py-4 bg-green-700 text-white rounded-xl font-bold text-lg shadow-xl shadow-green-700/20 hover:bg-green-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+        <button type="submit" disabled={loading || (isBillPayment && !customerName) || !!phoneError} className="w-full py-4 bg-green-700 text-white rounded-xl font-bold text-lg shadow-xl shadow-green-700/20 hover:bg-green-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
           Continue
         </button>
       </form>

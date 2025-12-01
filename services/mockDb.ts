@@ -1,6 +1,6 @@
 
 
-import { User, Transaction, TransactionType, TransactionStatus, UserRole, Provider, Ticket, UserStatus, Staff, Role, Announcement, CommunicationTemplate, Bundle, AppNotification, AccessRule, KycStatus, CronJob, AuditLog } from '../types';
+import { User, Transaction, TransactionType, TransactionStatus, UserRole, Provider, Ticket, UserStatus, Staff, Role, Announcement, CommunicationTemplate, Bundle, AppNotification, AccessRule, KycStatus, CronJob, AuditLog, KnowledgeBaseItem } from '../types';
 import { MOCK_USERS_DATA, SAMPLE_BUNDLES } from '../constants';
 import { SettingsService, AppSettings } from './settingsService';
 import { NotificationService } from './notificationService';
@@ -22,6 +22,7 @@ interface DatabaseSchema {
     accessRules: AccessRule[];
     cronJobs: CronJob[];
     auditLogs: AuditLog[];
+    knowledgeBase: KnowledgeBaseItem[];
 }
 
 // Default Data
@@ -49,6 +50,12 @@ const DEFAULT_CRON_JOBS: CronJob[] = [
     { id: '4', name: 'Database Backup', schedule: 'Every Week', status: 'inactive', lastRun: '-', nextRun: '-', description: 'Auto-backup system data to cloud.' },
 ];
 
+const DEFAULT_KNOWLEDGE_BASE: KnowledgeBaseItem[] = [
+    { id: 'kb1', question: "What is JadanPay?", answer: "JadanPay is a platform that allows you to easily buy airtime and data for all Nigerian networks, pay bills like electricity and cable TV, all at the best prices." },
+    { id: 'kb2', question: "How do I buy data?", answer: "To buy a data bundle, log in to your dashboard, click on the 'Data' tab, select your network provider, choose a data plan, enter the phone number, and confirm the transaction with your PIN." },
+    { id: 'kb3', question: "How do I fund my wallet?", answer: "You can fund your wallet by clicking the 'Fund Wallet' button on your dashboard. You can use a card, or make a bank transfer to your dedicated virtual account number." }
+];
+
 // In-Memory State
 let db: DatabaseSchema = {
     users: [],
@@ -63,7 +70,8 @@ let db: DatabaseSchema = {
     settings: null,
     accessRules: [],
     cronJobs: [],
-    auditLogs: []
+    auditLogs: [],
+    knowledgeBase: []
 };
 
 // --- DATA SANITIZATION ---
@@ -131,7 +139,8 @@ const loadDatabase = () => {
                 settings: parsed.settings || null,
                 accessRules: Array.isArray(parsed.accessRules) ? parsed.accessRules : [],
                 cronJobs: Array.isArray(parsed.cronJobs) ? parsed.cronJobs : DEFAULT_CRON_JOBS,
-                auditLogs: Array.isArray(parsed.auditLogs) ? parsed.auditLogs : []
+                auditLogs: Array.isArray(parsed.auditLogs) ? parsed.auditLogs : [],
+                knowledgeBase: Array.isArray(parsed.knowledgeBase) ? parsed.knowledgeBase : DEFAULT_KNOWLEDGE_BASE
             };
             
             console.log("Database loaded and sanitized.");
@@ -140,6 +149,7 @@ const loadDatabase = () => {
             db.users = DEFAULT_USERS;
             db.bundles = DEFAULT_BUNDLES;
             db.cronJobs = DEFAULT_CRON_JOBS;
+            db.knowledgeBase = DEFAULT_KNOWLEDGE_BASE;
             saveDatabase();
         }
     } catch (e) {
@@ -148,6 +158,7 @@ const loadDatabase = () => {
         db.users = DEFAULT_USERS;
         db.bundles = DEFAULT_BUNDLES;
         db.cronJobs = DEFAULT_CRON_JOBS;
+        db.knowledgeBase = DEFAULT_KNOWLEDGE_BASE;
         // Clear corrupt data
         localStorage.removeItem(DB_STORAGE_KEY);
         saveDatabase();
@@ -180,6 +191,28 @@ const _getCurrentAdmin = () => {
 
 
 export const MockDB = {
+  // --- KNOWLEDGE BASE ---
+  getKnowledgeBase: async (): Promise<KnowledgeBaseItem[]> => {
+      await delay(100);
+      return [...db.knowledgeBase];
+  },
+  saveKnowledgeBaseItem: async (item: KnowledgeBaseItem): Promise<KnowledgeBaseItem> => {
+      await delay(200);
+      const index = db.knowledgeBase.findIndex(kb => kb.id === item.id);
+      if (index > -1) {
+          db.knowledgeBase[index] = item;
+      } else {
+          db.knowledgeBase.push(item);
+      }
+      saveDatabase();
+      return item;
+  },
+  deleteKnowledgeBaseItem: async (id: string): Promise<void> => {
+      await delay(200);
+      db.knowledgeBase = db.knowledgeBase.filter(kb => kb.id !== id);
+      saveDatabase();
+  },
+
   // --- AUDIT LOGS ---
   addAuditLog: async (action: string, description: string, targetType?: string, targetId?: string) => {
       await delay(50);
