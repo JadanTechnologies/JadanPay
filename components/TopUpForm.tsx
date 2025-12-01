@@ -75,7 +75,8 @@ export const TopUpForm: React.FC<TopUpFormProps> = ({ user, onSuccess, onViewRec
     }
   };
   
-  const handleTabChange = (newTab: 'airtime' | 'data' | 'data_refill' | 'cable' | 'power'>) => {
+  // FIX: Removed trailing '>' from type definition which was causing a parsing error.
+  const handleTabChange = (newTab: 'airtime' | 'data' | 'data_refill' | 'cable' | 'power') => {
       setActiveTab(newTab);
       setPhone('');
       setAmount('');

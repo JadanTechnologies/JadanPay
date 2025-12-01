@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Transaction, TransactionStatus, Provider, User } from '../types';
 import { MockDB } from '../services/mockDb';
@@ -9,6 +10,8 @@ interface HistoryProps {
   user: User;
   highlightId?: string;
 }
+
+const inputFieldClass = "w-full p-2 bg-gray-100 dark:bg-gray-700 rounded-lg text-sm text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600 focus:ring-1 focus:ring-green-500 focus:border-green-500 outline-none";
 
 export const History: React.FC<HistoryProps> = ({ user, highlightId }) => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -146,9 +149,9 @@ export const History: React.FC<HistoryProps> = ({ user, highlightId }) => {
       {showFilters && (
           <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm animate-in fade-in slide-in-from-top-4">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <input type="date" value={filterStartDate} onChange={e => setFilterStartDate(e.target.value)} className="input-field" />
-                  <input type="date" value={filterEndDate} onChange={e => setFilterEndDate(e.target.value)} className="input-field" />
-                  <select value={filterType} onChange={e => setFilterType(e.target.value)} className="input-field">
+                  <input type="date" value={filterStartDate} onChange={e => setFilterStartDate(e.target.value)} className={inputFieldClass} />
+                  <input type="date" value={filterEndDate} onChange={e => setFilterEndDate(e.target.value)} className={inputFieldClass} />
+                  <select value={filterType} onChange={e => setFilterType(e.target.value)} className={inputFieldClass}>
                       <option value="">All Types</option>
                       <option value="AIRTIME">Airtime</option>
                       <option value="DATA">Data</option>
@@ -156,7 +159,7 @@ export const History: React.FC<HistoryProps> = ({ user, highlightId }) => {
                       <option value="ELECTRICITY">Electricity</option>
                       <option value="WALLET_FUND">Wallet Funding</option>
                   </select>
-                  <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="input-field">
+                  <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className={inputFieldClass}>
                       <option value="">All Statuses</option>
                       <option value="SUCCESS">Success</option>
                       <option value="FAILED">Failed</option>
@@ -336,18 +339,3 @@ export const History: React.FC<HistoryProps> = ({ user, highlightId }) => {
     </div>
   );
 };
-
-// Simple helper class for input fields in the filter
-const InputField: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <div className="bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-700 rounded-xl focus-within:ring-2 focus-within:ring-green-500 transition-all">
-    {children}
-  </div>
-);
-
-// Add this style to your index.html's <style> tag or a CSS file
-// .input-field {
-//   @apply w-full p-2 bg-transparent outline-none text-sm;
-// }
-// This is added via Tailwind JIT, so no style changes needed. The className is applied directly.
-// But for this environment, we'll define it locally.
-const inputFieldClass = "w-full p-2 bg-gray-100 dark:bg-gray-700 rounded-lg text-sm text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600 focus:ring-1 focus:ring-green-500 focus:border-green-500 outline-none";
