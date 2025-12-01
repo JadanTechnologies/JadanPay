@@ -1,34 +1,56 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Mic, Bot, Send, X, Loader2, Volume2 } from 'lucide-react';
+import { Mic, Bot, PhoneOff, Loader2, Volume2 } from 'lucide-react';
 import { SettingsService } from '../services/settingsService';
 import { MockDB } from '../services/mockDb';
 import { KnowledgeBaseItem } from '../types';
 
-interface Message {
-  text: string;
-  sender: 'user' | 'bot';
-}
-
 export const AIAgent: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [isListening, setIsListening] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [status, setStatus] = useState<'idle' | 'connecting' | 'listening' | 'speaking' | 'thinking'>('idle');
   const [knowledgeBase, setKnowledgeBase] = useState<KnowledgeBaseItem[]>([]);
+  const [welcomeMessage, setWelcomeMessage] = useState("Hello! How can I help you today?");
   const recognitionRef = useRef<any>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  const speak = (text: string, onEnd?: () => void) => {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel(); // Stop any previous speech
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 1.0;
+      utterance.pitch = 1.0;
+      utterance.onstart = () => setStatus('speaking');
+      utterance.onend = () => {
+        setStatus('idle');
+        if (onEnd) onEnd();
+      };
+      window.speechSynthesis.speak(utterance);
+    }
+  };
+
+  const startListening = () => {
+    if (recognitionRef.current && status !== 'listening') {
+      setStatus('listening');
+      recognitionRef.current.start();
+    }
+  };
+
+  const stopListening = () => {
+    if (recognitionRef.current && status === 'listening') {
+      recognitionRef.current.stop();
+      setStatus('idle');
+    }
+  };
+  
   useEffect(() => {
     const loadData = async () => {
         const settings = await SettingsService.getSettings();
         const kb = await MockDB.getKnowledgeBase();
         setKnowledgeBase(kb);
         if (settings.aiAgentSettings?.welcomeMessage) {
-            setMessages([{ text: settings.aiAgentSettings.welcomeMessage, sender: 'bot' }]);
+            setWelcomeMessage(settings.aiAgentSettings.welcomeMessage);
         }
     };
     loadData();
 
-    // Setup speech recognition
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (SpeechRecognition) {
       recognitionRef.current = new SpeechRecognition();
@@ -36,67 +58,94 @@ export const AIAgent: React.FC = () => {
       recognitionRef.current.lang = 'en-US';
       recognitionRef.current.interimResults = false;
 
-      recognitionRef.current.onstart = () => setIsListening(true);
-      recognitionRef.current.onend = () => setIsListening(false);
-      recognitionRef.current.onerror = (event: any) => {
-        console.error("Speech recognition error:", event.error);
-        setIsListening(false);
+      recognitionRef.current.onend = () => {
+        if (status === 'listening') {
+            setStatus('idle');
+        }
       };
-      
+
       recognitionRef.current.onresult = (event: any) => {
         const transcript = event.results[0][0].transcript;
-        handleUserMessage(transcript);
+        handleUserQuery(transcript);
       };
     }
   }, []);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
-  const speak = (text: string) => {
-    if ('speechSynthesis' in window) {
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 1.0;
-      utterance.pitch = 1.0;
-      window.speechSynthesis.speak(utterance);
+    if (isOpen && status === 'connecting') {
+      speak(welcomeMessage, () => {
+        startListening();
+      });
     }
-  };
+  }, [isOpen, status]);
 
   const findAnswer = (query: string): string => {
     const lowerQuery = query.toLowerCase();
+    
+    // Prioritize exact or near-exact matches
     for (const item of knowledgeBase) {
-      const keywords = item.question.toLowerCase().split(' ');
+      if (lowerQuery.includes(item.question.toLowerCase())) {
+        return item.answer;
+      }
+    }
+
+    // Keyword matching as fallback
+    for (const item of knowledgeBase) {
+      const keywords = item.question.toLowerCase().split(' ').filter(k => k.length > 3); // Simple keyword filter
       if (keywords.some(keyword => lowerQuery.includes(keyword))) {
         return item.answer;
       }
     }
-    return "I'm not sure how to answer that. I will connect you to a live support agent shortly.";
+
+    return "I'm not sure how to answer that. For complex issues, I will connect you to a live support agent shortly.";
   };
 
-  const handleUserMessage = (text: string) => {
-    setMessages(prev => [...prev, { text, sender: 'user' }]);
+  const handleUserQuery = (text: string) => {
+    setStatus('thinking');
     const answer = findAnswer(text);
     setTimeout(() => {
-        setMessages(prev => [...prev, { text: answer, sender: 'bot' }]);
-        speak(answer);
+        speak(answer, () => {
+            // After speaking, go back to listening
+            startListening();
+        });
     }, 500);
   };
 
-  const toggleListen = () => {
-    if (isListening) {
-      recognitionRef.current?.stop();
-    } else {
-      recognitionRef.current?.start();
+  const handleOpen = () => {
+    setIsOpen(true);
+    setStatus('connecting');
+  };
+
+  const handleClose = () => {
+    window.speechSynthesis.cancel();
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+    }
+    setIsOpen(false);
+    setStatus('idle');
+  };
+
+  const StatusIndicator = () => {
+    switch (status) {
+      case 'connecting':
+        return <><Loader2 size={20} className="animate-spin" /> Connecting...</>;
+      case 'listening':
+        return <><Mic size={20} /> Listening...</>;
+      case 'speaking':
+        return <><Volume2 size={20} /> JadanPay Speaking...</>;
+      case 'thinking':
+        return <><Loader2 size={20} className="animate-spin" /> Thinking...</>;
+      default:
+        return 'Ready';
     }
   };
 
   if (!isOpen) {
     return (
       <button 
-        onClick={() => setIsOpen(true)}
+        onClick={handleOpen}
         className="fixed bottom-6 right-6 z-[9999] w-16 h-16 bg-green-600 text-white rounded-full shadow-2xl flex items-center justify-center animate-bounce hover:animate-none hover:bg-green-700 transition-all"
-        aria-label="Open AI Assistant"
+        aria-label="Open AI Voice Assistant"
       >
         <Bot size={32} />
       </button>
@@ -104,51 +153,37 @@ export const AIAgent: React.FC = () => {
   }
 
   return (
-    <div className="fixed inset-0 sm:inset-auto sm:bottom-6 sm:right-6 z-[9999] w-full sm:w-96 h-full sm:h-[600px] bg-white dark:bg-gray-900 rounded-none sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-fade-in-up border border-gray-200 dark:border-gray-800">
-      <header className="p-4 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center bg-gray-50 dark:bg-gray-950">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-green-100 dark:bg-green-900/50 rounded-full flex items-center justify-center text-green-600 dark:text-green-400">
-            <Bot size={24} />
-          </div>
-          <div>
-            <h3 className="font-bold text-gray-900 dark:text-white">AI Assistant</h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400">Online</p>
-          </div>
-        </div>
-        <button onClick={() => setIsOpen(false)} className="p-2 text-gray-400 hover:text-gray-600"><X size={20} /></button>
-      </header>
-      
-      <main className="flex-1 p-4 overflow-y-auto space-y-4">
-        {messages.map((msg, index) => (
-          <div key={index} className={`flex ${msg.sender === 'bot' ? 'justify-start' : 'justify-end'}`}>
-            <div className={`max-w-[80%] p-3 rounded-2xl text-sm ${msg.sender === 'bot' ? 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white rounded-bl-none' : 'bg-green-600 text-white rounded-br-none'}`}>
-              {msg.text}
+    <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-lg flex items-center justify-center animate-fade-in">
+      <div className="w-full max-w-sm h-[90vh] max-h-[600px] bg-gray-900 rounded-3xl shadow-2xl flex flex-col overflow-hidden border-2 border-gray-700">
+        
+        <header className="p-6 text-center border-b border-gray-700/50">
+            <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto text-green-400 mb-2">
+                <Bot size={32} />
             </div>
-          </div>
-        ))}
-        <div ref={messagesEndRef} />
-      </main>
+            <h3 className="font-bold text-white text-lg">JadanPay AI Agent</h3>
+        </header>
 
-      <footer className="p-4 border-t border-gray-200 dark:border-gray-800">
-        <button
-          onClick={toggleListen}
-          className={`w-full py-4 rounded-xl font-bold flex items-center justify-center gap-3 transition-colors ${
-            isListening
-              ? 'bg-red-600 text-white animate-pulse'
-              : 'bg-green-600 text-white hover:bg-green-700'
-          }`}
-        >
-          {isListening ? (
-            <>
-              <Loader2 size={20} className="animate-spin" /> Listening...
-            </>
-          ) : (
-            <>
-              <Mic size={20} /> Ask a Question
-            </>
-          )}
-        </button>
-      </footer>
+        <main className="flex-1 flex flex-col items-center justify-center text-center p-8">
+            <div className={`w-32 h-32 rounded-full flex items-center justify-center transition-all duration-300 ${status === 'listening' ? 'bg-green-500/20' : 'bg-gray-800'}`}>
+                <div className={`w-24 h-24 rounded-full flex items-center justify-center transition-all duration-300 ${status === 'listening' ? 'bg-green-500/30' : 'bg-gray-700'}`}>
+                   <Mic size={48} className={`transition-colors duration-300 ${status === 'listening' ? 'text-green-300' : 'text-gray-500'}`} />
+                </div>
+            </div>
+            <div className={`mt-6 px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 transition-colors ${status === 'speaking' ? 'bg-blue-500/20 text-blue-300' : 'bg-gray-800 text-gray-400'}`}>
+                <StatusIndicator />
+            </div>
+        </main>
+        
+        <footer className="p-6 border-t border-gray-700/50">
+            <button
+            onClick={handleClose}
+            className="w-full py-4 rounded-2xl font-bold flex items-center justify-center gap-3 bg-red-600 text-white hover:bg-red-700 transition-colors"
+            >
+                <PhoneOff size={20} />
+                End Call
+            </button>
+        </footer>
+      </div>
     </div>
   );
 };

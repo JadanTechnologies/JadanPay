@@ -52,10 +52,10 @@ export const PROVIDER_IMAGES: Record<string, string> = {
   [BillProvider.IKEDC]: 'https://asset.brandfetch.io/id2Fd_t01j/idjW803s7s.svg',
   [BillProvider.EKEDC]: 'https://asset.brandfetch.io/id5CK5m9s-/idY-M33L0n.svg',
   [BillProvider.AEDC]: 'https://asset.brandfetch.io/idV4d3p_dZ/id0qB7jL3X.svg',
-  [BillProvider.IBEDC]: 'https://images.vconnect.com/profile/p/2/38622/picture_1586518774.png',
+  [BillProvider.IBEDC]: 'https://asset.brandfetch.io/idBJ2rQk4i/id_9nJ939w.svg', // Corrected Link
   [BillProvider.KEDCO]: 'https://upload.wikimedia.org/wikipedia/commons/e/e4/KEDCO_logo.png',
   [BillProvider.PHED]: 'https://asset.brandfetch.io/id8yC7pC45/idg3t9a0Qp.svg',
-  [BillProvider.JOS]: 'https://www.jedplc.com/images/logo.png',
+  [BillProvider.JOS]: 'https://asset.brandfetch.io/id7rW_H-k4/idS307F-b0.svg', // Corrected Link
 };
 
 // MOCK DATA FOR USERS

@@ -1,4 +1,5 @@
 
+
 import React, { useEffect, useState } from 'react';
 import { User, UserStatus, Transaction, TransactionType, TransactionStatus, UserRole, KycStatus } from '../types';
 import { MockDB } from '../services/mockDb';
@@ -364,7 +365,28 @@ export const AdminUsers: React.FC = () => {
                 <div className="max-h-96 overflow-y-auto">
                     {userHistory.length > 0 ? (
                         <table className="w-full text-left text-xs text-gray-700 dark:text-gray-300">
-                           {/* Table for user history */}
+                           <thead className="bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 uppercase font-semibold sticky top-0">
+                                <tr>
+                                    <th className="p-3">Type</th>
+                                    <th className="p-3">Amount</th>
+                                    <th className="p-3">Date</th>
+                                    <th className="p-3">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                                {userHistory.map(tx => (
+                                    <tr key={tx.id}>
+                                        <td className="p-3 font-bold">{tx.type.replace('_', ' ')}</td>
+                                        <td className="p-3 font-mono">₦{tx.amount.toLocaleString()}</td>
+                                        <td className="p-3">{new Date(tx.date).toLocaleDateString()}</td>
+                                        <td className="p-3">
+                                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${tx.status === TransactionStatus.SUCCESS ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                                {tx.status}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
                         </table>
                     ) : <p className="text-center text-gray-400 py-8">No transactions found for this user.</p>}
                 </div>
