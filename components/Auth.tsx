@@ -6,213 +6,226 @@ import { playNotification } from '../utils/audio';
 import { SettingsService } from '../services/settingsService';
 
 interface AuthProps {
-  onAuthSuccess: (user: User) => void;
-  onBack: () => void;
+    onAuthSuccess: (user: User) => void;
+    onBack: () => void;
 }
 
 export const Auth: React.FC<AuthProps> = ({ onAuthSuccess, onBack }) => {
-  const [isLogin, setIsLogin] = useState(true);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  
-  // Branding
-  const [appName, setAppName] = useState('JadanPay');
-  const [logoUrl, setLogoUrl] = useState('');
+    const [isLogin, setIsLogin] = useState(true);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
-  // Form State
-  const [email, setEmail] = useState('tunde@example.com');
-  const [password, setPassword] = useState('user123');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [referralCode, setReferralCode] = useState('');
+    // Branding
+    const [appName, setAppName] = useState('JadanPay');
+    const [logoUrl, setLogoUrl] = useState('');
 
-  useEffect(() => {
-      SettingsService.getSettings().then(s => {
-          setAppName(s.appName);
-          setLogoUrl(s.logoUrl);
-      });
-  }, []);
+    // Form State
+    const [email, setEmail] = useState('tunde@example.com');
+    const [password, setPassword] = useState('user123');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [name, setName] = useState('');
+    const [phone, setPhone] = useState('');
+    const [referralCode, setReferralCode] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
+    useEffect(() => {
+        SettingsService.getSettings().then(s => {
+            setAppName(s.appName);
+            setLogoUrl(s.logoUrl);
+        });
+    }, []);
 
-    try {
-      if (isLogin) {
-        const user = await login(email, password);
-        onAuthSuccess(user);
-      } else {
-        if (password !== confirmPassword) {
-            throw new Error("Passwords do not match.");
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        setError(null);
+
+        // Timeout to prevent infinite loading
+        const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("Login timed out. Check connection.")), 15000)
+        );
+
+        try {
+            if (isLogin) {
+                // Race login against timeout
+                const loginPromise = login(email, password);
+                const user = await Promise.race([loginPromise, timeoutPromise]) as User;
+
+                // HACK: Force a small delay to allow AuthContext to update via its subscription listener
+                // calling onAuthSuccess immediately might be too fast if relying on 'user' state in App.tsx
+                await new Promise(r => setTimeout(r, 500));
+
+                onAuthSuccess(user);
+            } else {
+                if (password !== confirmPassword) {
+                    throw new Error("Passwords do not match.");
+                }
+
+                const registerPromise = register(name, email, phone, password, referralCode);
+                const user = await Promise.race([registerPromise, timeoutPromise]) as User;
+
+                // Success Audio
+                const welcomeText = `Welcome to the ${appName} family, ${name}. We are glad to have you on board.`;
+                playNotification(welcomeText);
+
+                onAuthSuccess(user);
+            }
+        } catch (err: any) {
+            setError(err.message || "An unexpected error occurred.");
+            playNotification("Authentication failed. " + (err.message || ""), 'error');
+            setLoading(false); // Only set loading false on error, success unmounts component
         }
-        const user = await register(name, email, phone, password, referralCode);
-        
-        // Success Audio
-        const welcomeText = `Welcome to the ${appName} family, ${name}. We are glad to have you on board.`;
-        playNotification(welcomeText);
-        
-        onAuthSuccess(user);
-      }
-    } catch (err: any) {
-      setError(err.message);
-      playNotification("Authentication failed. " + err.message, 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  const handleForgotPassword = () => {
-    if (!email) {
-      alert("Please enter your email address first.");
-      return;
-    }
-    alert(`A password reset link has been sent to ${email} (simulation).`);
-  };
+    };
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-black p-4 transition-colors duration-300 overflow-hidden relative">
-      
-      {/* Background decoration for levitation effect context */}
-      <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-green-500/10 dark:bg-green-600/10 rounded-full blur-[100px] animate-pulse"></div>
-          <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-blue-500/10 dark:bg-blue-600/10 rounded-full blur-[100px] animate-pulse delay-700"></div>
-      </div>
+    const handleForgotPassword = () => {
+        if (!email) {
+            alert("Please enter your email address first.");
+            return;
+        }
+        alert(`A password reset link has been sent to ${email} (simulation).`);
+    };
 
-      {/* Main Card with Levitation Animation */}
-      <div className="bg-white dark:bg-gray-900 w-full max-w-md rounded-2xl p-8 shadow-2xl border border-gray-100 dark:border-gray-800 relative z-10 levitate transition-all duration-300">
-        <button 
-            onClick={onBack}
-            className="absolute top-6 left-6 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
-        >
-            <ArrowLeft size={20} />
-        </button>
+    return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-black p-4 transition-colors duration-300 overflow-hidden relative">
 
-        <div className="text-center mb-8 mt-2">
-            <div className="mx-auto mb-4 w-20 h-20 flex items-center justify-center">
-                {logoUrl ? (
-                    <img src={logoUrl} alt="Logo" className="w-full h-full object-contain drop-shadow-lg" />
-                ) : (
-                    <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center text-black font-black text-xl shadow-[0_0_20px_rgba(34,197,94,0.5)]">
-                        {appName.charAt(0)}
-                    </div>
-                )}
-            </div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight mb-2">{appName}</h1>
-            <p className="text-gray-500 dark:text-gray-400">Your #1 Plug for Data & Airtime.</p>
-        </div>
-
-        <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-lg mb-8">
-            <button 
-                onClick={() => setIsLogin(true)}
-                className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${isLogin ? 'bg-white dark:bg-gray-700 shadow text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}
-            >
-                Login
-            </button>
-            <button 
-                onClick={() => setIsLogin(false)}
-                className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${!isLogin ? 'bg-white dark:bg-gray-700 shadow text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}
-            >
-                Register
-            </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-            {!isLogin && (
-                <>
-                    <div>
-                        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Full Name</label>
-                        <input 
-                            type="text" 
-                            className="w-full p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-green-500 outline-none text-gray-900 dark:text-white transition-colors" 
-                            value={name}
-                            onChange={e => setName(e.target.value)}
-                            required
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Phone Number</label>
-                        <input 
-                            type="tel" 
-                            className="w-full p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-green-500 outline-none text-gray-900 dark:text-white transition-colors" 
-                            value={phone}
-                            onChange={e => setPhone(e.target.value)}
-                            required
-                        />
-                    </div>
-                </>
-            )}
-
-            <div>
-                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Email Address</label>
-                <input 
-                    type="email" 
-                    className="w-full p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-green-500 outline-none text-gray-900 dark:text-white transition-colors" 
-                    value={email}
-                    onChange={e => setEmail(e.target.value)}
-                    required
-                />
+            {/* Background decoration for levitation effect context */}
+            <div className="absolute inset-0 pointer-events-none">
+                <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-green-500/10 dark:bg-green-600/10 rounded-full blur-[100px] animate-pulse"></div>
+                <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-blue-500/10 dark:bg-blue-600/10 rounded-full blur-[100px] animate-pulse delay-700"></div>
             </div>
 
-            <div>
-                 <div className="flex justify-between items-center mb-1">
-                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300">Password</label>
-                    {isLogin && (
-                        <button type="button" onClick={handleForgotPassword} className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium">Forgot Password?</button>
+            {/* Main Card with Levitation Animation */}
+            <div className="bg-white dark:bg-gray-900 w-full max-w-md rounded-2xl p-8 shadow-2xl border border-gray-100 dark:border-gray-800 relative z-10 levitate transition-all duration-300">
+                <button
+                    onClick={onBack}
+                    className="absolute top-6 left-6 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+                >
+                    <ArrowLeft size={20} />
+                </button>
+
+                <div className="text-center mb-8 mt-2">
+                    <div className="mx-auto mb-4 w-20 h-20 flex items-center justify-center">
+                        {logoUrl ? (
+                            <img src={logoUrl} alt="Logo" className="w-full h-full object-contain drop-shadow-lg" />
+                        ) : (
+                            <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center text-black font-black text-xl shadow-[0_0_20px_rgba(34,197,94,0.5)]">
+                                {appName.charAt(0)}
+                            </div>
+                        )}
+                    </div>
+                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight mb-2">{appName}</h1>
+                    <p className="text-gray-500 dark:text-gray-400">Your #1 Plug for Data & Airtime.</p>
+                </div>
+
+                <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-lg mb-8">
+                    <button
+                        onClick={() => setIsLogin(true)}
+                        className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${isLogin ? 'bg-white dark:bg-gray-700 shadow text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}
+                    >
+                        Login
+                    </button>
+                    <button
+                        onClick={() => setIsLogin(false)}
+                        className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${!isLogin ? 'bg-white dark:bg-gray-700 shadow text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}
+                    >
+                        Register
+                    </button>
+                </div>
+
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    {!isLogin && (
+                        <>
+                            <div>
+                                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Full Name</label>
+                                <input
+                                    type="text"
+                                    className="w-full p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-green-500 outline-none text-gray-900 dark:text-white transition-colors"
+                                    value={name}
+                                    onChange={e => setName(e.target.value)}
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Phone Number</label>
+                                <input
+                                    type="tel"
+                                    className="w-full p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-green-500 outline-none text-gray-900 dark:text-white transition-colors"
+                                    value={phone}
+                                    onChange={e => setPhone(e.target.value)}
+                                    required
+                                />
+                            </div>
+                        </>
                     )}
-                 </div>
-                <input 
-                    type="password" 
-                    className="w-full p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-green-500 outline-none text-gray-900 dark:text-white transition-colors" 
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    required
-                />
-            </div>
-            
-            {!isLogin && (
-                <>
+
                     <div>
-                        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Confirm Password</label>
-                        <input 
-                            type="password" 
-                            className="w-full p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-green-500 outline-none text-gray-900 dark:text-white transition-colors" 
-                            value={confirmPassword}
-                            onChange={e => setConfirmPassword(e.target.value)}
+                        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Email Address</label>
+                        <input
+                            type="email"
+                            className="w-full p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-green-500 outline-none text-gray-900 dark:text-white transition-colors"
+                            value={email}
+                            onChange={e => setEmail(e.target.value)}
                             required
                         />
                     </div>
+
                     <div>
-                         <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Referral Code (Optional)</label>
-                         <input 
-                            type="text" 
-                            className="w-full p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-green-500 outline-none uppercase font-mono tracking-wider text-gray-900 dark:text-white transition-colors" 
-                            value={referralCode}
-                            onChange={e => setReferralCode(e.target.value.toUpperCase())}
-                            placeholder="e.g. TUND123"
+                        <div className="flex justify-between items-center mb-1">
+                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300">Password</label>
+                            {isLogin && (
+                                <button type="button" onClick={handleForgotPassword} className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium">Forgot Password?</button>
+                            )}
+                        </div>
+                        <input
+                            type="password"
+                            className="w-full p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-green-500 outline-none text-gray-900 dark:text-white transition-colors"
+                            value={password}
+                            onChange={e => setPassword(e.target.value)}
+                            required
                         />
                     </div>
-                </>
-            )}
 
-            {error && <p className="text-red-500 text-sm bg-red-50 dark:bg-red-900/20 p-2 rounded border border-red-100 dark:border-red-900/50">{error}</p>}
+                    {!isLogin && (
+                        <>
+                            <div>
+                                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Confirm Password</label>
+                                <input
+                                    type="password"
+                                    className="w-full p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-green-500 outline-none text-gray-900 dark:text-white transition-colors"
+                                    value={confirmPassword}
+                                    onChange={e => setConfirmPassword(e.target.value)}
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Referral Code (Optional)</label>
+                                <input
+                                    type="text"
+                                    className="w-full p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-green-500 outline-none uppercase font-mono tracking-wider text-gray-900 dark:text-white transition-colors"
+                                    value={referralCode}
+                                    onChange={e => setReferralCode(e.target.value.toUpperCase())}
+                                    placeholder="e.g. TUND123"
+                                />
+                            </div>
+                        </>
+                    )}
 
-            <button 
-                type="submit" 
-                disabled={loading}
-                className="w-full py-3 bg-green-600 hover:bg-green-500 text-white font-bold rounded-xl shadow-lg shadow-green-600/30 hover:shadow-green-500/40 transition-all flex items-center justify-center"
-            >
-                {loading ? <Loader2 className="animate-spin" /> : (isLogin ? "Sign In" : "Create Account")}
-            </button>
-        </form>
-        
-        <div className="mt-6 text-center text-xs text-gray-400">
-            <p>Demo Credentials:</p>
-            <p>User: tunde@example.com / user123</p>
-            <p>Admin: admin@jadanpay.com / admin123</p>
+                    {error && <p className="text-red-500 text-sm bg-red-50 dark:bg-red-900/20 p-2 rounded border border-red-100 dark:border-red-900/50">{error}</p>}
+
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full py-3 bg-green-600 hover:bg-green-500 text-white font-bold rounded-xl shadow-lg shadow-green-600/30 hover:shadow-green-500/40 transition-all flex items-center justify-center"
+                    >
+                        {loading ? <Loader2 className="animate-spin" /> : (isLogin ? "Sign In" : "Create Account")}
+                    </button>
+                </form>
+
+                <div className="mt-6 text-center text-xs text-gray-400">
+                    <p>Demo Credentials:</p>
+                    <p>User: tunde@example.com / user123</p>
+                    <p>Admin: admin@jadanpay.com / admin123</p>
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-  );
+    );
 };
