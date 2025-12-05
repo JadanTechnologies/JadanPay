@@ -76,6 +76,24 @@ export const Auth: React.FC<AuthProps> = ({ onAuthSuccess, onBack }) => {
         }
     };
 
+    const handleTestConnection = async () => {
+        try {
+            // Import dynamically to avoid top-level issues if something is weird
+            const { supabase } = await import('../utils/supabase');
+            const start = Date.now();
+            // Try a simple health check or fetch
+            const { data, error } = await supabase.from('profiles').select('count', { count: 'exact', head: true });
+
+            if (error) {
+                alert(`Connection Test Failed:\nCode: ${error.code}\nMessage: ${error.message}\nDetails: ${error.details}`);
+            } else {
+                alert(`Connection Successful!\nPing: ${Date.now() - start}ms\nStatus: 200 OK`);
+            }
+        } catch (e: any) {
+            alert(`Connection Test Network Error:\n${e.message}`);
+        }
+    };
+
     const handleForgotPassword = () => {
         if (!email) {
             alert("Please enter your email address first.");
@@ -232,6 +250,14 @@ export const Auth: React.FC<AuthProps> = ({ onAuthSuccess, onBack }) => {
                             {import.meta.env.VITE_SUPABASE_URL ? 'System Online' : 'Config Missing'}
                         </p>
                         {!import.meta.env.VITE_SUPABASE_URL && <p className="text-[10px] text-red-400 mt-1">Error: VITE_SUPABASE_URL not found</p>}
+
+                        <button
+                            type="button"
+                            onClick={handleTestConnection}
+                            className="mt-2 text-[10px] underline text-gray-400 hover:text-gray-600"
+                        >
+                            Test Connection details
+                        </button>
                     </div>
                 </div>
             </div>
