@@ -224,6 +224,15 @@ export const Auth: React.FC<AuthProps> = ({ onAuthSuccess, onBack }) => {
                     <p>Demo Credentials:</p>
                     <p>User: tunde@example.com / user123</p>
                     <p>Admin: admin@jadanpay.com / admin123</p>
+
+                    <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
+                        <p className="flex items-center justify-center gap-2">
+                            Status:
+                            <span className={`inline-block w-2 h-2 rounded-full ${import.meta.env.VITE_SUPABASE_URL ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                            {import.meta.env.VITE_SUPABASE_URL ? 'System Online' : 'Config Missing'}
+                        </p>
+                        {!import.meta.env.VITE_SUPABASE_URL && <p className="text-[10px] text-red-400 mt-1">Error: VITE_SUPABASE_URL not found</p>}
+                    </div>
                 </div>
             </div>
         </div>
