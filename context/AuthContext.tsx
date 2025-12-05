@@ -73,31 +73,71 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     useEffect(() => {
-        // 1. Check active session
-        supabase.auth.getSession().then(async ({ data: { session } }) => {
-            setSession(session);
-            if (session) {
-                const profile = await fetchProfile(session.user.id, session.user.email);
-                setUser(profile);
-            }
-            setIsLoading(false);
-        });
+        let mounted = true;
 
-        // 2. Listen for changes
+        const initAuth = async () => {
+            // Create a timeout promise that resolves after 3 seconds
+            const timeoutPromise = new Promise((resolve) => {
+                setTimeout(() => resolve('timeout'), 3000);
+            });
+
+            try {
+                // Race Supabase session check against the timeout
+                const sessionPromise = supabase.auth.getSession();
+                const result = await Promise.race([sessionPromise, timeoutPromise]);
+
+                if (result === 'timeout') {
+                    console.warn("Supabase auth check timed out - likely missing keys or connection issue. Proceeding as guest.");
+                    if (mounted) setIsLoading(false);
+                    return;
+                }
+
+                // If we get here, Supabase responded
+                const { data: { session }, error } = result as any;
+
+                if (error) {
+                    console.error("Supabase auth error during init:", error);
+                    if (mounted) setIsLoading(false);
+                    return;
+                }
+
+                // If session exists, fetch profile
+                if (session && mounted) {
+                    setSession(session);
+                    try {
+                        const profile = await fetchProfile(session.user.id, session.user.email);
+                        if (mounted) setUser(profile);
+                    } catch (profileErr) {
+                        console.error("Profile fetch failed:", profileErr);
+                    }
+                }
+            } catch (err) {
+                console.error("Critical AuthContext initialization error:", err);
+            } finally {
+                if (mounted) setIsLoading(false);
+            }
+        };
+
+        // 1. Run initialization
+        initAuth();
+
+        // 2. Listen for changes (non-blocking)
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+            if (!mounted) return;
             setSession(session);
             if (session) {
-                // If we just signed up, the profile might trigger a bit later, allow retry or rely on simple data
-                // Ideally fetch profile here
                 const profile = await fetchProfile(session.user.id, session.user.email);
-                setUser(profile);
+                if (mounted) setUser(profile);
             } else {
-                setUser(null);
+                if (mounted) setUser(null);
             }
-            setIsLoading(false);
+            if (mounted) setIsLoading(false);
         });
 
-        return () => subscription.unsubscribe();
+        return () => {
+            mounted = false;
+            subscription.unsubscribe();
+        };
     }, []);
 
     const signOut = async () => {
