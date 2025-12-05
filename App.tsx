@@ -1,5 +1,4 @@
 
-
 import React, { useState, useEffect } from 'react';
 import { Layout } from './components/Layout';
 import { Dashboard } from './components/Dashboard';
@@ -20,22 +19,21 @@ import { DeveloperApi } from './components/DeveloperApi';
 import { LandingPage } from './components/LandingPage';
 import { UserProfile } from './components/UserProfile';
 import { User, UserRole } from './types';
-import { MockDB } from './services/mockDb';
 import { SettingsService } from './services/settingsService';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { Loader2 } from 'lucide-react';
 
-export default function App() {
-  const [user, setUser] = useState<User | null>(null);
+function AppContent() {
+  const { user, isLoading, signOut } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [isLoadingUser, setIsLoadingUser] = useState(false);
   const [selectedTxId, setSelectedTxId] = useState<string | undefined>(undefined);
   const [showLanding, setShowLanding] = useState(true);
-  
-  // Theme Management
   const [isDarkMode, setIsDarkMode] = useState(false);
 
+  // Theme Management
   useEffect(() => {
     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-       setIsDarkMode(true);
+      setIsDarkMode(true);
     }
   }, []);
 
@@ -50,69 +48,41 @@ export default function App() {
 
   // Apply Favicon and App Name
   useEffect(() => {
-      const applySettings = async () => {
-          try {
-              const s = await SettingsService.getSettings();
-              document.title = s.appName;
-              
-              if (s.faviconUrl) {
-                  let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
-                  if (!link) {
-                      link = document.createElement('link');
-                      link.rel = 'icon';
-                      document.getElementsByTagName('head')[0].appendChild(link);
-                  }
-                  link.href = s.faviconUrl;
-              }
-          } catch (e) {
-              console.error("Failed to load settings", e);
+    const applySettings = async () => {
+      try {
+        const s = await SettingsService.getSettings();
+        document.title = s.appName;
+        if (s.faviconUrl) {
+          let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
+          if (!link) {
+            link = document.createElement('link');
+            link.rel = 'icon';
+            document.getElementsByTagName('head')[0].appendChild(link);
           }
-      };
-      applySettings();
+          link.href = s.faviconUrl;
+        }
+      } catch (e) {
+        console.error("Failed to load settings", e);
+      }
+    };
+    applySettings();
   }, []);
 
-  useEffect(() => {
-      const loadUserSession = async () => {
-          try {
-              const savedUserId = localStorage.getItem('JADANPAY_CURRENT_USER_ID');
-              if (savedUserId && !user) {
-                  const users = await MockDB.getUsers();
-                  const found = users.find(u => u.id === savedUserId);
-                  if (found) {
-                      setUser({ ...found });
-                      setShowLanding(false);
-                  } else {
-                      // Session invalid
-                      localStorage.removeItem('JADANPAY_CURRENT_USER_ID');
-                  }
-              }
-          } catch (e) {
-              console.error("Critical session error", e);
-              // Fail safe: Clear storage if corrupt
-              localStorage.removeItem('JADANPAY_CURRENT_USER_ID');
-              setUser(null);
-          }
-      };
-      
-      loadUserSession();
-  }, []);
+  // Handle Loading State
+  if (isLoading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <Loader2 className="h-10 w-10 animate-spin text-purple-600" />
+      </div>
+    );
+  }
 
   const toggleTheme = () => {
     setIsDarkMode(!isDarkMode);
   };
 
   const handleRefreshUser = async () => {
-    if(!user) return;
-    setIsLoadingUser(true);
-    try {
-        const updatedUserList = await MockDB.getUsers();
-        const currentUser = updatedUserList.find(u => u.id === user.id);
-        if(currentUser) setUser({ ...currentUser }); // Force new reference
-    } catch (e) {
-        console.error("Failed to refresh user", e);
-    } finally {
-        setIsLoadingUser(false);
-    }
+    // Configured in AuthContext, can expose if needed
   };
 
   const handleViewReceipt = (txId: string) => {
@@ -124,38 +94,27 @@ export default function App() {
     setActiveTab(tab);
     setSelectedTxId(undefined);
   };
-  
-  const handleAuthSuccess = (u: User) => {
-      setUser(u);
-      localStorage.setItem('JADANPAY_CURRENT_USER_ID', u.id); 
-      if (u.role === UserRole.ADMIN) {
-          setActiveTab('admin');
-      } else {
-          setActiveTab('dashboard');
-      }
-      setShowLanding(false);
-  };
 
   if (!user) {
     if (showLanding) {
-        return <LandingPage 
-            onGetStarted={() => setShowLanding(false)} 
-            onLogin={() => setShowLanding(false)}
-            toggleTheme={toggleTheme}
-            isDarkMode={isDarkMode}
-        />;
+      return <LandingPage
+        onGetStarted={() => setShowLanding(false)}
+        onLogin={() => setShowLanding(false)}
+        toggleTheme={toggleTheme}
+        isDarkMode={isDarkMode}
+      />;
     }
-    
-    return <Auth 
-        onAuthSuccess={handleAuthSuccess} 
-        onBack={() => setShowLanding(true)}
+
+    return <Auth
+      onAuthSuccess={() => setShowLanding(false)}
+      onBack={() => setShowLanding(true)}
     />;
   }
 
   const renderContent = () => {
     // Permission Guard
     if (activeTab.startsWith('admin') && user.role !== UserRole.ADMIN) {
-        return <div className="p-10 text-center dark:text-white">Unauthorized Access</div>;
+      return <div className="p-10 text-center dark:text-white">Unauthorized Access</div>;
     }
 
     switch (activeTab) {
@@ -168,27 +127,27 @@ export default function App() {
       case 'support':
         return <Support user={user} />;
       case 'admin':
-         return <AdminDashboard onNavigate={handleTabChange} />;
+        return <AdminDashboard onNavigate={handleTabChange} />;
       case 'admin-users':
-         return <AdminUsers />;
+        return <AdminUsers />;
       case 'admin-payments':
-         return <AdminPayments />;
+        return <AdminPayments />;
       case 'admin-support':
-         return <AdminSupport />;
+        return <AdminSupport />;
       case 'admin-communication':
-         return <AdminCommunication />;
+        return <AdminCommunication />;
       case 'admin-staff':
-         return <AdminStaff />;
+        return <AdminStaff />;
       case 'admin-access':
-         return <AdminAccessControl />;
+        return <AdminAccessControl />;
       case 'admin-audit':
-         return <AdminAuditLog />;
+        return <AdminAuditLog />;
       case 'admin-settings':
-         return <AdminSettings />;
+        return <AdminSettings />;
       case 'reseller':
-         return user.role === UserRole.RESELLER ? <ResellerZone /> : <div className="p-10 text-center dark:text-white">Unauthorized</div>;
+        return user.role === UserRole.RESELLER ? <ResellerZone /> : <div className="p-10 text-center dark:text-white">Unauthorized</div>;
       case 'api-docs':
-         return (user.role === UserRole.RESELLER || user.apiKey) ? <DeveloperApi user={user} /> : <div className="p-10 text-center dark:text-white">Unauthorized</div>;
+        return (user.role === UserRole.RESELLER || user.apiKey) ? <DeveloperApi user={user} /> : <div className="p-10 text-center dark:text-white">Unauthorized</div>;
       default:
         if (user.role === UserRole.ADMIN) return <AdminDashboard onNavigate={handleTabChange} />;
         return <Dashboard user={user} refreshUser={handleRefreshUser} onViewReceipt={handleViewReceipt} />;
@@ -196,18 +155,21 @@ export default function App() {
   };
 
   return (
-    <Layout 
-        user={user} 
-        activeTab={activeTab} 
-        onTabChange={handleTabChange}
-        onLogout={() => {
-            setUser(null);
-            localStorage.removeItem('JADANPAY_CURRENT_USER_ID');
-            setActiveTab('dashboard'); 
-            setShowLanding(true); 
-        }}
+    <Layout
+      user={user}
+      activeTab={activeTab}
+      onTabChange={handleTabChange}
+      onLogout={signOut}
     >
       {renderContent()}
     </Layout>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }
