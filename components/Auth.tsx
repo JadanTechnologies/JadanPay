@@ -77,22 +77,38 @@ export const Auth: React.FC<AuthProps> = ({ onAuthSuccess, onBack }) => {
     };
 
     const handleTestConnection = async () => {
+        alert("Starting connection diagnostic..."); // Immediate feedback to confirm click works
         try {
-            // Import dynamically to avoid top-level issues if something is weird
-            const { supabase } = await import('../utils/supabase');
-            const start = Date.now();
-            // Try a simple health check or fetch
-            const { data, error } = await supabase.from('profiles').select('count', { count: 'exact', head: true });
+            const url = import.meta.env.VITE_SUPABASE_URL;
+            const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-            if (error) {
-                alert(`Connection Test Failed:\nCode: ${error.code}\nMessage: ${error.message}\nDetails: ${error.details}`);
+            if (!url || !key) {
+                alert("Missing URL or Key in environment variables!");
+                return;
+            }
+
+            console.log("Testing connection to:", url);
+            // Simple REST check to Supabase
+            const response = await fetch(`${url}/rest/v1/profiles?select=count&limit=1`, {
+                method: 'GET',
+                headers: {
+                    'apikey': key,
+                    'Authorization': `Bearer ${key}`
+                }
+            });
+
+            if (response.ok) {
+                alert(`Connection SUCCESS!\nStatus: ${response.status}\nSupabase is reachable.`);
             } else {
-                alert(`Connection Successful!\nPing: ${Date.now() - start}ms\nStatus: 200 OK`);
+                const text = await response.text();
+                alert(`Connection FAILED.\nStatus: ${response.status}\nError: ${text}`);
             }
         } catch (e: any) {
-            alert(`Connection Test Network Error:\n${e.message}`);
+            alert(`NETWORK ERROR.\nMessage: ${e.message}\nCheck your internet or CORS settings.`);
+            console.error(e);
         }
     };
+
 
     const handleForgotPassword = () => {
         if (!email) {
