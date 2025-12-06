@@ -77,8 +77,10 @@ export const Auth: React.FC<AuthProps> = ({ onAuthSuccess, onBack }) => {
     };
 
     const handleTestConnection = async () => {
-        alert("Starting connection diagnostic..."); // Immediate feedback to confirm click works
+        alert("Starting connection diagnostic... (Step 1/2)");
+
         try {
+            // 1. Raw Fetch Test
             const url = import.meta.env.VITE_SUPABASE_URL;
             const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
@@ -88,26 +90,40 @@ export const Auth: React.FC<AuthProps> = ({ onAuthSuccess, onBack }) => {
             }
 
             console.log("Testing connection to:", url);
-            // Simple REST check to Supabase
             const response = await fetch(`${url}/rest/v1/profiles?select=count&limit=1`, {
                 method: 'GET',
-                headers: {
-                    'apikey': key,
-                    'Authorization': `Bearer ${key}`
-                }
+                headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
             });
 
-            if (response.ok) {
-                alert(`Connection SUCCESS!\nStatus: ${response.status}\nSupabase is reachable.`);
-            } else {
+            if (!response.ok) {
                 const text = await response.text();
-                alert(`Connection FAILED.\nStatus: ${response.status}\nError: ${text}`);
+                alert(`Raw Fetch FAILED.\nStatus: ${response.status}\nError: ${text}`);
+                return;
             }
+
+            alert("Network OK. Starting SDK Auth Test (Step 2/2)...");
+
+            // 2. SDK Auth Test
+            const { supabase } = await import('../utils/supabase');
+            const { error } = await supabase.auth.signInWithPassword({
+                email: 'test@connection-check.com',
+                password: 'wrongpassword123'
+            });
+
+            if (error && error.message === 'Invalid login credentials') {
+                alert(`Diagnostic Result: EVERYTHING IS GOOD.\n\n1. Network: OK\n2. Status: 200\n3. SDK: OK (Got expected 'Invalid login' error)\n\nIf you still can't login, check if your User Account actually exists in Supabase 'users' table.`);
+            } else if (error) {
+                alert(`SDK Error: ${error.message}`);
+            } else {
+                alert("SDK Test: Unexpected success (should have failed login).");
+            }
+
         } catch (e: any) {
-            alert(`NETWORK ERROR.\nMessage: ${e.message}\nCheck your internet or CORS settings.`);
+            alert(`Diagnostic Failed:\n${e.message}`);
             console.error(e);
         }
     };
+
 
 
     const handleForgotPassword = () => {
